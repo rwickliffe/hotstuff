@@ -172,6 +172,20 @@ Errors are also written to the browser console, but that is only useful with
 devtools already open. There is no server-side logging: GitHub Pages is static
 hosting, so nothing is recorded anywhere.
 
+## The horror cut
+
+`horror.html` is an alternate styling of the same page, leaning into
+grindhouse slasher. It is generated, never hand edited:
+
+```bash
+./build-horror.py
+```
+
+It rewrites the palette, the type, the heat words and some wording, and
+leaves the behaviour alone. Run it after any change to `index.html`. If a
+substitution stops matching it fails loudly rather than producing a half
+updated page.
+
 ## Hosting
 
 GitHub Pages serves this repo as-is: Settings, Pages, deploy from `main`,
