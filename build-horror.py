@@ -242,7 +242,7 @@ COPY = [
     ('<p class="eyebrow">What it costs</p>',
      '<p class="eyebrow">What it costs' + SPATTER + "</p>"),
     ("We're at markets and community events around Elgin and Central Texas most weekends. This list keeps itself up to date.",
-     "We're at markets and community events around Elgin and Central Texas most weekends. You will know the booth when you see it."),
+     "Lurking at markets and community events around Elgin and Central Texas most weekends. You'll know the booth when you see it."),
 ]
 
 
