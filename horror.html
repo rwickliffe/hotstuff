@@ -47,34 +47,6 @@
     --pad: clamp(20px, 5vw, 64px);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:      #0C0A08;
-      --paper-sunk: #120E0B;
-      --card:       #17120E;
-      --ink:        #E2D7C3;
-      --ink-mid:    #9A8C77;
-      --ink-faint:  #7A6D5C;
-      --chile:      #C62A18;
-      --chile-deep: #E0503A;
-      --flame:      #D2822F;
-      --char:       #060504;
-      --char-soft:  #100D0A;
-      --bone:       #E2D7C3;
-      --rule:       #2A211A;
-      --rule-firm:  #3E3226;
-      --pip-off:    #362B21;
-
-      --h1: #8A9A48;
-      --h2: #C62A18;
-      --h3: #D8451C;
-      --h4: #E4721F;
-      --h5: #EFA033;
-      --h6: #F2E0A8;
-      --h6-edge: #A8862E;
-      --name-color: #E0503A;
-    }
-  }
 
   :root[data-theme="dark"] {
     --paper:      #0C0A08;
@@ -534,7 +506,6 @@
     background: radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(6,5,4,0.42) 100%);
   }
 
-  :root:not([data-theme="light"]) body::after { mix-blend-mode: screen; opacity: 0.16; }
   :root[data-theme="dark"] body::after { mix-blend-mode: screen; opacity: 0.16; }
 
   /* Special Elite is a light face. Give the big type some weight and air. */
@@ -1187,11 +1158,8 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   var root = document.documentElement;
   var toggle = document.getElementById("theme-toggle");
 
-  function systemDark() { return window.matchMedia("(prefers-color-scheme: dark)").matches; }
-  function isDark() {
-    var set = root.getAttribute("data-theme");
-    return set ? set === "dark" : systemDark();
-  }
+  // The page ships lights on. Dark is opt-in via the toggle and remembered.
+  function isDark() { return root.getAttribute("data-theme") === "dark"; }
   function label() { toggle.textContent = isDark() ? "Lights on" : "Lights out"; }
 
   try {

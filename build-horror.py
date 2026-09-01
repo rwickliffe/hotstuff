@@ -98,7 +98,6 @@ OVERRIDES = """
     background: radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(6,5,4,0.42) 100%);
   }
 
-  :root:not([data-theme="light"]) body::after { mix-blend-mode: screen; opacity: 0.16; }
   :root[data-theme="dark"] body::after { mix-blend-mode: screen; opacity: 0.16; }
 
   /* Special Elite is a light face. Give the big type some weight and air. */
@@ -261,10 +260,10 @@ def main():
                FONT_LINK.replace("\\", "\\\\"), s)
 
     blocks = list(re.finditer(
-        r'(:root \{|:root:not\(\[data-theme="light"\]\) \{|:root\[data-theme="dark"\] \{)(.*?)\n  \}',
+        r'(:root \{|:root\[data-theme="dark"\] \{)(.*?)\n  \}',
         s, re.S))
-    if len(blocks) != 3:
-        sys.exit("FAIL: expected 3 token blocks, found %d" % len(blocks))
+    if len(blocks) != 2:
+        sys.exit("FAIL: expected 2 token blocks, found %d" % len(blocks))
 
     out, last = [], 0
     for i, m in enumerate(blocks):

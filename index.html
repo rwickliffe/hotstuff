@@ -47,34 +47,6 @@
     --pad: clamp(20px, 5vw, 64px);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:      #16110E;
-      --paper-sunk: #1F1815;
-      --card:       #221A16;
-      --ink:        #F0E7DC;
-      --ink-mid:    #B0A296;
-      --ink-faint:  #8A7C70;
-      --chile:      #E8503F;
-      --chile-deep: #F0705F;
-      --flame:      #E89040;
-      --char:       #0E0A08;
-      --char-soft:  #1C1512;
-      --bone:       #F0E7DC;
-      --rule:       #332923;
-      --rule-firm:  #46392F;
-      --pip-off:    #3E332C;
-
-      --h1: #5CB84A;
-      --h2: #E8503F;
-      --h3: #F26A2E;
-      --h4: #FB8B22;
-      --h5: #FFB443;
-      --h6: #FFE9A0;
-      --h6-edge: #C9922B;
-      --name-color: #E8503F;
-    }
-  }
 
   :root[data-theme="dark"] {
     --paper:      #16110E;
@@ -1082,11 +1054,8 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   var root = document.documentElement;
   var toggle = document.getElementById("theme-toggle");
 
-  function systemDark() { return window.matchMedia("(prefers-color-scheme: dark)").matches; }
-  function isDark() {
-    var set = root.getAttribute("data-theme");
-    return set ? set === "dark" : systemDark();
-  }
+  // The page ships lights on. Dark is opt-in via the toggle and remembered.
+  function isDark() { return root.getAttribute("data-theme") === "dark"; }
   function label() { toggle.textContent = isDark() ? "Lights on" : "Lights out"; }
 
   try {
