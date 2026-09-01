@@ -40,6 +40,7 @@
     --name-style: italic;
     --name-weight: 700;
     --name-size: 23px;
+    --name-color: #C4241B;
     --cond:    "Barlow Condensed", "Arial Narrow", Helvetica, sans-serif;
     --body:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 
@@ -71,6 +72,7 @@
       --h5: #FFB443;
       --h6: #FFE9A0;
       --h6-edge: #C9922B;
+      --name-color: #E8503F;
     }
   }
 
@@ -98,6 +100,7 @@
     --h5: #FFB443;
     --h6: #FFE9A0;
     --h6-edge: #C9922B;
+    --name-color: #E8503F;
   }
 
   * { box-sizing: border-box; }
@@ -163,6 +166,7 @@
     font-style: var(--name-style);
     font-weight: var(--name-weight);
     font-size: var(--name-size);
+    color: var(--name-color);
     letter-spacing: 0.01em;
     text-transform: none;
   }
@@ -307,6 +311,10 @@
 
   .scale-key div { display: flex; align-items: center; gap: 9px; }
 
+  @media (max-width: 620px) {
+    .scale-key { flex-direction: column; align-items: flex-start; gap: 11px; }
+  }
+
   .scale-key small {
     font-family: var(--cond); font-size: 14px;
     letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-mid);
@@ -362,6 +370,7 @@
     font-style: var(--name-style);
     font-weight: var(--name-weight);
     font-size: var(--name-size);
+    color: var(--name-color);
     line-height: 1.14; letter-spacing: 0.012em; margin: 0; text-wrap: balance;
   }
 
@@ -523,7 +532,7 @@
 
 <!-- DRAFT RIBBON: delete this one div before showing publicly -->
 <div class="draft">
-  <span>Draft preview. Product list, prices and heat ratings still need Paula &amp; John to confirm.</span>
+  <span>Draft preview. Product list, prices and heat ratings still need Paula &amp; Crazy John to confirm.</span>
   <span class="draft-fonts">
     <label for="fontpick">Type</label>
     <select id="fontpick">
@@ -559,6 +568,7 @@
     <li><b>Cowboy Candy</b><span>Candied jalapenos</span></li>
     <li><b>Pickles</b><span>Dill &amp; bread'n'butter</span></li>
     <li><b>Chow Chow</b><span>The old way</span></li>
+    <li><b>More!</b><span>Ask at the booth</span></li>
   </ul>
 </div>
 
@@ -566,7 +576,7 @@
   <div class="shell">
     <div class="sec-head">
       <p class="eyebrow maker">Paula's</p>
-      <h2>Salsas, pickles &amp; cowboy candy</h2>
+      <h2>Salsas, pickles, cowboy candy &amp; more</h2>
       <p class="lede">Paula's side of the table. Same garden, gentler intentions. Mostly.</p>
     </div>
     <div class="grid" data-grid="Paula"></div>
@@ -578,7 +588,7 @@
     <div class="sec-head">
       <p class="eyebrow maker">Crazy John's</p>
       <h2>The hot sauces</h2>
-      <p class="lede">John builds these one small batch at a time, and they climb from friendly to genuinely reckless. The rating is his own, it goes past the reaper, and he does not grade on a curve.</p>
+      <p class="lede">Crazy John builds these one small batch at a time, and they climb from friendly to genuinely reckless. The rating is his own, it goes past the reaper, and he does not grade on a curve.</p>
     </div>
 
     <div class="scale-key">
@@ -591,7 +601,7 @@
     <div class="filters" role="group" aria-label="Filter by heat">
       <button type="button" data-band="all" aria-pressed="true">Everything</button>
       <button type="button" data-band="mild" aria-pressed="false">Mild</button>
-      <button type="button" data-band="warm" aria-pressed="false">Warm</button>
+      <button type="button" data-band="medium" aria-pressed="false">Medium</button>
       <button type="button" data-band="hot" aria-pressed="false">Hot</button>
       <button type="button" data-band="beyond" aria-pressed="false">Beyond</button>
     </div>
@@ -614,7 +624,7 @@
         <span class="what">Pints &amp; hot sauce</span>
         <span class="single">$10</span>
         <span class="bulk">3 for $25</span>
-        <span class="note">Salsas, cowboy candy, pickles and every one of John's sauces.</span>
+        <span class="note">Salsas, cowboy candy, pickles and every one of Crazy John's sauces.</span>
       </div>
       <div class="deal">
         <span class="what">Quarts</span>
@@ -664,7 +674,7 @@
       </div>
       <div class="story-body">
         <p><span class="stub">Placeholder, two minutes on a voice memo and we'll write this properly</span></p>
-        <p>Paula and John have been putting up salsa, hot sauce, pickles and cowboy candy out of a home kitchen in Elgin, Texas, growing most of the peppers and produce themselves. What started as too much of a garden harvest turned into a booth, and the booth turned into a following.</p>
+        <p>Paula and Crazy John have been putting up salsa, hot sauce, pickles and cowboy candy out of a home kitchen in Elgin, Texas, growing most of the peppers and produce themselves. What started as too much of a garden harvest turned into a booth, and the booth turned into a following.</p>
         <p>Everything is made in small batches under the Texas Cottage Food Law, jarred and labeled by hand, and sold face to face at markets across Central Texas.</p>
       </div>
     </div>
@@ -775,7 +785,27 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     if (!box.parentNode) document.body.appendChild(box);
   }
 
-  var HEAT_WORD = { 1: "Mild", 2: "Warm", 3: "Medium", 4: "Hot", 5: "Very hot", 6: "Beyond" };
+  // One definition of the heat scale. The per-jar word, the filter button and
+  // the legend all read from this, so they cannot drift apart.
+  var BANDS = [
+    { key: "all",    range: [0, 9], label: "Everything" },
+    { key: "mild",   range: [1, 1], label: "Mild" },
+    { key: "medium", range: [2, 3], label: "Medium" },
+    { key: "hot",    range: [4, 5], label: "Hot" },
+    { key: "beyond", range: [6, 6], label: "Beyond" }
+  ];
+
+  function band(key) {
+    for (var i = 0; i < BANDS.length; i++) if (BANDS[i].key === key) return BANDS[i];
+    return BANDS[0];
+  }
+
+  function heatWord(n) {
+    for (var i = 1; i < BANDS.length; i++) {
+      if (n >= BANDS[i].range[0] && n <= BANDS[i].range[1]) return BANDS[i].label;
+    }
+    return "";
+  }
 
   // --- CSV parse: handles quoted fields containing commas and newlines ---
   function parseCSV(text) {
@@ -822,7 +852,7 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
       into.appendChild(svg);
     }
     into.setAttribute("role", "img");
-    into.setAttribute("aria-label", n + " out of 6, " + (HEAT_WORD[n] || "unrated"));
+    into.setAttribute("aria-label", n + " out of 6, " + (heatWord(n) || "unrated"));
   }
 
   function card(p) {
@@ -848,7 +878,7 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     pips(scale, heat);
     var word = document.createElement("div");
     word.className = "heat-word";
-    word.textContent = HEAT_WORD[heat] || "";
+    word.textContent = heatWord(heat);
     left.appendChild(scale);
     left.appendChild(word);
 
@@ -887,8 +917,6 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   }
 
   // --- heat filter over John's grid ---
-  var BANDS = { all: [0, 9], mild: [1, 1], warm: [2, 3], hot: [4, 5], beyond: [6, 6] };
-
   function wireFilter() {
     var buttons = document.querySelectorAll(".filters button");
     var cards = document.querySelectorAll('[data-grid="John"] .prod');
@@ -896,8 +924,9 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     if (!buttons.length) return;
 
     buttons.forEach(function (btn) {
+      btn.textContent = band(btn.dataset.band).label;
       btn.onclick = function () {
-        var range = BANDS[btn.dataset.band] || BANDS.all;
+        var range = band(btn.dataset.band).range;
         buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
         var shown = 0;
         cards.forEach(function (c) {
@@ -914,6 +943,8 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   // --- scale key sample pips ---
   document.querySelectorAll(".heat[data-key]").forEach(function (el) {
     pips(el, el.dataset.key);
+    var label = el.parentNode.querySelector("small");
+    if (label) label.textContent = heatWord(parseInt(el.dataset.key, 10));
   });
 
   // --- schedule, rendered into our own markup so it matches the page ---

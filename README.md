@@ -8,7 +8,7 @@ A single static page. No build step, no framework, no server. Open
 
 ## Why it is built this way
 
-Paula and John need to keep the site current themselves. Everything that
+Paula and Crazy John need to keep the site current themselves. Everything that
 changes often is therefore handled outside the code, in apps they already use
 daily:
 
@@ -64,7 +64,7 @@ Columns:
 
 | Column | Notes |
 |---|---|
-| `maker` | `Paula` or `John`. Decides which section the item lands in. |
+| `maker` | `Paula` or `John`. Matches the spreadsheet, so it stays short. Decides which section the item lands in. |
 | `name` | Product name as it appears on the jar. |
 | `description` | Ingredients, a sentence. Commas are fine if the cell is quoted. |
 | `heat` | `1` to `6`. Drives the flame rating and the card's colour. |
@@ -95,7 +95,7 @@ mean entering every market twice. The sheet is the only place dates live.
 - [ ] Replace both `REPLACE_ME.com` values in the JSON-LD block with the real domain
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
-- [ ] Confirm product names, prices and heat ratings with Paula and John
+- [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Delete the preview scaffolding: the `.draft` CSS block, the `<div class="draft">`,
       and the type picker at the end of the script.
 - [ ] Trim the Google Fonts link to the one chosen family set
