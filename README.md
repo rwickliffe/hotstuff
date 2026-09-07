@@ -19,8 +19,9 @@ daily:
 | News and announcements | Weekly | Them | Facebook |
 | Photos, story, layout | Rarely | A developer | This repo |
 
-Ordering and payment happen on Square, so this site never touches money or
-customer data.
+Ordering and payment happen on Square, so this site never takes money.
+Contact notes and newsletter signups go to Resend through the Worker when
+`WORKER_URL` is set — not into this repo.
 
 ## Connecting the Google Sheet
 
@@ -30,8 +31,10 @@ the `<script>` block in `index.html`, and either left empty falls back to the
 sample content baked in, so the page always renders.
 
 ```js
-var PRODUCTS_CSV_URL = "";   // products tab
-var EVENTS_CSV_URL   = "";   // events tab
+const PRODUCTS_CSV_URL = "";   // products tab
+const EVENTS_CSV_URL   = "";   // events tab
+const WORKER_URL       = "";   // Cloudflare Worker, empty = forms idle
+const LIST_OPEN        = false; // true only on their Resend Audience
 ```
 
 `data/products.csv` and `data/events.csv` are importable starting points for
@@ -96,6 +99,9 @@ mean entering every market twice. The sheet is the only place dates live.
       They currently read `rwickliffe.github.io/hotstuff`, which is correct until then
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
+- [ ] Set `WORKER_URL` to the live Worker once contact mail is ready to ship
+- [ ] Flip `LIST_OPEN` to `true` only after `RESEND_AUDIENCE_ID` is *their*
+      Resend Audience (not yours — see ops.md)
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Delete the preview scaffolding: the `.draft` CSS block and the
       `<div class="draft">` ribbon
@@ -177,6 +183,14 @@ tools/test-parsing.js
 Rename one of those functions and the extraction fails loudly rather than
 quietly testing something that no longer exists.
 
+The Worker uses Node's built-in test runner for token signing and expiry,
+email and HTML validation, password comparison, request-size limits, and
+the existing-contact Segment path. It makes no real network calls:
+
+```bash
+node --test worker/test-worker.mjs
+```
+
 ## Checking that the sheets are actually being read
 
 Add `?debug` to any url, including the live site:
@@ -255,13 +269,40 @@ Email Routing. Porkbun if Cloudflare does not sell that TLD, then point
 the nameservers at Cloudflare. Skip GoDaddy. Auto-renew on. Do not buy
 the registrar's email or website builder.
 
+## Mail
+
+Contact form and confirmed newsletter signup run through one Cloudflare
+Worker and Resend. The page POSTs JSON as `text/plain` to `WORKER_URL`
+(next to the sheet URLs in `index.html`). Empty means the forms stay on
+the page but do not send.
+
+- **Contact** is transactional: Resend emails Paula, Reply-To is the
+  visitor. Nothing is stored. Safe to point at your Worker while
+  developing.
+- **Newsletter** is double opt-in. `/subscribe` only sends a confirm
+  mail; `GET /confirm` shows a button; `POST /confirm` adds them to the
+  Resend Audience (Segment). Keep `LIST_OPEN = false` on the public site
+  until that Audience is *theirs*. A CSV export is not a consent record.
+- **Broadcasts** wait on `MAIL_POSTAL_ADDRESS` (a PO box they will print).
+  `/send` refuses without it. Compose lives at the Worker `/compose` URL,
+  not in the nav. Generate `COMPOSE_PASSWORD` with `openssl rand -base64 24`.
+
+Resend free tier: 3,000 transactional mails a month **and** 100/day, plus
+1,000 marketing contacts. Confirm in the dashboard whether broadcasts
+share the daily cap before the first real send. Do not loop the
+transactional Send API over the list.
+
+Open `?debug` to see whether `WORKER_URL` is set, and after a failed mail
+attempt whether the note says `Resend daily cap` or `could not reach`.
+
+Account ownership and handoff steps stay in local `ops.md` (gitignored).
+
 ## Later
 
-Three things they have asked for that a static page cannot do alone: a
-contact form, a newsletter, and a catalog that matches Square on a busy
-market day. Stay on Pages. Add one Cloudflare Worker and one Resend
-account. Those two cover all three jobs. Secrets live in Actions and on
-the Worker, never in this repo.
+One thing they have asked for that a static page cannot do alone: a
+catalog that matches Square on a busy market day. Stay on Pages. The
+Worker and Resend already cover contact and the list. Secrets live in
+Actions and on the Worker, never in this repo.
 
 Do not add a form vendor plus a newsletter vendor. That is two accounts
 and still cannot receive Square webhooks. Do not use Google Forms (cannot
@@ -269,8 +310,7 @@ match the page) or Apps Script (the browser CORS path is a pile of tricks
 they would inherit). Do not collect addresses in the spreadsheet and BCC
 from Gmail.
 
-Until this ships, the site still does not touch customer data. After it
-does, names and emails go to Resend, not GitHub.
+Names and emails from the forms go to Resend, not GitHub.
 
 Do not build this on AWS. It is the same jobs with a billing alarm and a
 SES sandbox ticket. Pages, one Worker, and Resend stay cheaper and
@@ -323,31 +363,12 @@ morning is still stale until they reload. Square checkout is the only
 place that cannot lie. Shop links stay on Square. This site still does
 not take money.
 
-### Contact form
-
-Custom fields on this page, posted to the Worker, which emails them
-through Resend's transactional send. No second form product.
-
-### Newsletter
-
-A second box: email only. The Worker adds the address to a Resend
-Audience. They send from a compose page the Worker serves. The Worker
-checks a password (or later Cloudflare Access) before it will mail
-anyone. Not linking that URL from the site is housekeeping, not a lock.
-
-One HTML wrapper — logo, colours, unsubscribe — that they never edit.
-They type a subject and a body. One list, monthly, until they prove they
-will write weekly. Facebook already takes weekly news.
-
-Contact mail and the newsletter are the same Resend login and different
-APIs. Do not loop the contact send over the list.
-
 ### Cost
 
 Cloudflare Workers and Resend's free tiers cover a salsa shop (Resend:
-3,000 transactional mails a month, 1,000 newsletter contacts, unlimited
-broadcasts to those contacts). Square Marketing is a paid add-on; skip it
-unless they already want to pay Square for email.
+3,000 transactional mails a month and 100/day, 1,000 newsletter contacts;
+confirm whether broadcasts share the daily cap). Square Marketing is a
+paid add-on; skip it unless they already want to pay Square for email.
 
 ## Notes
 
