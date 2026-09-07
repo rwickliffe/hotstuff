@@ -77,7 +77,7 @@ public, so it should not sit in a file that also has costs or supplier notes
 in another tab.
 
 **Schedule.** A second tab, published the same way. Past dates drop off on
-their own and the next six show, earliest first.
+their own and the next thirty show, earliest first.
 
 | Column | Notes |
 |---|---|
@@ -92,13 +92,13 @@ mean entering every market twice. The sheet is the only place dates live.
 
 ## Before launch
 
-- [ ] Replace both `REPLACE_ME.com` values in the JSON-LD block with the real domain
+- [ ] Point the JSON-LD `url` and `image` at the custom domain once there is one.
+      They currently read `rwickliffe.github.io/hotstuff`, which is correct until then
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
-- [ ] Delete the preview scaffolding: the `.draft` CSS block, the `<div class="draft">`,
-      and the type picker at the end of the script.
-- [ ] Trim the Google Fonts link to the one chosen family set
+- [ ] Delete the preview scaffolding: the `.draft` CSS block and the
+      `<div class="draft">` ribbon
 
 ## Working on it
 

@@ -7,7 +7,7 @@
 <meta name="description" content="Small-batch salsa, hot sauce, cowboy candy, pickles and chow chow. Home grown ingredients, made in Elgin, Texas.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Comic+Neue:ital,wght@0,400;0,700;1,400;1,700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Comic+Neue:ital,wght@1,700&family=Barlow:ital,wght@0,400;0,600;1,400&family=Barlow+Condensed:wght@500;600&display=swap">
 <style>
   :root {
     --paper:      #E5DCC9;
@@ -143,9 +143,9 @@
   img { max-width: 100%; height: auto; display: block; }
   a { color: inherit; }
 
-  /* DRAFT RIBBON + FONT PICKER: preview scaffolding.
-     Delete this rule block, the matching div, and the pickFont script
-     before going live, then trim the Google Fonts link to one family set. */
+  /* DRAFT RIBBON: preview scaffolding. It says out loud that the product
+     list, prices and heat ratings are not confirmed yet. Delete this rule
+     and the matching <div class="draft"> when the owners sign off. */
   .draft {
     display: flex; flex-wrap: wrap; gap: 8px 20px;
     align-items: center; justify-content: center;
@@ -158,19 +158,6 @@
     text-align: center;
     padding: 9px 16px;
   }
-
-  .draft-fonts { display: inline-flex; align-items: center; gap: 8px; }
-  .draft-fonts label { opacity: 0.75; }
-
-  .draft-fonts select {
-    font-family: inherit; font-size: 13px;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    background: #0F0B09; color: #E8D9C4;
-    border: 1px solid rgba(232,217,196,0.4); border-radius: 2px;
-    padding: 3px 8px; cursor: pointer;
-  }
-
-  .draft-fonts select:focus-visible { outline: 2px solid var(--flame); outline-offset: 2px; }
 
   .shell { max-width: 1180px; margin: 0 auto; padding-left: var(--pad); padding-right: var(--pad); }
 
@@ -765,7 +752,7 @@
 
 <!-- DRAFT RIBBON: delete this one div before showing publicly -->
 <div class="draft">
-  <span>Draft preview, horror cut. Product list, prices and heat ratings still need Paula &amp; Crazy John to confirm.</span>
+  <span>Draft preview. Product list, prices and heat ratings still need Paula &amp; Crazy John to confirm.</span>
 </div>
 
 <header class="hero">
@@ -814,6 +801,9 @@
       <div class="lede-row"><p class="lede">Crazy John builds these one small batch at a time, out in the shed, and they climb from friendly to genuinely reckless. The rating is his own, it goes well past the reaper, and he does not grade on a curve.</p><svg class="flourish flourish-blade" viewBox="0 0 84 56" aria-hidden="true" focusable="false"><path class="edge" d="M53 8 C38 6 18 12 6 26 C20 18 38 16 52 18 Z"/><path class="haft" d="M52 12 L60 52"/><path class="haft" d="M56 34 L68 29"/></svg></div><span class="snapshot snapshot-sm"><span class="snapshot-paper"><img src="images/john-bottles.jpg" width="520" height="296" loading="lazy" decoding="async" alt="Bottles of Crazy John's ultra insanity sauces on the market table"></span></span>
     </div>
 
+    <!-- Plain-language heat words, replaced from BANDS once the script runs.
+         They are the no-JS fallback, deliberately not the jar wording: the
+         labels a customer needs are more use here than the joke ones. -->
     <div class="scale-key">
       <div><span class="heat" data-key="1"></span><small>Mild</small></div>
       <div><span class="heat" data-key="3"></span><small>Medium</small></div>
@@ -1185,7 +1175,13 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     const bits = String(iso).trim().split("-");
     if (bits.length !== 3) return null;
     const d = new Date(+bits[0], +bits[1] - 1, +bits[2]);
-    return isNaN(d) ? null : d;
+    if (isNaN(d)) return null;
+    // Date rolls a bad day forward rather than rejecting it, so Feb 31 comes
+    // back as Mar 3 and the market shows up on the wrong day. The sheet is
+    // typed by hand, so check the date we got is the date we asked for.
+    if (d.getFullYear() !== +bits[0] || d.getMonth() !== +bits[1] - 1 ||
+        d.getDate() !== +bits[2]) return null;
+    return d;
   }
 
   function renderEvents(rows, isLive) {
@@ -1357,7 +1353,6 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
 <!--
   Structured data. This is what lets Google show the business name, phone,
   location and hours properly in search results and Maps.
-  BEFORE LAUNCH: replace the two REPLACE_ME urls with the real domain.
   Deliberately no street address: the labels carry one because cottage food
   law requires it, but that is their home and it does not belong here.
   Products are not listed because they come from the spreadsheet and would

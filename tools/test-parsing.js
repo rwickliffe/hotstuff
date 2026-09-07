@@ -117,6 +117,16 @@ test("rejects the wrong shape", () => {
 
 test("rejects a non-date", () => assert.strictEqual(parseDay("no-such-day"), null));
 
+test("rejects a day that does not exist", () => {
+  // Date rolls these forward instead of failing, so an unchecked Feb 31 puts
+  // a market on Mar 3. The sheet is typed by hand; typos are the normal case.
+  assert.strictEqual(parseDay("2026-02-31"), null);
+  assert.strictEqual(parseDay("2026-13-01"), null);
+  assert.strictEqual(parseDay("2026-00-10"), null);
+  assert.strictEqual(parseDay("2025-02-29"), null);      // 2025 is not a leap year
+  assert.strictEqual(parseDay("2024-02-29").getDate(), 29); // 2024 is
+});
+
 // --- the heat scale -------------------------------------------------------
 test("every level has a word, and 0 has none", () => {
   assert.deepStrictEqual([1, 2, 3, 4, 5, 6].map(heatWord),
