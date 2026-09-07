@@ -24,16 +24,17 @@
     --bone:       #E5DCC9;
     --rule:       #C9BCA2;
     --rule-firm:  #A8987A;
-    --pip-off:    #B6A88C;
 
-    /* heat ramp, cool to hot: green (no flame), then real flame colours */
+    /* heat ramp, cool to hot: green (no flame), then real flame colours.
+       --heat-off is a pip that is not lit. */
+    --heat-off: #B6A88C;
     --heat-1: #6E7A38;
     --heat-2: #8E1409;
     --heat-3: #A82F0F;
     --heat-4: #BF5A16;
     --heat-5: #CE8A22;
     --heat-6: #E4CE8E;
-    --h6-edge: #9C7A22;
+    --heat-6-edge: #9C7A22;
 
     --display: "Special Elite", "Courier New", monospace;
     --name: "Comic Neue", "Comic Sans MS", cursive;
@@ -63,15 +64,15 @@
     --bone:       #E2D7C3;
     --rule:       #2A211A;
     --rule-firm:  #3E3226;
-    --pip-off:    #362B21;
 
+    --heat-off: #362B21;
     --heat-1: #8A9A48;
     --heat-2: #C62A18;
     --heat-3: #D8451C;
     --heat-4: #E4721F;
     --heat-5: #EFA033;
     --heat-6: #F2E0A8;
-    --h6-edge: #A8862E;
+    --heat-6-edge: #A8862E;
     --name-color: #E0503A;
   }
 
@@ -306,14 +307,14 @@
   /* ---------------- heat scale ---------------- */
 
   .heat { display: inline-flex; gap: 3px; align-items: center; }
-  .heat svg { width: 12px; height: 15px; display: block; fill: var(--pip-off); flex: none; transition: fill 140ms ease; }
+  .heat svg { width: 12px; height: 15px; display: block; fill: var(--heat-off); flex: none; transition: fill 140ms ease; }
   .heat svg.heat-on.heat-1 { fill: var(--heat-1); }
   .heat svg.heat-on.heat-2 { fill: var(--heat-2); }
   .heat svg.heat-on.heat-3 { fill: var(--heat-3); }
   .heat svg.heat-on.heat-4 { fill: var(--heat-4); }
   .heat svg.heat-on.heat-5 { fill: var(--heat-5); }
   /* the hottest flame is nearly white, so it gets an edge to stay legible on paper */
-  .heat svg.heat-on.heat-6 { fill: var(--heat-6); stroke: var(--h6-edge); stroke-width: 0.9; }
+  .heat svg.heat-on.heat-6 { fill: var(--heat-6); stroke: var(--heat-6-edge); stroke-width: 0.9; }
 
   .scale-key {
     display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center;
@@ -535,7 +536,7 @@
     outline: 3px solid var(--flame); outline-offset: 2px;
   }
   .write-form textarea { min-height: 8.5rem; resize: vertical; }
-  .write-hp {
+  .write-honeypot {
     position: absolute; left: -10000px; width: 1px; height: 1px;
     overflow: hidden; opacity: 0;
   }
@@ -544,7 +545,6 @@
   }
   .write-status.is-err { color: var(--chile); }
   .write-status a { color: var(--chile); text-decoration: underline; }
-  .write-note { margin: 0; font-size: 15px; color: var(--ink-mid); max-width: 36ch; }
 
   /* ---------------- footer ---------------- */
 
@@ -956,7 +956,7 @@
         <label for="contact-message">Message
           <textarea id="contact-message" name="message" required maxlength="2000"></textarea>
         </label>
-        <label class="write-hp" aria-hidden="true">Company
+        <label class="write-honeypot" aria-hidden="true">Company
           <input type="text" name="company" tabindex="-1" autocomplete="off">
         </label>
         <button class="btn btn-primary" type="submit">Send it</button>
@@ -971,7 +971,7 @@
           <label for="subscribe-email">Email
             <input id="subscribe-email" name="email" type="email" autocomplete="email" required maxlength="254">
           </label>
-          <label class="write-hp" aria-hidden="true">Company
+          <label class="write-honeypot" aria-hidden="true">Company
             <input type="text" name="company" tabindex="-1" autocomplete="off">
           </label>
           <button class="btn btn-primary" type="submit">Put me on it</button>
