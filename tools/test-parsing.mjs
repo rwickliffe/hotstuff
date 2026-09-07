@@ -1,7 +1,6 @@
-#!/usr/bin/env node
 /* Checks on the pure data functions in index.html.
  *
- *     tools/test-parsing.js
+ *     node --test tools/ worker/
  *
  * The page is deliberately one self-contained file, so rather than keep a
  * second copy of these functions to test, this lifts them out of index.html by
@@ -10,16 +9,18 @@
  *
  * Only pure functions belong here: no DOM, no fetch, no clock.
  */
-const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
+import assert from "node:assert/strict";
+import test from "node:test";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const PAGE = path.join(__dirname, "..", "index.html");
-const src = fs.readFileSync(PAGE, "utf8");
+const here = path.dirname(fileURLToPath(import.meta.url));
+const src = fs.readFileSync(path.join(here, "..", "index.html"), "utf8");
 
 function lift(name, opener) {
   const start = src.indexOf(opener);
-  assert.notStrictEqual(start, -1, `${name} not found in index.html - renamed?`);
+  assert.notEqual(start, -1, `${name} not found in index.html - renamed?`);
   // Balance whichever bracket the declaration opens with: a function body is
   // {...}, the heat table is [...].
   const open = /[[{]/.exec(src.slice(start))[0];
@@ -46,93 +47,91 @@ const sandbox = [
 const { BANDS, bandByKey, heatWord, parseCSV, csvToObjects, parseDay } =
   new Function(sandbox)();
 
-let run = 0;
-const test = (what, fn) => { fn(); run++; process.stdout.write(`  ok  ${what}\n`); };
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>
-  assert.deepStrictEqual(parseCSV("a,b\n1,2\n"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\n1,2\n"), [["a", "b"], ["1", "2"]]));
 
 test("keeps commas inside quotes", () =>
-  assert.deepStrictEqual(parseCSV('name,note\nSalsa,"hot, very"\n'),
+  assert.deepEqual(parseCSV('name,note\nSalsa,"hot, very"\n'),
     [["name", "note"], ["Salsa", "hot, very"]]));
 
 test("keeps newlines inside quotes", () =>
-  assert.deepStrictEqual(parseCSV('a\n"line one\nline two"\n'),
+  assert.deepEqual(parseCSV('a\n"line one\nline two"\n'),
     [["a"], ["line one\nline two"]]));
 
 test("unescapes doubled quotes", () =>
-  assert.deepStrictEqual(parseCSV('a\n"she said ""hi"""\n'),
+  assert.deepEqual(parseCSV('a\n"she said ""hi"""\n'),
     [["a"], ['she said "hi"']]));
 
 test("tolerates CRLF", () =>
-  assert.deepStrictEqual(parseCSV("a,b\r\n1,2\r\n"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\r\n1,2\r\n"), [["a", "b"], ["1", "2"]]));
 
 test("keeps a last row with no trailing newline", () =>
-  assert.deepStrictEqual(parseCSV("a,b\n1,2"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\n1,2"), [["a", "b"], ["1", "2"]]));
 
 test("drops blank rows", () =>
-  assert.deepStrictEqual(parseCSV("a,b\n\n , \n1,2\n"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\n\n , \n1,2\n"), [["a", "b"], ["1", "2"]]));
 
 // --- csvToObjects ---------------------------------------------------------
 test("maps headers onto rows", () =>
-  assert.deepStrictEqual(csvToObjects("name,heat\nVerde,3\n"),
+  assert.deepEqual(csvToObjects("name,heat\nVerde,3\n"),
     [{ name: "Verde", heat: "3" }]));
 
 test("normalises header case and padding", () =>
-  assert.deepStrictEqual(csvToObjects("  Name , HEAT \nVerde,3\n"),
+  assert.deepEqual(csvToObjects("  Name , HEAT \nVerde,3\n"),
     [{ name: "Verde", heat: "3" }]));
 
 test("fills missing trailing cells", () =>
-  assert.deepStrictEqual(csvToObjects("name,heat,price\nVerde,3\n"),
+  assert.deepEqual(csvToObjects("name,heat,price\nVerde,3\n"),
     [{ name: "Verde", heat: "3", price: "" }]));
 
 test("drops rows with no name", () =>
-  assert.deepStrictEqual(csvToObjects("name,heat\n,4\nVerde,3\n"),
+  assert.deepEqual(csvToObjects("name,heat\n,4\nVerde,3\n"),
     [{ name: "Verde", heat: "3" }]));
 
 test("returns nothing for a header alone", () =>
-  assert.deepStrictEqual(csvToObjects("name,heat\n"), []));
+  assert.deepEqual(csvToObjects("name,heat\n"), []));
 
-test("returns nothing for junk", () => assert.deepStrictEqual(csvToObjects(""), []));
+test("returns nothing for junk", () => assert.deepEqual(csvToObjects(""), []));
 
 // --- parseDay -------------------------------------------------------------
 // The bug this guards: Date.parse("2026-03-01") is UTC midnight, which renders
 // as Feb 28 anywhere west of Greenwich. Everyone reading this page is.
 test("lands on the stated day, not the one before", () => {
   const d = parseDay("2026-03-01");
-  assert.strictEqual(d.getFullYear(), 2026);
-  assert.strictEqual(d.getMonth(), 2);
-  assert.strictEqual(d.getDate(), 1);
+  assert.equal(d.getFullYear(), 2026);
+  assert.equal(d.getMonth(), 2);
+  assert.equal(d.getDate(), 1);
 });
 
 test("ignores surrounding whitespace", () =>
-  assert.strictEqual(parseDay("  2026-03-01 ").getDate(), 1));
+  assert.equal(parseDay("  2026-03-01 ").getDate(), 1));
 
 test("rejects the wrong shape", () => {
-  assert.strictEqual(parseDay("03/01/2026"), null);
-  assert.strictEqual(parseDay("2026-03"), null);
-  assert.strictEqual(parseDay(""), null);
+  assert.equal(parseDay("03/01/2026"), null);
+  assert.equal(parseDay("2026-03"), null);
+  assert.equal(parseDay(""), null);
 });
 
-test("rejects a non-date", () => assert.strictEqual(parseDay("no-such-day"), null));
+test("rejects a non-date", () => assert.equal(parseDay("no-such-day"), null));
 
 test("rejects a day that does not exist", () => {
   // Date rolls these forward instead of failing, so an unchecked Feb 31 puts
   // a market on Mar 3. The sheet is typed by hand; typos are the normal case.
-  assert.strictEqual(parseDay("2026-02-31"), null);
-  assert.strictEqual(parseDay("2026-13-01"), null);
-  assert.strictEqual(parseDay("2026-00-10"), null);
-  assert.strictEqual(parseDay("2025-02-29"), null);      // 2025 is not a leap year
-  assert.strictEqual(parseDay("2024-02-29").getDate(), 29); // 2024 is
+  assert.equal(parseDay("2026-02-31"), null);
+  assert.equal(parseDay("2026-13-01"), null);
+  assert.equal(parseDay("2026-00-10"), null);
+  assert.equal(parseDay("2025-02-29"), null);      // 2025 is not a leap year
+  assert.equal(parseDay("2024-02-29").getDate(), 29); // 2024 is
 });
 
 // --- the heat scale -------------------------------------------------------
 test("every level has a word, and 0 has none", () => {
-  assert.deepStrictEqual([1, 2, 3, 4, 5, 6].map(heatWord),
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(heatWord),
     ["Harmless", "Uneasy", "Uneasy", "Regrettable", "Regrettable", "No survivors"]);
-  assert.strictEqual(heatWord(0), "");
-  assert.strictEqual(heatWord(7), "");
+  assert.equal(heatWord(0), "");
+  assert.equal(heatWord(7), "");
 });
 
 test("jar words and filter labels come from one table", () => {
@@ -140,7 +139,7 @@ test("jar words and filter labels come from one table", () => {
   for (const word of [1, 2, 3, 4, 5, 6].map(heatWord)) {
     const band = BANDS.find((b) => b.label === word);
     assert.ok(band, `jar word "${word}" matches no filter button`);
-    assert.strictEqual(bandByKey(band.key).label, word);
+    assert.equal(bandByKey(band.key).label, word);
   }
 });
 
@@ -149,13 +148,11 @@ test("every band except All covers a real heat level", () => {
     const covered = [1, 2, 3, 4, 5, 6].filter(
       (n) => n >= band.range[0] && n <= band.range[1]);
     assert.ok(covered.length, `${band.label} filters to an empty range`);
-    for (const n of covered) assert.strictEqual(heatWord(n), band.label);
+    for (const n of covered) assert.equal(heatWord(n), band.label);
   }
 });
 
 test("an unknown band key falls back to everything", () => {
-  assert.strictEqual(bandByKey("nope").key, "all");
-  assert.deepStrictEqual(bandByKey("all").range, [0, 9]);
+  assert.equal(bandByKey("nope").key, "all");
+  assert.deepEqual(bandByKey("all").range, [0, 9]);
 });
-
-console.log(`\n${run} checks passed`);

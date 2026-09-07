@@ -2,6 +2,8 @@
 # Produce a single self-contained HTML file with images embedded as data: URIs.
 # ponytail: string substitution, not a build tool. Swap for real <img src> + CDN if this ever ships for real.
 set -euo pipefail
+# Paths below are repo-relative, so run from the repo root wherever invoked.
+cd "$(dirname "$0")/.."
 src="${1:-index.html}"; out="${2:-dist/index.html}"
 mkdir -p "$(dirname "$out")"
 cp "$src" "$out"

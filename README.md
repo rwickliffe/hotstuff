@@ -100,6 +100,9 @@ mean entering every market twice. The sheet is the only place dates live.
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
 - [ ] Set `WORKER_URL` to the live Worker once contact mail is ready to ship
+- [ ] Drop `http://localhost:8765` from the Worker's CORS allowlist, and add the
+      custom domain. It is there so the contact form can read the Worker's reply
+      during local development
 - [ ] Flip `LIST_OPEN` to `true` only after `RESEND_AUDIENCE_ID` is *their*
       Resend Audience (not yours — see ops.md)
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
@@ -156,40 +159,43 @@ Build a single self-contained file with the images inlined, for emailing or
 dropping on a host as one file:
 
 ```bash
-./inline.sh index.html dist/index.html
+tools/inline.sh index.html dist/index.html
 ```
 
-Check that both live-data paths still work after any edit:
+## Checks
+
+One command runs everything. It is quiet unless something fails, and exits
+non-zero, so it works as a habit before pushing:
 
 ```bash
-./test-integrations.sh
+./check
 ```
 
-That writes `integration-test.html` wired to local stand-ins, and works
-whatever the constants currently hold. Serve the folder and open it. You
-should see the three products from `data/live-products.csv` in place of the real
-catalog, and three events from `data/live-events.csv` in place of the sample
-dates. The 2020 row in that file must not appear: it is there to prove past
-dates get dropped.
-
-The pure data functions - CSV parsing, the date parser and the heat scale -
-have their own checks, which lift the real functions out of `index.html` by
-name and run them under node:
+It parses the page script and the Worker, confirms the generated art block is
+current, runs both test suites, and rewrites the sheet URLs to local fixtures.
+Nothing touches the network. The pieces run on their own too:
 
 ```bash
-tools/test-parsing.js
+node --test tools/ worker/        # both suites
+tools/make-assets.py --check      # generated art is up to date
+tools/test-integrations.sh        # sheet plumbing
 ```
 
-Rename one of those functions and the extraction fails loudly rather than
-quietly testing something that no longer exists.
+`tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
+the date parser, the heat scale. Rather than keep a second copy of them, it
+lifts the real functions out of `index.html` by name, so renaming one fails
+loudly instead of quietly testing something that no longer exists.
 
-The Worker uses Node's built-in test runner for token signing and expiry,
-email and HTML validation, password comparison, request-size limits, and
-the existing-contact Segment path. It makes no real network calls:
+`worker/test-worker.mjs` covers token signing and expiry, email and HTML
+validation, password comparison, request-size limits, and the existing-contact
+Segment path. It stubs `fetch`, so no mail is ever sent.
 
-```bash
-node --test worker/test-worker.mjs
-```
+`tools/test-integrations.sh` writes `integration-test.html` wired to local
+stand-ins, and works whatever the constants currently hold. That part is
+manual: serve the folder and open it. You should see the three products from
+`data/fixtures/products.csv` in place of the real catalog, and three events
+from `data/fixtures/events.csv` in place of the sample dates. The 2020 row in
+that file must not appear: it is there to prove past dates get dropped.
 
 ## Checking that the sheets are actually being read
 
