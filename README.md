@@ -122,6 +122,25 @@ magick source/booth.jpg          -resize 1400x -quality 78 images/booth.jpg
 magick source/logo-watermarked.jpg -resize 560x -quality 82 images/logo.jpg
 ```
 
+The horror cut uses three more, cropped from the originals. They are shipped
+at 520px on purpose: the jar labels carry their home address, and at this size
+it is not legible. The bottle crop also stops above the address line.
+
+```bash
+magick source/517364888_*.jpg -crop 1700x1010+250+120 +repage -resize 520x \
+  -modulate 112 -quality 82 images/paula-pickles.jpg
+magick source/484479420_*.jpg -crop 1230x700+330+130 +repage -resize 520x \
+  -quality 82 images/john-bottles.jpg
+magick source/585894050_*.jpg -crop 720x470+0+400 +repage -resize 520x \
+  -quality 82 images/pepper-mash.jpg
+```
+
+If you swap any image, update the `width` and `height` attributes on its
+`<img>` to the new intrinsic size. They are what reserves the box before the
+image loads. The `img { height: auto }` rule in the stylesheet has to stay
+with them: those attributes are presentational hints, so without it the
+height is pinned to the intrinsic pixel value and every image stretches.
+
 Build a single self-contained file with the images inlined, for emailing or
 dropping on a host as one file:
 
@@ -184,12 +203,127 @@ grindhouse slasher. It is generated, never hand edited:
 It rewrites the palette, the type, the heat words and some wording, and
 leaves the behaviour alone. Run it after any change to `index.html`. If a
 substitution stops matching it fails loudly rather than producing a half
-updated page.
+updated page, and the torn-edge geometry carries its own assertions.
+
+Two switches at the top of the script:
+
+| Constant | Options | Notes |
+|---|---|---|
+| `HERO_HALFTONE` | `none`, `canvas`, `css` | `canvas` screens the hero photo while keeping its colour. `css` is a truer press halftone, thresholded with `contrast()`, but monochrome and much harsher. Currently `none`. |
+| `SHOW_ONE_SHEET` | `False`, `True` | A 1977-style rating box and billing block at the foot of the page. Built, held back. |
+
+The four torn prints each get their own seed, their own torn edges and their
+own ripped corner, plus a random scatter of stains. Change a print's seed to
+reshuffle just that sheet. Note that retuning any stain or tear parameter
+reshuffles the ones after it too: `randint` consumes a variable amount of the
+random stream depending on its range.
 
 ## Hosting
 
 GitHub Pages serves this repo as-is: Settings, Pages, deploy from `main`,
-root. A custom domain can be attached later in the same place.
+root. A custom domain can be attached later in the same place. Keep the
+repo public. Pages, Actions, and a custom domain's HTTPS certificate are
+free on a public repo; the only recurring bill is the domain itself.
+
+Register the name at Cloudflare if they have the TLD (they do for `.com`).
+At-cost, privacy included, and it is the same login as the Worker and
+Email Routing. Porkbun if Cloudflare does not sell that TLD, then point
+the nameservers at Cloudflare. Skip GoDaddy. Auto-renew on. Do not buy
+the registrar's email or website builder.
+
+## Later
+
+Three things they have asked for that a static page cannot do alone: a
+contact form, a newsletter, and a catalog that matches Square on a busy
+market day. Stay on Pages. Add one Cloudflare Worker and one Resend
+account. Those two cover all three jobs. Secrets live in Actions and on
+the Worker, never in this repo.
+
+Do not add a form vendor plus a newsletter vendor. That is two accounts
+and still cannot receive Square webhooks. Do not use Google Forms (cannot
+match the page) or Apps Script (the browser CORS path is a pile of tricks
+they would inherit). Do not collect addresses in the spreadsheet and BCC
+from Gmail.
+
+Until this ships, the site still does not touch customer data. After it
+does, names and emails go to Resend, not GitHub.
+
+Do not build this on AWS. It is the same jobs with a billing alarm and a
+SES sandbox ticket. Pages, one Worker, and Resend stay cheaper and
+smaller.
+
+Account ownership and how to develop against a personal Worker stay out
+of this file.
+
+### Their inbox
+
+Resend sending from `@their-domain` (SPF, DKIM) is not a mailbox.
+Customers still cannot write to it.
+
+For humans: Cloudflare Email Routing, free, into the Gmail they already
+use. `orders@` or a catch-all. They reply from Gmail. A `gmail.com` From
+is fine until they ask otherwise. Google Workspace is nicer mail, not
+cheaper mail (~$7/user/month). Do not use Resend as their inbox.
+
+### Square catalog and stock
+
+Crazy John adds two or three jars a week and they already keep inventory
+in Square. The products tab would be a second copy. Square becomes the
+source of truth. The events tab stays: Square is not a calendar.
+
+A GitHub Action, on a daily cron, pulls Catalog and Inventory and writes
+`data/products.csv`. The page already knows how to fetch a CSV. A failed
+run must not overwrite the last good file. Same silent fallback as today,
+but stale means last successful sync, not the baked-in sample. They never
+log into GitHub.
+
+Need from them, once: fifteen minutes with whoever signs into Square, to
+create a Developer app on *their* seller account and put the production
+token in GitHub secrets. Two fields on each item they already create:
+Maker (`Paula` or `John`; a category each is fine) and Heat (`1` to `6`).
+Name, description, price, and pint vs quart already live in Square. Stamp
+heat and maker on the current list from the sheet so they are not
+retyping. Ask once how they mark sold out (quantity hits zero, they hide
+it, or they archive it) and whether quarts are a second variation or a
+separate item.
+
+A daily CSV is fine for names, heat, and prices. It is not fine for stock
+during a market. Square can push `inventory.count.updated`; Pages has
+nowhere for that to land. Do not commit on every sale. That waits on an
+Action and a Pages deploy, and a busy booth would spam rebuilds.
+
+The Worker receives the webhook and writes a public `stock.json`. The
+page fetches it the same way it fetches the sheet. If the Worker is down,
+keep the last file or hide the sold-out badges. An open tab from the
+morning is still stale until they reload. Square checkout is the only
+place that cannot lie. Shop links stay on Square. This site still does
+not take money.
+
+### Contact form
+
+Custom fields on this page, posted to the Worker, which emails them
+through Resend's transactional send. No second form product.
+
+### Newsletter
+
+A second box: email only. The Worker adds the address to a Resend
+Audience. They send from a compose page the Worker serves. The Worker
+checks a password (or later Cloudflare Access) before it will mail
+anyone. Not linking that URL from the site is housekeeping, not a lock.
+
+One HTML wrapper — logo, colours, unsubscribe — that they never edit.
+They type a subject and a body. One list, monthly, until they prove they
+will write weekly. Facebook already takes weekly news.
+
+Contact mail and the newsletter are the same Resend login and different
+APIs. Do not loop the contact send over the list.
+
+### Cost
+
+Cloudflare Workers and Resend's free tiers cover a salsa shop (Resend:
+3,000 transactional mails a month, 1,000 newsletter contacts, unlimited
+broadcasts to those contacts). Square Marketing is a paid add-on; skip it
+unless they already want to pay Square for email.
 
 ## Notes
 
