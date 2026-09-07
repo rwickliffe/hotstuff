@@ -1,0 +1,26 @@
+# Secrets (wrangler secret put …): RESEND_API_KEY, CONTACT_TO,
+# COMPOSE_PASSWORD, CONFIRM_SECRET, RESEND_AUDIENCE_ID, RESEND_FROM,
+# MAIL_POSTAL_ADDRESS (empty string until they have a PO box).
+#
+# Generate passwords: openssl rand -base64 24
+# Confirm on first deploy that [[ratelimits]] is accepted on Free.
+# If rejected, stop — do not ship without a limiter.
+
+name = "hotstuff-mail"
+main = "src/worker.js"
+compatibility_date = "2025-09-19"
+
+[[ratelimits]]
+name = "MAIL_IP"
+namespace_id = "1001"
+simple = { limit = 3, period = 60 }
+
+[[ratelimits]]
+name = "MAIL_EMAIL"
+namespace_id = "1002"
+simple = { limit = 1, period = 60 }
+
+[[ratelimits]]
+name = "SEND_IP"
+namespace_id = "1003"
+simple = { limit = 5, period = 60 }

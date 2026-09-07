@@ -28,3 +28,7 @@ __pycache__/
 # Client account / build notes. Public repo; keep this off GitHub.
 ops.md
 
+# Wrangler local state
+worker/.wrangler/
+worker/node_modules/
+
