@@ -88,7 +88,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  img { max-width: 100%; display: block; }
+  /* height:auto is mandatory alongside the width/height attributes. Those
+     attributes are presentational hints, so without this the height is pinned
+     to the intrinsic pixel value while CSS sets the width, and every image
+     stretches. Rules that set an explicit height, like the hero, still win. */
+  img { max-width: 100%; height: auto; display: block; }
   a { color: inherit; }
 
   /* DRAFT RIBBON + FONT PICKER: preview scaffolding.
@@ -519,10 +523,10 @@
 
 <header class="hero">
   <div class="hero-media">
-    <img src="images/lineup.jpg" alt="The full lineup of Paula and Crazy John's hot sauces, salsas, cowboy candy and pickles on a deck table">
+    <img src="images/lineup.jpg" width="1600" height="1200" fetchpriority="high" decoding="async" alt="The full lineup of Paula and Crazy John's hot sauces, salsas, cowboy candy and pickles on a deck table">
   </div>
   <div class="hero-inner">
-    <img class="hero-logo" src="images/logo.jpg" alt="Paula and Crazy John's Hot Stuff logo">
+    <img class="hero-logo" src="images/logo.jpg" width="560" height="558" decoding="async" alt="Paula and Crazy John's Hot Stuff logo">
     <p class="hero-place">Homemade in Elgin, Texas</p>
     <h1>Home grown, <em>hand jarred, seriously hot.</em></h1>
     <p class="hero-sub">Small-batch salsa, hot sauce, cowboy candy, pickles and chow chow, made from ingredients we grow ourselves, in a kitchen that smells like it.</p>
@@ -632,7 +636,7 @@
         <div id="cal-rows"></div>
         <p class="cal-note">Paula adds dates in the same spreadsheet as the products.</p>
       </div>
-      <img src="images/booth.jpg" alt="The Paula and Crazy John's booth set up under a canopy with red tables full of jars">
+      <img src="images/booth.jpg" width="1400" height="1050" loading="lazy" decoding="async" alt="The Paula and Crazy John's booth set up under a canopy with red tables full of jars">
     </div>
   </div>
 </section>
