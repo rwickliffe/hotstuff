@@ -1166,12 +1166,14 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     });
   }
 
-  // --- scale key sample pips ---
-  document.querySelectorAll(".heat[data-key]").forEach(function (el) {
-    fillHeatPips(el, el.dataset.key);
-    const label = el.parentNode.querySelector("small");
-    if (label) label.textContent = heatWord(parseInt(el.dataset.key, 10));
-  });
+  // --- the legend above the grid: one sample jar per band ---
+  function fillScaleKey() {
+    document.querySelectorAll(".heat[data-key]").forEach(function (sample) {
+      fillHeatPips(sample, sample.dataset.key);
+      const caption = sample.parentNode.querySelector("small");
+      if (caption) caption.textContent = heatWord(parseInt(sample.dataset.key, 10));
+    });
+  }
 
   // --- schedule, rendered into our own markup so it matches the page ---
   const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1245,89 +1247,110 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     }
   }
 
-  const seedEvents = csvToObjects(document.getElementById("seed-events").textContent);
-  renderEvents(seedEvents, false);
-  DIAG.events.rows = seedEvents.length;
+  // Seed rows first so the page is never empty, then try the live sheet and
+  // swap it in if it has anything usable. Both tabs follow the same sequence;
+  // only the target markup and the wording differ. A renderer takes
+  // (rows, isLive) - products ignores isLive, events uses it to drop the
+  // "sample dates" badge.
+  function loadSheet(sheet) {
+    const seedRows = csvToObjects(
+      document.getElementById(sheet.seedId).textContent);
+    sheet.render(seedRows, false);
+    sheet.source.rows = seedRows.length;
 
-  if (EVENTS_CSV_URL) {
-    fetch(EVENTS_CSV_URL, { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(function (t) {
-        const live = csvToObjects(t);
+    if (!sheet.url) return;
+
+    fetch(sheet.url, { cache: "no-store" })
+      .then(function (response) {
+        if (!response.ok) throw new Error(response.status);
+        return response.text();
+      })
+      .then(function (text) {
+        const live = csvToObjects(text);
         if (live.length) {
-          renderEvents(live, true);
-          DIAG.events = { state: "live sheet", rows: live.length, note: "" };
+          sheet.render(live, true);
+          sheet.source.state = "live sheet";
+          sheet.source.rows = live.length;
+          sheet.source.note = "";
         } else {
-          DIAG.events.note = "Sheet reachable but no usable rows. Check the date column reads YYYY-MM-DD.";
-          console.warn("Events sheet returned no usable rows. Is the URL the CSV one, ending in output=csv? Sample dates left in place.");
+          // Reachable but useless is the failure mode that looks like success:
+          // a "publish to web" HTML url answers 200 with a page, not rows.
+          sheet.source.note = "Sheet reachable but no usable rows. " + sheet.hint;
+          console.warn(sheet.label + " sheet returned no usable rows. " +
+                       sheet.hint + " " + sheet.fallback);
         }
         showDiag();
       })
-      .catch(function (e) {
+      .catch(function (error) {
         const why = location.protocol === "file:"
-          ? "Opened from a file:// path, which blocks requests to Google. Serve the folder instead: python3 -m http.server 8765"
-          : String(e);
-        DIAG.events.note = "Could not reach the sheet. " + why;
-        console.warn("Could not reach the events sheet, sample dates left in place.", why);
+          ? "Opened from a file:// path, which blocks requests to Google. " +
+            "Serve the folder instead: python3 -m http.server 8765"
+          : String(error);
+        sheet.source.note = "Could not reach the sheet. " + why;
+        console.warn("Could not reach the " + sheet.label + " sheet, " +
+                     sheet.fallback.toLowerCase(), why);
         showDiag();
       });
   }
 
-
-  // --- boot: seed first so the page is never empty, then try the live sheet ---
-  const seedProducts = csvToObjects(document.getElementById("seed-csv").textContent);
-  renderProducts(seedProducts);
-  DIAG.products.rows = seedProducts.length;
-  showDiag();
-
-  if (PRODUCTS_CSV_URL) {
-    fetch(PRODUCTS_CSV_URL, { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(function (t) {
-        const live = csvToObjects(t);
-        if (live.length) {
-          renderProducts(live);
-          DIAG.products = { state: "live sheet", rows: live.length, note: "" };
-        } else {
-          DIAG.products.note = "Sheet reachable but no usable rows. Is the URL the CSV one, ending in output=csv?";
-          console.warn("Products sheet returned no usable rows. Is the URL the CSV one, ending in output=csv? Built-in list left in place.");
-        }
-        showDiag();
-      })
-      .catch(function (e) {
-        const why = location.protocol === "file:"
-          ? "Opened from a file:// path, which blocks requests to Google. Serve the folder instead: python3 -m http.server 8765"
-          : String(e);
-        DIAG.products.note = "Could not reach the sheet. " + why;
-        console.warn("Could not reach the products sheet, built-in list left in place.", why);
-        showDiag();
-      });
-  }
+  const SHEETS = [
+    {
+      label: "products",
+      url: PRODUCTS_CSV_URL,
+      seedId: "seed-csv",
+      source: DIAG.products,
+      render: renderProducts,
+      hint: "Is the URL the CSV one, ending in output=csv?",
+      fallback: "Built-in list left in place."
+    },
+    {
+      label: "events",
+      url: EVENTS_CSV_URL,
+      seedId: "seed-events",
+      source: DIAG.events,
+      render: renderEvents,
+      hint: "Check the date column reads YYYY-MM-DD.",
+      fallback: "Sample dates left in place."
+    }
+  ];
 
   // --- theme toggle ---
   const root = document.documentElement;
   const toggle = document.getElementById("theme-toggle");
 
-  // The page ships lights on. Dark is opt-in via the toggle and remembered.
   function isDark() { return root.getAttribute("data-theme") === "dark"; }
+
   function syncToggleLabel() {
     toggle.textContent = isDark() ? "Lights on" : "Lights out";
   }
 
-  try {
-    const saved = localStorage.getItem("pcj-theme");
-    if (saved === "dark" || saved === "light") root.setAttribute("data-theme", saved);
-  } catch (e) { /* storage blocked, system theme it is */ }
+  // The page ships lights on. Dark is opt-in via the toggle and remembered.
+  function wireThemeToggle() {
+    try {
+      const saved = localStorage.getItem("pcj-theme");
+      if (saved === "dark" || saved === "light") {
+        root.setAttribute("data-theme", saved);
+      }
+    } catch (e) { /* storage blocked, ship the default */ }
 
-  syncToggleLabel();
-
-  toggle.addEventListener("click", function () {
-    const next = isDark() ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    try { localStorage.setItem("pcj-theme", next); } catch (e) { /* fine */ }
     syncToggleLabel();
-  });
 
+    toggle.addEventListener("click", function () {
+      const next = isDark() ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("pcj-theme", next); } catch (e) { /* fine */ }
+      syncToggleLabel();
+    });
+  }
+
+  function init() {
+    fillScaleKey();
+    SHEETS.forEach(loadSheet);
+    showDiag();
+    wireThemeToggle();
+  }
+
+  init();
 })();
 </script>
 

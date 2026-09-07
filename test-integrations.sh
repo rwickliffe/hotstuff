@@ -10,8 +10,8 @@
 set -euo pipefail
 
 sed -E \
-  -e 's|var PRODUCTS_CSV_URL = "[^"]*";|var PRODUCTS_CSV_URL = "/data/live-products.csv";|' \
-  -e 's|var EVENTS_CSV_URL = "[^"]*";|var EVENTS_CSV_URL = "/data/live-events.csv";|' \
+  -e 's|(var\|let\|const) PRODUCTS_CSV_URL = "[^"]*";|const PRODUCTS_CSV_URL = "/data/live-products.csv";|' \
+  -e 's|(var\|let\|const) EVENTS_CSV_URL = "[^"]*";|const EVENTS_CSV_URL = "/data/live-events.csv";|' \
   index.html > integration-test.html
 
 grep -q '"/data/live-products.csv"' integration-test.html || { echo "FAIL: catalog URL not substituted";  exit 1; }
