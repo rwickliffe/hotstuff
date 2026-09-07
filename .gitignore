@@ -21,3 +21,10 @@ integration-test.html
 
 # macOS
 .DS_Store
+
+# Python bytecode, from importing build-horror.py in tests
+__pycache__/
+
+# Client account / build notes. Public repo; keep this off GitHub.
+ops.md
+
