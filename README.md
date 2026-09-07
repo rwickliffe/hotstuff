@@ -114,7 +114,12 @@ spreadsheet. There is a console warning saying so. Always view it over
 `http://localhost`, and note that the published site on GitHub Pages is
 served over https, where this is a non-issue.
 
-Regenerate the served images from the originals in `source/`:
+Regenerate the served images from the originals in `source/`. That folder is
+gitignored and stays on the developer's machine: the originals are full-size
+shots in which the jar labels and a bottle crop show the owners' home address.
+The commands below are therefore a record of how everything in `images/` was
+produced rather than something runnable from a fresh clone - ask for the
+originals if you need to redo a crop.
 
 ```bash
 magick source/product-lineup.jpg -resize 1600x -quality 76 images/lineup.jpg
@@ -122,9 +127,9 @@ magick source/booth.jpg          -resize 1400x -quality 78 images/booth.jpg
 magick source/logo-watermarked.jpg -resize 560x -quality 82 images/logo.jpg
 ```
 
-The horror cut uses three more, cropped from the originals. They are shipped
-at 520px on purpose: the jar labels carry their home address, and at this size
-it is not legible. The bottle crop also stops above the address line.
+Three more are cropped from the originals. They are shipped at 520px on
+purpose: the jar labels carry their home address, and at this size it is not
+legible. The bottle crop also stops above the address line.
 
 ```bash
 magick source/517364888_*.jpg -crop 1700x1010+250+120 +repage -resize 520x \
@@ -161,6 +166,17 @@ catalog, and three events from `data/live-events.csv` in place of the sample
 dates. The 2020 row in that file must not appear: it is there to prove past
 dates get dropped.
 
+The pure data functions - CSV parsing, the date parser and the heat scale -
+have their own checks, which lift the real functions out of `index.html` by
+name and run them under node:
+
+```bash
+tools/test-parsing.js
+```
+
+Rename one of those functions and the extraction fails loudly rather than
+quietly testing something that no longer exists.
+
 ## Checking that the sheets are actually being read
 
 Add `?debug` to any url, including the live site:
@@ -191,32 +207,40 @@ Errors are also written to the browser console, but that is only useful with
 devtools already open. There is no server-side logging: GitHub Pages is static
 hosting, so nothing is recorded anywhere.
 
-## The horror cut
+## Generated art
 
-`horror.html` is an alternate styling of the same page, leaning into
-grindhouse slasher. It is generated, never hand edited:
+The torn print edges, the barbed wire, the paper grain and the stains on each
+photograph are all procedural, generated once and baked into the stylesheet as
+custom properties inside a marked block:
 
 ```bash
-./build-horror.py
+tools/make-assets.py            # rewrite the block in index.html
+tools/make-assets.py --check    # fail if the block is out of date
 ```
 
-It rewrites the palette, the type, the heat words and some wording, and
-leaves the behaviour alone. Run it after any change to `index.html`. If a
-substitution stops matching it fails loudly rather than producing a half
-updated page, and the torn-edge geometry carries its own assertions.
+The generator emits **values only**, never selectors: the stylesheet decides
+what `var(--tear-booth)` or `var(--stain-jars)` is applied to. Renaming a class
+therefore cannot silently disconnect the art from the page.
 
-Two switches at the top of the script:
-
-| Constant | Options | Notes |
-|---|---|---|
-| `HERO_HALFTONE` | `none`, `canvas`, `css` | `canvas` screens the hero photo while keeping its colour. `css` is a truer press halftone, thresholded with `contrast()`, but monochrome and much harsher. Currently `none`. |
-| `SHOW_ONE_SHEET` | `False`, `True` | A 1977-style rating box and billing block at the foot of the page. Built, held back. |
-
-The four torn prints each get their own seed, their own torn edges and their
+Seeds are fixed, so output is byte-stable and a run with no source change is a
+no-op. The four prints each get their own seed, their own torn edges and their
 own ripped corner, plus a random scatter of stains. Change a print's seed to
 reshuffle just that sheet. Note that retuning any stain or tear parameter
 reshuffles the ones after it too: `randint` consumes a variable amount of the
-random stream depending on its range.
+random stream depending on its range. The geometry carries its own assertions -
+a mask polygon that crosses itself renders as a slash across the photograph
+rather than an edge, so the build refuses to emit one.
+
+Earlier the page shipped in two cuts, a plain one and this one, kept in sync by
+a `build-horror.py` generator. They only ever wanted this one, so the styling
+was merged into `index.html` and the generator retired. The two experiments it
+carried behind flags - a canvas and a CSS halftone over the hero photograph,
+and a 1977 rating box and billing block - are in git history:
+
+```bash
+git log --diff-filter=D -- build-horror.py     # find the commit that removed it
+git show <sha>^:build-horror.py                # read the last version
+```
 
 ## Hosting
 
