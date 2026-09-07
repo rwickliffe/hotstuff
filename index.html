@@ -27,12 +27,12 @@
     --pip-off:    #B6A88C;
 
     /* heat ramp, cool to hot: green (no flame), then real flame colours */
-    --h1: #6E7A38;
-    --h2: #8E1409;
-    --h3: #A82F0F;
-    --h4: #BF5A16;
-    --h5: #CE8A22;
-    --h6: #E4CE8E;
+    --heat-1: #6E7A38;
+    --heat-2: #8E1409;
+    --heat-3: #A82F0F;
+    --heat-4: #BF5A16;
+    --heat-5: #CE8A22;
+    --heat-6: #E4CE8E;
     --h6-edge: #9C7A22;
 
     --display: "Special Elite", "Courier New", monospace;
@@ -65,12 +65,12 @@
     --rule-firm:  #3E3226;
     --pip-off:    #362B21;
 
-    --h1: #8A9A48;
-    --h2: #C62A18;
-    --h3: #D8451C;
-    --h4: #E4721F;
-    --h5: #EFA033;
-    --h6: #F2E0A8;
+    --heat-1: #8A9A48;
+    --heat-2: #C62A18;
+    --heat-3: #D8451C;
+    --heat-4: #E4721F;
+    --heat-5: #EFA033;
+    --heat-6: #F2E0A8;
     --h6-edge: #A8862E;
     --name-color: #E0503A;
   }
@@ -197,18 +197,6 @@
     text-transform: none;
   }
 
-  :root[data-type="rodeo"] .maker,
-  :root[data-type="saloon"] .maker,
-  :root[data-type="roadside"] .maker,
-  :root[data-type="pantry"] .maker {
-    font-family: var(--cond);
-    font-style: normal;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.19em;
-    text-transform: uppercase;
-  }
-
   /* Cheap offset printing never quite lined the plates up. A red ghost a
      hair off the black sells the period more than any texture does. */
   h2 {
@@ -332,13 +320,13 @@
 
   .heat { display: inline-flex; gap: 3px; align-items: center; }
   .heat svg { width: 12px; height: 15px; display: block; fill: var(--pip-off); flex: none; transition: fill 140ms ease; }
-  .heat svg.on.lvl1 { fill: var(--h1); }
-  .heat svg.on.lvl2 { fill: var(--h2); }
-  .heat svg.on.lvl3 { fill: var(--h3); }
-  .heat svg.on.lvl4 { fill: var(--h4); }
-  .heat svg.on.lvl5 { fill: var(--h5); }
+  .heat svg.heat-on.heat-1 { fill: var(--heat-1); }
+  .heat svg.heat-on.heat-2 { fill: var(--heat-2); }
+  .heat svg.heat-on.heat-3 { fill: var(--heat-3); }
+  .heat svg.heat-on.heat-4 { fill: var(--heat-4); }
+  .heat svg.heat-on.heat-5 { fill: var(--heat-5); }
   /* the hottest flame is nearly white, so it gets an edge to stay legible on paper */
-  .heat svg.on.lvl6 { fill: var(--h6); stroke: var(--h6-edge); stroke-width: 0.9; }
+  .heat svg.heat-on.heat-6 { fill: var(--heat-6); stroke: var(--h6-edge); stroke-width: 0.9; }
 
   .scale-key {
     display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center;
@@ -393,15 +381,15 @@
   /* The rail climbs from the base red to the item's heat colour. Levels at or
      below the base are milder than red, so they stay solid: fading backwards
      down the scale would read as hotter, not cooler. */
-  .prod.h1::before { background: var(--h1); opacity: 1; }
-  .prod.h2::before { background: var(--h2); opacity: 1; }
-  .prod.h3::before { background: linear-gradient(to bottom, var(--chile), var(--h3)); opacity: 1; }
-  .prod.h4::before { background: linear-gradient(to bottom, var(--chile), var(--h4)); opacity: 1; }
-  .prod.h5::before { background: linear-gradient(to bottom, var(--chile), var(--h5)); opacity: 1; }
-  .prod.h6::before { background: linear-gradient(to bottom, var(--chile), var(--h6)); opacity: 1; }
+  .prod.heat-1::before { background: var(--heat-1); opacity: 1; }
+  .prod.heat-2::before { background: var(--heat-2); opacity: 1; }
+  .prod.heat-3::before { background: linear-gradient(to bottom, var(--chile), var(--heat-3)); opacity: 1; }
+  .prod.heat-4::before { background: linear-gradient(to bottom, var(--chile), var(--heat-4)); opacity: 1; }
+  .prod.heat-5::before { background: linear-gradient(to bottom, var(--chile), var(--heat-5)); opacity: 1; }
+  .prod.heat-6::before { background: linear-gradient(to bottom, var(--chile), var(--heat-6)); opacity: 1; }
 
-  .prod.gone { opacity: 0.62; }
-  .prod.gone::before { background: var(--rule-firm); }
+  .prod.sold-out { opacity: 0.62; }
+  .prod.sold-out::before { background: var(--rule-firm); }
 
   .prod h3 {
     font-family: var(--name);
@@ -412,7 +400,7 @@
     line-height: 1.14; letter-spacing: 0.012em; margin: 0; text-wrap: balance;
   }
 
-  .prod .made { font-size: 14px; color: var(--ink-mid); line-height: 1.5; flex: 1; margin: 0; }
+  .prod-made { font-size: 14px; color: var(--ink-mid); line-height: 1.5; flex: 1; margin: 0; }
 
   .prod-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -420,7 +408,7 @@
   }
 
   .price { font-family: var(--cond); font-size: 19px; font-weight: 600; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
-  .price.gone { color: var(--ink-faint); font-size: 15px; letter-spacing: 0.09em; text-transform: uppercase; }
+  .price.sold-out { color: var(--ink-faint); font-size: 15px; letter-spacing: 0.09em; text-transform: uppercase; }
   .price-qt { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-faint); letter-spacing: 0.05em; text-align: right; }
 
   .heat-word {
@@ -429,7 +417,7 @@
     color: var(--ink-faint); margin-top: 2px;
   }
 
-  .empty { padding: 34px 4px; color: var(--ink-mid); font-style: italic; display: none; }
+  .grid-empty { padding: 34px 4px; color: var(--ink-mid); font-style: italic; display: none; }
 
   /* ---------------- pricing ---------------- */
 
@@ -442,10 +430,10 @@
     padding: 26px 25px; display: flex; flex-direction: column; gap: 5px;
   }
 
-  .deal .what { font-family: var(--cond); font-size: 21px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
-  .deal .single { font-family: var(--display); font-size: 39px; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .deal .bulk { font-size: 15.5px; color: var(--chile); font-weight: 600; }
-  .deal .note { font-size: 14px; color: var(--ink-mid); margin-top: 5px; }
+  .deal-what { font-family: var(--cond); font-size: 21px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .deal-single { font-family: var(--display); font-size: 39px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .deal-bulk { font-size: 15.5px; color: var(--chile); font-weight: 600; }
+  .deal-note { font-size: 14px; color: var(--ink-mid); margin-top: 5px; }
 
   /* ---------------- split blocks ---------------- */
 
@@ -842,7 +830,7 @@
     </div>
 
     <div class="grid" data-grid="John"></div>
-    <p class="empty" id="empty">Nothing in that range. It's quiet. Too quiet.</p>
+    <p class="grid-empty" id="grid-empty">Nothing in that range. It's quiet. Too quiet.</p>
   </div>
 </section>
 
@@ -856,22 +844,22 @@
 
     <div class="deals">
       <div class="deal">
-        <span class="what">Pints &amp; hot sauce</span>
-        <span class="single">$10</span>
-        <span class="bulk">3 for $25</span>
-        <span class="note">Salsas, cowboy candy, pickles and every one of Crazy John's sauces.</span>
+        <span class="deal-what">Pints &amp; hot sauce</span>
+        <span class="deal-single">$10</span>
+        <span class="deal-bulk">3 for $25</span>
+        <span class="deal-note">Salsas, cowboy candy, pickles and every one of Crazy John's sauces.</span>
       </div>
       <div class="deal">
-        <span class="what">Quarts</span>
-        <span class="single">$15</span>
-        <span class="bulk">3 for $40</span>
-        <span class="note">For bigger hot stuff.</span>
+        <span class="deal-what">Quarts</span>
+        <span class="deal-single">$15</span>
+        <span class="deal-bulk">3 for $40</span>
+        <span class="deal-note">For bigger hot stuff.</span>
       </div>
       <div class="deal" style="border-top-color: var(--flame);">
-        <span class="what">Pick up</span>
-        <span class="single">Free</span>
-        <span class="bulk">At the market, or in Elgin</span>
-        <span class="note">Order online, then grab it from us at the next market. No shipping to worry about.</span>
+        <span class="deal-what">Pick up</span>
+        <span class="deal-single">Free</span>
+        <span class="deal-bulk">At the market, or in Elgin</span>
+        <span class="deal-note">Order online, then grab it from us at the next market. No shipping to worry about.</span>
       </div>
     </div>
 
@@ -980,49 +968,50 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   // Paste the Google Sheet's "Publish to web -> CSV" address here.
   // Leave it empty and the page just uses the seed list below.
   // ===================================================================
-  var PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv";
+  const PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv";
 
   // ===================================================================
   // Schedule. Second tab of the same spreadsheet, published as CSV.
   // Columns: date (YYYY-MM-DD), name, time, address
   // Empty leaves the sample dates below in place.
   // ===================================================================
-  var EVENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv";
+  const EVENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv";
 
 
   // Where each dataset actually came from. Surfaced only at ?debug, because a
    // customer should never see "our spreadsheet is broken" on a salsa website,
    // but Paula needs a way to check that an edit actually landed.
-  var DIAG = {
+  const DIAG = {
     products: { state: "built-in list", rows: 0, note: "" },
     events:   { state: "built-in dates", rows: 0, note: "" }
   };
 
   function showDiag() {
     if (!/(^|[?&])debug(=|&|$)/.test(location.search)) return;
-    var box = document.getElementById("diag") || document.createElement("div");
+    const box = document.getElementById("diag") || document.createElement("div");
     box.id = "diag";
     box.style.cssText =
       "position:fixed;right:12px;bottom:12px;z-index:9999;max-width:340px;" +
       "background:#14100E;color:#F0E7DC;border:1px solid #46392F;border-radius:4px;" +
       "padding:12px 14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;" +
       "box-shadow:0 6px 24px rgba(0,0,0,.4)";
-    function line(label, d) {
-      var live = /^live/.test(d.state);
-      return '<div style="margin-top:6px"><b>' + label + '</b> ' +
+    function sourceLine(name, source) {
+      const live = /^live/.test(source.state);
+      return '<div style="margin-top:6px"><b>' + name + '</b> ' +
              '<span style="color:' + (live ? "#5CB84A" : "#E8A87C") + '">' +
-             d.state + "</span> (" + d.rows + " rows)" +
-             (d.note ? '<div style="color:#B0A296;margin-top:2px">' + d.note + "</div>" : "") +
+             source.state + "</span> (" + source.rows + " rows)" +
+             (source.note ? '<div style="color:#B0A296;margin-top:2px">' + source.note + "</div>" : "") +
              "</div>";
     }
     box.innerHTML = '<div style="color:#B0A296">data sources</div>' +
-                    line("products", DIAG.products) + line("events", DIAG.events);
+                    sourceLine("products", DIAG.products) +
+                    sourceLine("events", DIAG.events);
     if (!box.parentNode) document.body.appendChild(box);
   }
 
   // One definition of the heat scale. The per-jar word, the filter button and
   // the legend all read from this, so they cannot drift apart.
-  var BANDS = [
+  const BANDS = [
     { key: "all",    range: [0, 9], label: "Everything" },
     { key: "mild",   range: [1, 1], label: "Harmless" },
     { key: "medium", range: [2, 3], label: "Uneasy" },
@@ -1030,13 +1019,13 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     { key: "beyond", range: [6, 6], label: "No survivors" }
   ];
 
-  function band(key) {
-    for (var i = 0; i < BANDS.length; i++) if (BANDS[i].key === key) return BANDS[i];
+  function bandByKey(key) {
+    for (let i = 0; i < BANDS.length; i++) if (BANDS[i].key === key) return BANDS[i];
     return BANDS[0];
   }
 
   function heatWord(n) {
-    for (var i = 1; i < BANDS.length; i++) {
+    for (let i = 1; i < BANDS.length; i++) {
       if (n >= BANDS[i].range[0] && n <= BANDS[i].range[1]) return BANDS[i].label;
     }
     return "";
@@ -1044,9 +1033,10 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
 
   // --- CSV parse: handles quoted fields containing commas and newlines ---
   function parseCSV(text) {
-    var rows = [], row = [], field = "", quoted = false, i, c;
-    for (i = 0; i < text.length; i++) {
-      c = text[i];
+    const rows = [];
+    let row = [], field = "", quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
       if (quoted) {
         if (c === '"') {
           if (text[i + 1] === '"') { field += '"'; i++; } else { quoted = false; }
@@ -1060,28 +1050,28 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     return rows.filter(function (r) { return r.some(function (v) { return v.trim() !== ""; }); });
   }
 
-  function toProducts(text) {
-    var rows = parseCSV(text);
+  function csvToObjects(text) {
+    const rows = parseCSV(text);
     if (rows.length < 2) return [];
-    var head = rows[0].map(function (h) { return h.trim().toLowerCase(); });
+    const head = rows[0].map(function (h) { return h.trim().toLowerCase(); });
     return rows.slice(1).map(function (r) {
-      var o = {};
+      const o = {};
       head.forEach(function (h, i) { o[h] = (r[i] || "").trim(); });
       return o;
     }).filter(function (o) { return o.name; });
   }
 
   // --- pepper / skull pips ---
-  function pips(into, heat) {
-    var n = Math.max(0, Math.min(6, parseInt(heat, 10) || 0));
+  function fillHeatPips(into, heat) {
+    const n = Math.max(0, Math.min(6, parseInt(heat, 10) || 0));
     into.innerHTML = "";
-    for (var i = 1; i <= 6; i++) {
-      var on = i <= n;
-      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    for (let i = 1; i <= 6; i++) {
+      const on = i <= n;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("viewBox", "0 0 20 24");
       svg.setAttribute("aria-hidden", "true");
-      if (on) { svg.setAttribute("class", "on lvl" + n); }
-      var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      if (on) { svg.setAttribute("class", "heat-on heat-" + n); }
+      const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
       use.setAttribute("href", "#i-flame");
       svg.appendChild(use);
       into.appendChild(svg);
@@ -1090,42 +1080,43 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     into.setAttribute("aria-label", n + " out of 6, " + (heatWord(n) || "unrated"));
   }
 
-  function card(p) {
-    var heat = parseInt(p.heat, 10) || 0;
-    var gone = /^(y|yes|true|1|sold ?out)$/i.test(p.sold_out || "");
-    var el = document.createElement("article");
-    el.className = "prod" + (heat ? " h" + heat : "") + (gone ? " gone" : "");
+  function productCard(p) {
+    const heat = parseInt(p.heat, 10) || 0;
+    const soldOut = /^(y|yes|true|1|sold ?out)$/i.test(p.sold_out || "");
+    const el = document.createElement("article");
+    el.className = "prod" + (heat ? " heat-" + heat : "") +
+                   (soldOut ? " sold-out" : "");
     el.dataset.heat = String(heat);
 
-    var h3 = document.createElement("h3");
+    const h3 = document.createElement("h3");
     h3.textContent = p.name;
 
-    var made = document.createElement("p");
-    made.className = "made";
+    const made = document.createElement("p");
+    made.className = "prod-made";
     made.textContent = p.description || "";
 
-    var foot = document.createElement("div");
+    const foot = document.createElement("div");
     foot.className = "prod-foot";
 
-    var left = document.createElement("div");
-    var scale = document.createElement("span");
+    const left = document.createElement("div");
+    const scale = document.createElement("span");
     scale.className = "heat";
-    pips(scale, heat);
-    var word = document.createElement("div");
+    fillHeatPips(scale, heat);
+    const word = document.createElement("div");
     word.className = "heat-word";
     word.textContent = heatWord(heat);
     left.appendChild(scale);
     left.appendChild(word);
 
-    var price = document.createElement("span");
-    if (gone) {
-      price.className = "price gone";
+    const price = document.createElement("span");
+    if (soldOut) {
+      price.className = "price sold-out";
       price.textContent = "All gone";
     } else {
       price.className = "price";
       price.textContent = p.price ? "$" + p.price : "";
       if (p.price_quart) {
-        var qt = document.createElement("small");
+        const qt = document.createElement("small");
         qt.className = "price-qt";
         qt.textContent = "$" + p.price_quart + " qt";
         price.appendChild(qt);
@@ -1140,33 +1131,33 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     return el;
   }
 
-  function render(products) {
+  function renderProducts(products) {
     document.querySelectorAll("[data-grid]").forEach(function (grid) {
-      var who = grid.dataset.grid.toLowerCase();
+      const who = grid.dataset.grid.toLowerCase();
       grid.innerHTML = "";
       products
         .filter(function (p) { return (p.maker || "").trim().toLowerCase() === who; })
-        .forEach(function (p) { grid.appendChild(card(p)); });
+        .forEach(function (p) { grid.appendChild(productCard(p)); });
     });
     wireFilter();
   }
 
   // --- heat filter over John's grid ---
   function wireFilter() {
-    var buttons = document.querySelectorAll(".filters button");
-    var cards = document.querySelectorAll('[data-grid="John"] .prod');
-    var empty = document.getElementById("empty");
+    const buttons = document.querySelectorAll(".filters button");
+    const cards = document.querySelectorAll('[data-grid="John"] .prod');
+    const empty = document.getElementById("grid-empty");
     if (!buttons.length) return;
 
     buttons.forEach(function (btn) {
-      btn.textContent = band(btn.dataset.band).label;
+      btn.textContent = bandByKey(btn.dataset.band).label;
       btn.onclick = function () {
-        var range = band(btn.dataset.band).range;
+        const range = bandByKey(btn.dataset.band).range;
         buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
-        var shown = 0;
+        let shown = 0;
         cards.forEach(function (c) {
-          var h = parseInt(c.dataset.heat, 10) || 0;
-          var fits = h >= range[0] && h <= range[1];
+          const h = parseInt(c.dataset.heat, 10) || 0;
+          const fits = h >= range[0] && h <= range[1];
           c.style.display = fits ? "" : "none";
           if (fits) shown++;
         });
@@ -1177,32 +1168,32 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
 
   // --- scale key sample pips ---
   document.querySelectorAll(".heat[data-key]").forEach(function (el) {
-    pips(el, el.dataset.key);
-    var label = el.parentNode.querySelector("small");
+    fillHeatPips(el, el.dataset.key);
+    const label = el.parentNode.querySelector("small");
     if (label) label.textContent = heatWord(parseInt(el.dataset.key, 10));
   });
 
   // --- schedule, rendered into our own markup so it matches the page ---
-  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
   function parseDay(iso) {
     // Split rather than Date.parse: an ISO date string is treated as UTC and
     // can land on the previous day once rendered in a US timezone.
-    var bits = String(iso).trim().split("-");
+    const bits = String(iso).trim().split("-");
     if (bits.length !== 3) return null;
-    var d = new Date(+bits[0], +bits[1] - 1, +bits[2]);
+    const d = new Date(+bits[0], +bits[1] - 1, +bits[2]);
     return isNaN(d) ? null : d;
   }
 
   function renderEvents(rows, isLive) {
-    var host = document.getElementById("cal-rows");
+    const host = document.getElementById("cal-rows");
     if (!host) return;
 
-    var today = new Date();
+    const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    var upcoming = rows
+    const upcoming = rows
       .map(function (e) { e._d = parseDay(e.date); return e; })
       .filter(function (e) { return e._d && e._d >= today; })
       .sort(function (a, b) { return a._d - b._d; })
@@ -1211,32 +1202,32 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     host.innerHTML = "";
 
     if (!upcoming.length) {
-      var none = document.createElement("p");
+      const none = document.createElement("p");
       none.className = "cal-empty";
       none.textContent = "Nothing on the books right now. Facebook has the latest.";
       host.appendChild(none);
     }
 
     upcoming.forEach(function (e) {
-      var row = document.createElement("div");
+      const row = document.createElement("div");
       row.className = "cal-row";
 
-      var when = document.createElement("span");
+      const when = document.createElement("span");
       when.className = "cal-when";
       when.textContent = DAYS[e._d.getDay()] + " " + e._d.getDate() + " " + MONTHS[e._d.getMonth()];
 
-      var what = document.createElement("span");
+      const what = document.createElement("span");
       what.className = "cal-what";
       what.appendChild(document.createTextNode(e.name || ""));
 
       if (e.time) {
-        var t = document.createElement("small");
+        const t = document.createElement("small");
         t.textContent = e.time;
         what.appendChild(t);
       }
 
       if (e.address) {
-        var a = document.createElement("a");
+        const a = document.createElement("a");
         a.className = "cal-map";
         a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(e.address);
         a.textContent = e.address;
@@ -1249,12 +1240,12 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     });
 
     if (isLive) {
-      var badge = document.getElementById("cal-badge");
+      const badge = document.getElementById("cal-badge");
       if (badge) badge.remove();
     }
   }
 
-  var seedEvents = toProducts(document.getElementById("seed-events").textContent);
+  const seedEvents = csvToObjects(document.getElementById("seed-events").textContent);
   renderEvents(seedEvents, false);
   DIAG.events.rows = seedEvents.length;
 
@@ -1262,7 +1253,7 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     fetch(EVENTS_CSV_URL, { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
       .then(function (t) {
-        var live = toProducts(t);
+        const live = csvToObjects(t);
         if (live.length) {
           renderEvents(live, true);
           DIAG.events = { state: "live sheet", rows: live.length, note: "" };
@@ -1273,7 +1264,7 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
         showDiag();
       })
       .catch(function (e) {
-        var why = location.protocol === "file:"
+        const why = location.protocol === "file:"
           ? "Opened from a file:// path, which blocks requests to Google. Serve the folder instead: python3 -m http.server 8765"
           : String(e);
         DIAG.events.note = "Could not reach the sheet. " + why;
@@ -1284,18 +1275,18 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
 
 
   // --- boot: seed first so the page is never empty, then try the live sheet ---
-  var seed = toProducts(document.getElementById("seed-csv").textContent);
-  render(seed);
-  DIAG.products.rows = seed.length;
+  const seedProducts = csvToObjects(document.getElementById("seed-csv").textContent);
+  renderProducts(seedProducts);
+  DIAG.products.rows = seedProducts.length;
   showDiag();
 
   if (PRODUCTS_CSV_URL) {
     fetch(PRODUCTS_CSV_URL, { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
       .then(function (t) {
-        var live = toProducts(t);
+        const live = csvToObjects(t);
         if (live.length) {
-          render(live);
+          renderProducts(live);
           DIAG.products = { state: "live sheet", rows: live.length, note: "" };
         } else {
           DIAG.products.note = "Sheet reachable but no usable rows. Is the URL the CSV one, ending in output=csv?";
@@ -1304,7 +1295,7 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
         showDiag();
       })
       .catch(function (e) {
-        var why = location.protocol === "file:"
+        const why = location.protocol === "file:"
           ? "Opened from a file:// path, which blocks requests to Google. Serve the folder instead: python3 -m http.server 8765"
           : String(e);
         DIAG.products.note = "Could not reach the sheet. " + why;
@@ -1314,83 +1305,29 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   }
 
   // --- theme toggle ---
-  var root = document.documentElement;
-  var toggle = document.getElementById("theme-toggle");
+  const root = document.documentElement;
+  const toggle = document.getElementById("theme-toggle");
 
   // The page ships lights on. Dark is opt-in via the toggle and remembered.
   function isDark() { return root.getAttribute("data-theme") === "dark"; }
-  function label() { toggle.textContent = isDark() ? "Lights on" : "Lights out"; }
+  function syncToggleLabel() {
+    toggle.textContent = isDark() ? "Lights on" : "Lights out";
+  }
 
   try {
-    var saved = localStorage.getItem("pcj-theme");
+    const saved = localStorage.getItem("pcj-theme");
     if (saved === "dark" || saved === "light") root.setAttribute("data-theme", saved);
   } catch (e) { /* storage blocked, system theme it is */ }
 
-  label();
+  syncToggleLabel();
 
   toggle.addEventListener("click", function () {
-    var next = isDark() ? "light" : "dark";
+    const next = isDark() ? "light" : "dark";
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("pcj-theme", next); } catch (e) { /* fine */ }
-    label();
+    syncToggleLabel();
   });
 
-  // --- PREVIEW ONLY: type picker. Remove with the draft ribbon before launch. ---
-  var TYPE = {
-    rodeo: {
-      display: '"Alfa Slab One", Georgia, serif',
-      cond:    '"Barlow Condensed", "Arial Narrow", Helvetica, sans-serif',
-      body:    '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-    },
-    saloon: {
-      display: '"Rye", Georgia, serif',
-      cond:    '"Oswald", "Arial Narrow", Helvetica, sans-serif',
-      body:    '"Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-    },
-    roadside: {
-      display: '"Anton", Impact, Haettenschweiler, sans-serif',
-      cond:    '"Archivo Narrow", "Arial Narrow", Helvetica, sans-serif',
-      body:    '"Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-    },
-    pantry: {
-      display: '"Bitter", Georgia, serif',
-      cond:    '"Archivo", Helvetica, Arial, sans-serif',
-      body:    '"Karla", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-    },
-    // Rodeo Poster everywhere, except product names, which pick up the bold
-    // marker script from their jar labels. Comic Neue is the closest Google
-    // face to what the labels actually use.
-    jarnames: {
-      display: '"Alfa Slab One", Georgia, serif',
-      cond:    '"Barlow Condensed", "Arial Narrow", Helvetica, sans-serif',
-      body:    '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
-      name:       '"Comic Neue", "Comic Sans MS", cursive',
-      nameStyle:  "italic",
-      nameWeight: "700"
-    }
-  };
-
-  var picker = document.getElementById("fontpick");
-
-  function pickFont(key) {
-    var set = TYPE[key];
-    if (!set) return;
-    root.style.setProperty("--display", set.display);
-    root.style.setProperty("--cond", set.cond);
-    root.style.setProperty("--body", set.body);
-    root.style.setProperty("--name", set.name || set.cond);
-    root.style.setProperty("--name-style", set.nameStyle || "normal");
-    root.style.setProperty("--name-weight", set.nameWeight || "600");
-    root.setAttribute("data-type", key);
-    try { localStorage.setItem("pcj-type", key); } catch (e) { /* fine */ }
-  }
-
-  if (picker) {
-    var savedType = "jarnames";
-    try { savedType = localStorage.getItem("pcj-type") || "jarnames"; } catch (e) { /* fine */ }
-    if (TYPE[savedType]) { picker.value = savedType; pickFont(savedType); }
-    picker.addEventListener("change", function () { pickFont(picker.value); });
-  }
 })();
 </script>
 
