@@ -503,6 +503,49 @@
   .story-body { display: flex; flex-direction: column; gap: 17px; }
   .story-body p { margin: 0; color: #CBBDAC; }
 
+  /* ---------------- write us ---------------- */
+
+  .write-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: clamp(28px, 5vw, 56px);
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .write-grid { grid-template-columns: 1fr; }
+  }
+
+  .write-form { display: flex; flex-direction: column; gap: 14px; max-width: 36rem; position: relative; }
+  .write-form label {
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: var(--display); font-size: 13.5px;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-mid);
+  }
+  .write-form input,
+  .write-form textarea {
+    font-family: var(--body); font-size: 16px; line-height: 1.45;
+    color: var(--ink); background: var(--card);
+    border: 1px solid var(--ink-faint); border-radius: 2px;
+    padding: 11px 13px; width: 100%;
+  }
+  .write-form input::placeholder,
+  .write-form textarea::placeholder { color: var(--ink-faint); }
+  .write-form input:focus-visible,
+  .write-form textarea:focus-visible {
+    outline: 3px solid var(--flame); outline-offset: 2px;
+  }
+  .write-form textarea { min-height: 8.5rem; resize: vertical; }
+  .write-hp {
+    position: absolute; left: -10000px; width: 1px; height: 1px;
+    overflow: hidden; opacity: 0;
+  }
+  .write-status {
+    min-height: 1.4em; margin: 4px 0 0; font-size: 15px; color: var(--ink-mid);
+  }
+  .write-status.is-err { color: var(--chile); }
+  .write-status a { color: var(--chile); text-decoration: underline; }
+  .write-note { margin: 0; font-size: 15px; color: var(--ink-mid); max-width: 36ch; }
+
   /* ---------------- footer ---------------- */
 
   .foot { background: var(--char-soft); color: var(--bone); padding: clamp(48px, 7vw, 78px) 0 34px; }
@@ -894,6 +937,51 @@
   </div>
 </section>
 
+<section id="write">
+  <div class="shell">
+    <div class="sec-head">
+      <p class="eyebrow">Write us</p>
+      <h2>Leave a note</h2>
+      <p class="lede">Orders, questions, or something you want put in a jar. We read every one. If the wire is down, call or find us on Facebook.</p>
+    </div>
+
+    <div class="write-grid">
+      <form class="write-form" id="contact-form">
+        <label for="contact-name">Name
+          <input id="contact-name" name="name" type="text" autocomplete="name" required maxlength="100">
+        </label>
+        <label for="contact-email">Email
+          <input id="contact-email" name="email" type="email" autocomplete="email" required maxlength="254">
+        </label>
+        <label for="contact-message">Message
+          <textarea id="contact-message" name="message" required maxlength="2000"></textarea>
+        </label>
+        <label class="write-hp" aria-hidden="true">Company
+          <input type="text" name="company" tabindex="-1" autocomplete="off">
+        </label>
+        <button class="btn btn-primary" type="submit">Send it</button>
+        <p class="write-status" id="contact-status" role="status" aria-live="polite" tabindex="-1"></p>
+      </form>
+
+      <div id="list-box">
+        <p class="eyebrow">The list</p>
+        <h2 style="font-size:clamp(24px,3.4vw,32px)">Join the list</h2>
+        <p class="lede" style="margin-top:10px">We write when there is something to say. It may be a while. You will get a confirm email first.</p>
+        <form class="write-form" id="subscribe-form" style="margin-top:18px">
+          <label for="subscribe-email">Email
+            <input id="subscribe-email" name="email" type="email" autocomplete="email" required maxlength="254">
+          </label>
+          <label class="write-hp" aria-hidden="true">Company
+            <input type="text" name="company" tabindex="-1" autocomplete="off">
+          </label>
+          <button class="btn btn-primary" type="submit">Put me on it</button>
+          <p class="write-status" id="subscribe-status" role="status" aria-live="polite" tabindex="-1"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer class="foot">
   <div class="shell">
     <div class="foot-top">
@@ -967,13 +1055,18 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
   // ===================================================================
   const EVENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv";
 
+  // Mail Worker. Empty: forms show a short “not connected” note and do not POST.
+  // LIST_OPEN: false until RESEND_AUDIENCE_ID is *their* Resend account (see ops.md).
+  const WORKER_URL = "";
+  const LIST_OPEN = false;
 
   // Where each dataset actually came from. Surfaced only at ?debug, because a
-   // customer should never see "our spreadsheet is broken" on a salsa website,
-   // but Paula needs a way to check that an edit actually landed.
+  // customer should never see "our spreadsheet is broken" on a salsa website,
+  // but Paula needs a way to check that an edit actually landed.
   const DIAG = {
     products: { state: "built-in list", rows: 0, note: "" },
-    events:   { state: "built-in dates", rows: 0, note: "" }
+    events:   { state: "built-in dates", rows: 0, note: "" },
+    worker:   { state: WORKER_URL ? "set" : "empty", note: "" }
   };
 
   function showDiag() {
@@ -986,16 +1079,19 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
       "padding:12px 14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;" +
       "box-shadow:0 6px 24px rgba(0,0,0,.4)";
     function sourceLine(name, source) {
-      const live = /^live/.test(source.state);
+      const live = /^live/.test(source.state) || source.state === "set";
+      const rows =
+        source.rows != null ? " (" + source.rows + " rows)" : "";
       return '<div style="margin-top:6px"><b>' + name + '</b> ' +
              '<span style="color:' + (live ? "#5CB84A" : "#E8A87C") + '">' +
-             source.state + "</span> (" + source.rows + " rows)" +
+             source.state + "</span>" + rows +
              (source.note ? '<div style="color:#B0A296;margin-top:2px">' + source.note + "</div>" : "") +
              "</div>";
     }
     box.innerHTML = '<div style="color:#B0A296">data sources</div>' +
                     sourceLine("products", DIAG.products) +
-                    sourceLine("events", DIAG.events);
+                    sourceLine("events", DIAG.events) +
+                    sourceLine("worker", DIAG.worker);
     if (!box.parentNode) document.body.appendChild(box);
   }
 
@@ -1339,9 +1435,133 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     });
   }
 
+  function wireMailForms() {
+    const listBox = document.getElementById("list-box");
+    if (listBox && !LIST_OPEN) {
+      listBox.hidden = true;
+      const sub = document.getElementById("subscribe-form");
+      if (sub) sub.remove();
+      const grid = listBox.closest(".write-grid");
+      if (grid) grid.style.gridTemplateColumns = "1fr";
+    }
+
+    function setStatus(el, html, isErr) {
+      el.classList.toggle("is-err", !!isErr);
+      el.innerHTML = html;
+      el.focus();
+    }
+
+    function contactFallback() {
+      return "Call " +
+        '<a href="tel:+15126619723">(512) 661-9723</a> or find us on ' +
+        '<a href="https://www.facebook.com/paulassalsa">Facebook</a>.';
+    }
+
+    function noteDiag(reason) {
+      if (reason === "quota") DIAG.worker.note = "Resend daily cap";
+      else if (reason === "down" || reason === "network") DIAG.worker.note = "could not reach";
+      else if (!reason) DIAG.worker.note = "";
+      showDiag();
+    }
+
+    async function postMail(path, payload) {
+      if (!WORKER_URL) return { ok: false, reason: "empty" };
+      const r = await fetch(WORKER_URL.replace(/\/+$/, "") + path, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload)
+      });
+      let body = {};
+      try { body = await r.json(); } catch (e) { body = {}; }
+      if (!r.ok) {
+        return { ok: false, reason: body.reason || (r.status === 429 ? "rate" : "down") };
+      }
+      return { ok: true };
+    }
+
+    const contact = document.getElementById("contact-form");
+    if (contact) {
+      contact.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const status = document.getElementById("contact-status");
+        if (!WORKER_URL) {
+          setStatus(status, "Mail is not connected yet. " + contactFallback(), true);
+          return;
+        }
+        const fd = new FormData(contact);
+        setStatus(status, "Sending…", false);
+        try {
+          const result = await postMail("/contact", {
+            name: String(fd.get("name") || "").trim(),
+            email: String(fd.get("email") || "").trim(),
+            message: String(fd.get("message") || "").trim(),
+            company: String(fd.get("company") || "")
+          });
+          if (result.ok) {
+            noteDiag("");
+            contact.reset();
+            setStatus(status, "Sent. We'll get back to you.", false);
+          } else if (result.reason === "rate") {
+            setStatus(status, "Too many notes from here. Wait a minute. " + contactFallback(), true);
+          } else if (result.reason === "quota") {
+            noteDiag("quota");
+            setStatus(status, "Mail is capped for today. " + contactFallback(), true);
+          } else if (result.reason === "bad" || result.reason === "size") {
+            setStatus(status, "Check the fields and try again.", true);
+          } else {
+            noteDiag("down");
+            setStatus(status, "Could not send. " + contactFallback(), true);
+          }
+        } catch (err) {
+          noteDiag("network");
+          setStatus(status, "Could not send. " + contactFallback(), true);
+        }
+      });
+    }
+
+    const subscribe = document.getElementById("subscribe-form");
+    if (subscribe) {
+      subscribe.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const status = document.getElementById("subscribe-status");
+        if (!WORKER_URL) {
+          setStatus(status, "The list is not connected yet.", true);
+          return;
+        }
+        const fd = new FormData(subscribe);
+        setStatus(status, "Sending confirm…", false);
+        try {
+          const result = await postMail("/subscribe", {
+            email: String(fd.get("email") || "").trim(),
+            company: String(fd.get("company") || "")
+          });
+          if (result.ok) {
+            noteDiag("");
+            subscribe.reset();
+            setStatus(status, "Check your inbox and confirm. It may be a while before we write.", false);
+          } else if (result.reason === "rate") {
+            setStatus(status, "Slow down and try again in a minute.", true);
+          } else if (result.reason === "quota") {
+            noteDiag("quota");
+            setStatus(status, "Try again tomorrow.", true);
+          } else if (result.reason === "bad" || result.reason === "size") {
+            setStatus(status, "That email does not look right.", true);
+          } else {
+            noteDiag("down");
+            setStatus(status, "Could not send. Try again later.", true);
+          }
+        } catch (err) {
+          noteDiag("network");
+          setStatus(status, "Could not send. Try again later.", true);
+        }
+      });
+    }
+  }
+
   function init() {
     fillScaleKey();
     SHEETS.forEach(loadSheet);
+    wireMailForms();
     showDiag();
     wireThemeToggle();
   }
