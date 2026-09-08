@@ -117,6 +117,40 @@ test("contact and broadcast routes enforce their own body caps", async () => {
   }
 });
 
+test("/send refuses when COMPOSE_PASSWORD was never set", async () => {
+  let sends = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    sends++;
+    return new Response(JSON.stringify({ id: "ok" }), { status: 200 });
+  };
+
+  try {
+    // postal address configured but the password secret missing is a real
+    // setup ordering: the PO box arrives before anyone runs `wrangler secret`.
+    const env = {
+      SEND_IP: limiter,
+      MAIL_POSTAL_ADDRESS: "PO Box 1",
+      RESEND_AUDIENCE_ID: "segment",
+      RESEND_FROM: "Hot Stuff <test@example.com>",
+      RESEND_API_KEY: "key",
+    };
+    for (const password of ["", "anything"]) {
+      const req = new Request("https://worker.test/send", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ password, subject: "Test", body: "Hello." }),
+      });
+      const res = await worker.fetch(req, env);
+      assert.equal(res.status, 401, `password ${JSON.stringify(password)}`);
+      assert.equal((await res.json()).reason, "auth");
+    }
+    assert.equal(sends, 0, "no broadcast may be dispatched");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("existing contacts are added to the Segment without an update", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;

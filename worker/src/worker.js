@@ -318,7 +318,10 @@ async function sendBroadcast(req, env) {
   const subject = String(data.subject || "").trim();
   const body = String(data.body || "").trim();
 
-  if (!timingSafeEqual(password, String(env.COMPOSE_PASSWORD || ""))) {
+  // An unset secret leaves both sides empty, and two empty strings compare
+  // equal, so without this an empty password would authenticate a broadcast.
+  const expected = String(env.COMPOSE_PASSWORD || "");
+  if (!expected || !timingSafeEqual(password, expected)) {
     return json({ ok: false, reason: "auth" }, 401);
   }
   if (!subject || subject.length > MAX_SUBJECT) return json({ ok: false, reason: "bad" }, 400);
