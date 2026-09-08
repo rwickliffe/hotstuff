@@ -56,8 +56,14 @@ test("confirmation tokens verify, expire, and reject tampering", async () => {
   const token = await makeToken(email, Date.now() + 60_000, secret);
   assert.equal(await verifyToken(token, secret), email);
 
-  const replacement = token.endsWith("A") ? "B" : "A";
-  assert.equal(await verifyToken(token.slice(0, -1) + replacement, secret), null);
+  // Tamper with the FIRST character of the signature, not the last. A
+  // 32-byte HMAC is 43 base64url chars, so the final char carries only 4
+  // meaningful bits and its low 2 are discarded - A, B, C and D all decode
+  // identically there, and flipping between them is a no-op the token
+  // survives. The first char carries a full 6 bits.
+  const [body, sig] = token.split(".");
+  const flipped = (sig[0] === "A" ? "B" : "A") + sig.slice(1);
+  assert.equal(await verifyToken(body + "." + flipped, secret), null);
   assert.equal(
     await verifyToken(await makeToken(email, Date.now() - 1, secret), secret),
     null
