@@ -34,7 +34,7 @@ sample content baked in, so the page always renders.
 const PRODUCTS_CSV_URL = "";   // products tab
 const EVENTS_CSV_URL   = "";   // events tab
 const WORKER_URL       = "";   // Cloudflare Worker, empty = forms idle
-const LIST_OPEN        = false; // true only on their Resend Audience
+const LIST_OPEN        = false; // true only on their Resend Segment
 ```
 
 `data/products.csv` and `data/events.csv` are importable starting points for
@@ -103,8 +103,8 @@ mean entering every market twice. The sheet is the only place dates live.
 - [ ] Drop `http://localhost:8765` from the Worker's CORS allowlist, and add the
       custom domain. It is there so the contact form can read the Worker's reply
       during local development
-- [ ] Flip `LIST_OPEN` to `true` only after `RESEND_AUDIENCE_ID` is *their*
-      Resend Audience (not yours — see ops.md)
+- [ ] Flip `LIST_OPEN` to `true` only after `RESEND_SEGMENT_ID` is *their*
+      Resend Segment (not yours — see ops.md)
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Delete the preview scaffolding: the `.draft` CSS block and the
       `<div class="draft">` ribbon
@@ -287,11 +287,12 @@ the page but do not send.
   developing.
 - **Newsletter** is double opt-in. `/subscribe` only sends a confirm
   mail; `GET /confirm` shows a button; `POST /confirm` adds them to the
-  Resend Audience (Segment). Keep `LIST_OPEN = false` on the public site
-  until that Audience is *theirs*. A CSV export is not a consent record.
-- **Broadcasts** wait on `MAIL_POSTAL_ADDRESS` (a PO box they will print).
+  Segment. A Segment is a group of Contacts inside an Audience, and it is
+  the Segment that Broadcasts target. Keep `LIST_OPEN = false` on the public
+  site until that Segment is *theirs*. A CSV export is not a consent record.
+- **Broadcasts** wait on `BROADCAST_POSTAL_ADDRESS` (a PO box they will print).
   `/send` refuses without it. Compose lives at the Worker `/compose` URL,
-  not in the nav. Generate `COMPOSE_PASSWORD` with `openssl rand -base64 24`.
+  not in the nav. Generate `BROADCAST_PASSWORD` with `openssl rand -base64 24`.
 
 Resend free tier: 3,000 transactional mails a month **and** 100/day, plus
 1,000 marketing contacts. Confirm in the dashboard whether broadcasts

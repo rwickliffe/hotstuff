@@ -96,9 +96,9 @@ test("contact and broadcast routes enforce their own body caps", async () => {
     });
     const env = {
       SEND_IP: limiter,
-      MAIL_POSTAL_ADDRESS: "PO Box 1",
-      COMPOSE_PASSWORD: "secret",
-      RESEND_AUDIENCE_ID: "segment",
+      BROADCAST_POSTAL_ADDRESS: "PO Box 1",
+      BROADCAST_PASSWORD: "secret",
+      RESEND_SEGMENT_ID: "segment",
       RESEND_FROM: "Hot Stuff <test@example.com>",
       RESEND_API_KEY: "key",
     };
@@ -117,7 +117,7 @@ test("contact and broadcast routes enforce their own body caps", async () => {
   }
 });
 
-test("/send refuses when COMPOSE_PASSWORD was never set", async () => {
+test("/send refuses when BROADCAST_PASSWORD was never set", async () => {
   let sends = 0;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => {
@@ -130,8 +130,8 @@ test("/send refuses when COMPOSE_PASSWORD was never set", async () => {
     // setup ordering: the PO box arrives before anyone runs `wrangler secret`.
     const env = {
       SEND_IP: limiter,
-      MAIL_POSTAL_ADDRESS: "PO Box 1",
-      RESEND_AUDIENCE_ID: "segment",
+      BROADCAST_POSTAL_ADDRESS: "PO Box 1",
+      RESEND_SEGMENT_ID: "segment",
       RESEND_FROM: "Hot Stuff <test@example.com>",
       RESEND_API_KEY: "key",
     };
@@ -170,9 +170,9 @@ test("existing contacts are added to the Segment without an update", async () =>
     });
     const res = await worker.fetch(req, {
       MAIL_IP: limiter,
-      CONFIRM_SECRET: secret,
+      SUBSCRIBE_SIGNING_KEY: secret,
       RESEND_API_KEY: "key",
-      RESEND_AUDIENCE_ID: "segment",
+      RESEND_SEGMENT_ID: "segment",
     });
 
     assert.equal(res.status, 200);

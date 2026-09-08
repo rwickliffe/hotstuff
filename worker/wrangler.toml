@@ -1,8 +1,14 @@
-# Secrets (wrangler secret put …): RESEND_API_KEY, CONTACT_TO,
-# COMPOSE_PASSWORD, CONFIRM_SECRET, RESEND_AUDIENCE_ID, RESEND_FROM,
-# MAIL_POSTAL_ADDRESS (empty string until they have a PO box).
+# Secrets, set with `wrangler secret put NAME`. One prefix per route family.
 #
-# Generate passwords: openssl rand -base64 24
+#   RESEND_API_KEY             from resend.com, sending access is enough
+#   RESEND_FROM                a verified sender on that account
+#   RESEND_SEGMENT_ID          a Segment inside their Audience, not the Audience
+#   CONTACT_TO                 where /contact notes land
+#   SUBSCRIBE_SIGNING_KEY      HMAC key for /confirm links
+#   BROADCAST_PASSWORD         guards /compose and /send
+#   BROADCAST_POSTAL_ADDRESS   CAN-SPAM footer; leave unset to keep /send off
+#
+# Generate the two random ones: openssl rand -base64 24
 # Accepted on Free, confirmed at first deploy 2026-09-08.
 #
 # These limits are approximate, not caps. The binding counts per

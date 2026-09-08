@@ -168,7 +168,7 @@ async function subscribe(req, env) {
   }
 
   const exp = Date.now() + CONFIRM_TTL_MS;
-  const token = await makeToken(email, exp, env.CONFIRM_SECRET);
+  const token = await makeToken(email, exp, env.SUBSCRIBE_SIGNING_KEY);
   const link = new URL(req.url);
   link.pathname = "/confirm";
   link.search = "t=" + encodeURIComponent(token);
@@ -192,7 +192,7 @@ async function subscribe(req, env) {
 
 async function confirmGet(url, env) {
   const token = url.searchParams.get("t") || "";
-  const email = await verifyToken(token, env.CONFIRM_SECRET);
+  const email = await verifyToken(token, env.SUBSCRIBE_SIGNING_KEY);
   if (!email) {
     return html(thinPage("That link is dead", "<p>Ask again from the site if you still want on the list.</p>"), 400);
   }
@@ -220,7 +220,7 @@ async function confirmPost(req, env) {
     token = String((parsed.data && parsed.data.t) || "");
   }
 
-  const email = await verifyToken(token, env.CONFIRM_SECRET);
+  const email = await verifyToken(token, env.SUBSCRIBE_SIGNING_KEY);
   if (!email) {
     return html(thinPage("That link is dead", "<p>Ask again from the site if you still want on the list.</p>"), 400);
   }
@@ -229,7 +229,8 @@ async function confirmPost(req, env) {
     return html(thinPage("Slow down", "<p>Try again in a minute.</p>"), 429);
   }
 
-  // RESEND_AUDIENCE_ID is the Segment id (Resend renamed Audiences → Segments).
+  // A Segment is a group of Contacts inside an Audience. Broadcasts target a
+  // Segment, so a Segment id is what this needs, not the Audience itself.
   const r = await fetch("https://api.resend.com/contacts", {
     method: "POST",
     headers: {
@@ -238,7 +239,7 @@ async function confirmPost(req, env) {
     },
     body: JSON.stringify({
       email,
-      segments: [{ id: env.RESEND_AUDIENCE_ID }],
+      segments: [{ id: env.RESEND_SEGMENT_ID }],
     }),
   });
 
@@ -248,7 +249,7 @@ async function confirmPost(req, env) {
     // not change their global unsubscribe state if an old link is replayed.
     const add = await fetch(
       "https://api.resend.com/contacts/" + encodeURIComponent(email) +
-        "/segments/" + encodeURIComponent(env.RESEND_AUDIENCE_ID),
+        "/segments/" + encodeURIComponent(env.RESEND_SEGMENT_ID),
       {
         method: "POST",
         headers: { Authorization: "Bearer " + env.RESEND_API_KEY },
@@ -270,10 +271,10 @@ async function confirmPost(req, env) {
 }
 
 function composePage(env) {
-  const ready = !!(env.MAIL_POSTAL_ADDRESS && String(env.MAIL_POSTAL_ADDRESS).trim());
+  const ready = !!(env.BROADCAST_POSTAL_ADDRESS && String(env.BROADCAST_POSTAL_ADDRESS).trim());
   const gate = ready
     ? "<p class=\"muted\">Broadcasts go to the whole list. Preview only until you hit send.</p>"
-    : "<p class=\"warn\">Broadcasts are off until MAIL_POSTAL_ADDRESS is set (a PO box you will print).</p>";
+    : "<p class=\"warn\">Broadcasts are off until BROADCAST_POSTAL_ADDRESS is set (a PO box you will print).</p>";
   return html(thinPage(
     "Compose",
     gate +
@@ -308,7 +309,7 @@ async function sendBroadcast(req, env) {
     return json({ ok: false, reason: "rate" }, 429);
   }
 
-  const postal = String(env.MAIL_POSTAL_ADDRESS || "").trim();
+  const postal = String(env.BROADCAST_POSTAL_ADDRESS || "").trim();
   if (!postal) return json({ ok: false, reason: "postal" }, 403);
 
   const parsed = await readJson(req, MAX_SEND_BODY);
@@ -320,7 +321,7 @@ async function sendBroadcast(req, env) {
 
   // An unset secret leaves both sides empty, and two empty strings compare
   // equal, so without this an empty password would authenticate a broadcast.
-  const expected = String(env.COMPOSE_PASSWORD || "");
+  const expected = String(env.BROADCAST_PASSWORD || "");
   if (!expected || !timingSafeEqual(password, expected)) {
     return json({ ok: false, reason: "auth" }, 401);
   }
@@ -342,7 +343,7 @@ async function sendBroadcast(req, env) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      segment_id: env.RESEND_AUDIENCE_ID,
+      segment_id: env.RESEND_SEGMENT_ID,
       from: env.RESEND_FROM,
       subject,
       html: htmlBody,
