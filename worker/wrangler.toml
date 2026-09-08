@@ -1,8 +1,14 @@
 # Secrets, set with `wrangler secret put NAME`. One prefix per route family.
 #
-#   RESEND_API_KEY             from resend.com, sending access is enough
+#   RESEND_API_KEY             from resend.com. Full access: /confirm writes a
+#                              Contact and /send creates a Broadcast, and a
+#                              sending-only key refuses both with
+#                              restricted_api_key (401). Sending access alone
+#                              covers /contact and /subscribe.
 #   RESEND_FROM                a verified sender on that account
-#   RESEND_SEGMENT_ID          a Segment inside their Audience, not the Audience
+#   RESEND_SEGMENT_ID          dashboard: Audience -> Segments. Contacts are
+#                              global and can sit in several Segments; a
+#                              Broadcast targets one of them.
 #   CONTACT_TO                 where /contact notes land
 #   SUBSCRIBE_SIGNING_KEY      HMAC key for /confirm links
 #   BROADCAST_PASSWORD         guards /compose and /send

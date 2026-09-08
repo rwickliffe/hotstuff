@@ -4,8 +4,10 @@
 // Everything client-specific is in the SITE block below; the rest is generic.
 
 // ---------------------------------------------------------------- the site
-// Everything specific to this client lives here. To point this Worker at a
-// different business, edit this block and nothing below it.
+// Everything that identifies this client: their names, the copy that mentions
+// them, the palette. Nothing below this block names a business. The generic
+// strings down there - error titles, button labels - would serve any of them,
+// but read them before reusing this: they carry a voice.
 const SITE = {
   // Pages allowed to read this Worker's replies. Not access control: a
   // text/plain POST is sent whatever the origin, so the honeypot, rate
@@ -265,8 +267,9 @@ async function confirmPost(req, env) {
     return html(thinPage("Slow down", "<p>Try again in a minute.</p>"), 429);
   }
 
-  // A Segment is a group of Contacts inside an Audience. Broadcasts target a
-  // Segment, so a Segment id is what this needs, not the Audience itself.
+  // Contacts are global in Resend; a Segment is a named group of them, listed
+  // under Audience in the dashboard. A Broadcast targets a Segment, so that is
+  // the id this needs.
   const r = await fetch("https://api.resend.com/contacts", {
     method: "POST",
     headers: {

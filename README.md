@@ -287,9 +287,10 @@ the page but do not send.
   developing.
 - **Newsletter** is double opt-in. `/subscribe` only sends a confirm
   mail; `GET /confirm` shows a button; `POST /confirm` adds them to the
-  Segment. A Segment is a group of Contacts inside an Audience, and it is
-  the Segment that Broadcasts target. Keep `LIST_OPEN = false` on the public
-  site until that Segment is *theirs*. A CSV export is not a consent record.
+  Segment. Contacts are global in Resend; a Segment is a named group of them,
+  found under Audience in the dashboard, and a Broadcast targets one Segment.
+  Keep `LIST_OPEN = false` on the public site until that Segment is *theirs*.
+  A CSV export is not a consent record.
 - **Broadcasts** wait on `BROADCAST_POSTAL_ADDRESS` (a PO box they will print).
   `/send` refuses without it. Compose lives at the Worker `/compose` URL,
   not in the nav. Generate `BROADCAST_PASSWORD` with `openssl rand -base64 24`.
