@@ -17,11 +17,11 @@
 # Generate the two random ones: openssl rand -base64 24
 # Accepted on Free, confirmed at first deploy 2026-09-08.
 #
-# These limits are approximate, not caps. The binding counts per
-# Cloudflare location and is eventually consistent, so a burst outruns
-# the counter: 5/60s below let roughly 31 requests through in one window
-# under 25-way parallelism. Treat them as friction, not enforcement.
-# See ops.md for what actually holds the line.
+# These numbers are not enforced. Measured against the deployed Worker:
+# 10 sequential POSTs against the 5/60s limit below were all allowed, and
+# a 25-way parallel burst blocked only 2. The binding is live - a missing
+# one returns 502, and none was seen - it simply does not stop sequential
+# traffic, which is what a script makes. See ops.md for the real controls.
 
 name = "hotstuff-mail"
 main = "src/worker.js"
