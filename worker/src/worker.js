@@ -1,12 +1,49 @@
-// Hot Stuff mail Worker. Secrets stay in the dashboard, not this file.
-// CORS allowlist is not access control: a text/plain POST is sent regardless
-// of origin. Honeypot, rate limits, email-shape, size caps, and the compose
-// password are the actual controls.
+// Mail Worker: contact notes, double opt-in signup, and newsletter
+// broadcasts. Secrets stay in the dashboard, never in this file.
+//
+// Everything client-specific is in the SITE block below; the rest is generic.
 
-const ALLOW = [
-  "http://localhost:8765",
-  "https://rwickliffe.github.io",
-];
+// ---------------------------------------------------------------- the site
+// Everything specific to this client lives here. To point this Worker at a
+// different business, edit this block and nothing below it.
+const SITE = {
+  // Pages allowed to read this Worker's replies. Not access control: a
+  // text/plain POST is sent whatever the origin, so the honeypot, rate
+  // limits, email-shape check, size caps and broadcast password are the
+  // controls. Drop the localhost entry before launch.
+  origins: ["http://localhost:8765", "https://rwickliffe.github.io"],
+
+  name: "Hot Stuff",                            // page titles
+  masthead: "Paula and Crazy John's Hot Stuff", // top of the newsletter
+  list: "The list",                             // what a subscriber joined
+
+  copy: {
+    contactSubject: "Hot Stuff note from {name}",
+    confirmSubject: "Confirm you're on The list",
+    confirmLead: "Click to join Paula and Crazy John's list:",
+    confirmWait:
+      "It may be a while before you hear from us. We write when there is " +
+      "something to say, and the first letter waits until we have a PO box " +
+      "we can print.",
+    confirmIgnore: "If you did not ask for this, ignore it.",
+    joinedTitle: "You're on the list",
+    joinedBody:
+      "We'll write when there is something to say. It may be a while — " +
+      "the first letter waits on a PO box we can print.",
+  },
+
+  // The Worker serves two thin pages of its own (confirm, compose) plus the
+  // newsletter wrapper. They cannot share the site's stylesheet, so the few
+  // values that keep them recognisable are repeated here.
+  theme: {
+    paper: "#E5DCC9", ink: "#14100C", inkFaint: "#8A7C68",
+    chile: "#8E1409", flame: "#B4551D", card: "#F1EADB", quiet: "#574C3E",
+    display: "'Special Elite',Courier New,monospace",
+    body: "Barlow,system-ui,sans-serif",
+    fonts: "https://fonts.googleapis.com/css2?family=Special+Elite" +
+           "&family=Barlow:wght@400;600&display=swap",
+  },
+};
 
 const MAX_BODY = 8192;
 const MAX_SEND_BODY = 65536;
@@ -43,7 +80,7 @@ export default {
 function cors(req, res) {
   const origin = req.headers.get("Origin") || "";
   const headers = new Headers(res.headers);
-  if (ALLOW.includes(origin)) {
+  if (SITE.origins.includes(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set("Vary", "Origin");
   }
@@ -144,7 +181,9 @@ async function contact(req, env) {
     from: env.RESEND_FROM,
     to: [env.CONTACT_TO],
     reply_to: email,
-    subject: "Hot Stuff note from " + name,
+    // Replacer function, not a string: a plain replacement would treat a
+    // visitor typing $& or $` in their name as a substitution pattern.
+    subject: SITE.copy.contactSubject.replace("{name}", () => name),
     text: "From: " + name + " <" + email + ">\n\n" + message,
   });
   if (!result.ok) return resendFail(result.reason);
@@ -176,15 +215,12 @@ async function subscribe(req, env) {
   const result = await resendSend(env, {
     from: env.RESEND_FROM,
     to: [email],
-    subject: "Confirm you're on The list",
+    subject: SITE.copy.confirmSubject,
     text:
-      "Click to join Paula and Crazy John's list:\n\n" +
-      link.toString() +
-      "\n\n" +
-      "It may be a while before you hear from us. We write when there is " +
-      "something to say, and the first letter waits until we have a PO box " +
-      "we can print.\n\n" +
-      "If you did not ask for this, ignore it.",
+      SITE.copy.confirmLead + "\n\n" +
+      link.toString() + "\n\n" +
+      SITE.copy.confirmWait + "\n\n" +
+      SITE.copy.confirmIgnore,
   });
   if (!result.ok) return resendFail(result.reason);
   return json({ ok: true }, 200);
@@ -198,7 +234,7 @@ async function confirmGet(url, env) {
   }
   return html(thinPage(
     "One more click",
-    "<p>Confirm you want on The list. Prefetchers stop here.</p>" +
+    "<p>Confirm you want on " + esc(SITE.list) + ". Prefetchers stop here.</p>" +
       "<form method=\"POST\" action=\"/confirm\">" +
       "<input type=\"hidden\" name=\"t\" value=\"" + esc(token) + "\">" +
       "<button type=\"submit\">Put me on the list</button>" +
@@ -264,9 +300,8 @@ async function confirmPost(req, env) {
   }
 
   return html(thinPage(
-    "You're on the list",
-    "<p>We'll write when there is something to say. It may be a while — " +
-      "the first letter waits on a PO box we can print.</p>"
+    SITE.copy.joinedTitle,
+    "<p>" + esc(SITE.copy.joinedBody) + "</p>"
   ));
 }
 
@@ -329,10 +364,14 @@ async function sendBroadcast(req, env) {
   if (!body || body.length > MAX_BROADCAST) return json({ ok: false, reason: "bad" }, 400);
 
   const htmlBody =
-    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#14100C;background:#E5DCC9;padding:28px">' +
-    "<p style=\"font-family:'Courier New',monospace;letter-spacing:.05em;text-transform:uppercase;color:#8E1409;font-size:13px\">Paula and Crazy John's Hot Stuff</p>" +
+    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:' +
+    SITE.theme.ink + ";background:" + SITE.theme.paper + ';padding:28px">' +
+    '<p style="font-family:' + SITE.theme.display + ";letter-spacing:.05em;" +
+    "text-transform:uppercase;color:" + SITE.theme.chile + ';font-size:13px">' +
+    esc(SITE.masthead) + "</p>" +
     "<div style=\"white-space:pre-wrap;line-height:1.55\">" + esc(body) + "</div>" +
-    "<p style=\"margin-top:28px;font-size:13px;color:#574C3E\">" + esc(postal) + "</p>" +
+    '<p style="margin-top:28px;font-size:13px;color:' + SITE.theme.quiet + '">' +
+    esc(postal) + "</p>" +
     '<p style="font-size:13px"><a href="{{{RESEND_UNSUBSCRIBE_URL}}}">Unsubscribe</a></p>' +
     "</div>";
 
@@ -437,22 +476,26 @@ function esc(s) {
 function thinPage(title, inner) {
   return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
-    "<title>" + esc(title) + " · Hot Stuff</title>" +
-    "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Special+Elite&family=Barlow:wght@400;600&display=swap\">" +
+    "<title>" + esc(title) + " · " + esc(SITE.name) + "</title>" +
+    '<link rel="stylesheet" href="' + SITE.theme.fonts + '">' +
     "<style>" +
-    ":root{--paper:#E5DCC9;--ink:#14100C;--ink-faint:#8A7C68;--chile:#8E1409;--flame:#B4551D}" +
-    "body{margin:0;background:var(--paper);color:var(--ink);font:16.5px/1.6 Barlow,system-ui,sans-serif;padding:48px 20px}" +
+    ":root{--paper:" + SITE.theme.paper + ";--ink:" + SITE.theme.ink +
+    ";--ink-faint:" + SITE.theme.inkFaint + ";--chile:" + SITE.theme.chile +
+    ";--flame:" + SITE.theme.flame + ";--card:" + SITE.theme.card +
+    ";--quiet:" + SITE.theme.quiet + "}" +
+    "body{margin:0;background:var(--paper);color:var(--ink);font:16.5px/1.6 " +
+    SITE.theme.body + ";padding:48px 20px}" +
     "main{max-width:420px;margin:0 auto}" +
-    "h1{font-family:'Special Elite',Courier New,monospace;font-weight:400;font-size:28px;margin:0 0 16px;" +
+    "h1{font-family:" + SITE.theme.display + ";font-weight:400;font-size:28px;margin:0 0 16px;" +
     "text-shadow:1.4px 1px 0 color-mix(in srgb,var(--chile) 30%,transparent)}" +
     "label{display:block;margin:14px 0 6px;font-size:14px}" +
     "input,textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--ink-faint);" +
-    "background:#F1EADB;color:var(--ink);font:inherit;border-radius:2px}" +
+    "background:var(--card);color:var(--ink);font:inherit;border-radius:2px}" +
     "input:focus-visible,textarea:focus-visible{outline:2px solid var(--flame);outline-offset:2px}" +
     "button{margin-top:18px;background:var(--chile);color:#FFF6F2;border:1px solid var(--chile);" +
-    "padding:12px 20px;font:600 15px Barlow,system-ui,sans-serif;cursor:pointer;border-radius:2px}" +
+    "padding:12px 20px;font:600 15px " + SITE.theme.body + ";cursor:pointer;border-radius:2px}" +
     "button:disabled{opacity:.45;cursor:not-allowed}" +
-    ".muted{color:#574C3E;font-size:14.5px}.warn{color:var(--chile)}" +
+    ".muted{color:var(--quiet);font-size:14.5px}.warn{color:var(--chile)}" +
     "</style></head><body><main><h1>" + esc(title) + "</h1>" + inner + "</main></body></html>";
 }
 
