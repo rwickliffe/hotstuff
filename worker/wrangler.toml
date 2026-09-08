@@ -3,8 +3,13 @@
 # MAIL_POSTAL_ADDRESS (empty string until they have a PO box).
 #
 # Generate passwords: openssl rand -base64 24
-# Confirm on first deploy that [[ratelimits]] is accepted on Free.
-# If rejected, stop — do not ship without a limiter.
+# Accepted on Free, confirmed at first deploy 2026-09-08.
+#
+# These limits are approximate, not caps. The binding counts per
+# Cloudflare location and is eventually consistent, so a burst outruns
+# the counter: 5/60s below let roughly 31 requests through in one window
+# under 25-way parallelism. Treat them as friction, not enforcement.
+# See ops.md for what actually holds the line.
 
 name = "hotstuff-mail"
 main = "src/worker.js"
