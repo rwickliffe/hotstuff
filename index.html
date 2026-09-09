@@ -15,8 +15,11 @@
     --card:       #F1EADB;
     --ink:        #14100C;
     --ink-mid:    #574C3E;
-    --ink-faint:  #8A7C68;
+    --ink-faint:  #766854;
     --chile:      #8E1409;
+    /* --chile is a ground under near-white text; --chile-ink is the same
+       red used AS text, which needs more lift on a dark page. */
+    --chile-ink:  #8E1409;
     --chile-deep: #5C0B04;
     --flame:      #B4551D;
     --char:       #0B0907;
@@ -55,8 +58,9 @@
     --card:       #17120E;
     --ink:        #E2D7C3;
     --ink-mid:    #9A8C77;
-    --ink-faint:  #7A6D5C;
+    --ink-faint:  #887B6A;
     --chile:      #C62A18;
+    --chile-ink:  #E24634;
     --chile-deep: #E0503A;
     --flame:      #D2822F;
     --char:       #060504;
@@ -168,7 +172,7 @@
     font-family: var(--display);
     font-size: 14px; font-weight: 600;
     letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--chile); margin: 0;
+    color: var(--chile-ink); margin: 0;
   }
 
   /* The two maker names are set like product names, same face and size, which
@@ -290,7 +294,7 @@
   .stub {
     font-family: var(--display);
     font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--flame); border: 1px dashed currentColor;
+    color: #BE5F27; border: 1px dashed currentColor;
     border-radius: 2px; padding: 2px 7px;
     display: inline-block; vertical-align: middle;
   }
@@ -347,7 +351,7 @@
     transition: background 130ms ease, color 130ms ease, border-color 130ms ease;
   }
 
-  .filters button:hover { border-color: var(--chile); color: var(--chile); }
+  .filters button:hover { border-color: var(--chile); color: var(--chile-ink); }
   .filters button[aria-pressed="true"] { background: var(--chile); border-color: var(--chile); color: #FFF6F2; }
   .filters button:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
 
@@ -420,7 +424,7 @@
 
   .deal-what { font-family: var(--cond); font-size: 21px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
   .deal-single { font-family: var(--display); font-size: 39px; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .deal-bulk { font-size: 15.5px; color: var(--chile); font-weight: 600; }
+  .deal-bulk { font-size: 15.5px; color: var(--chile-ink); font-weight: 600; }
   .deal-note { font-size: 14px; color: var(--ink-mid); margin-top: 5px; }
 
   /* ---------------- split blocks ---------------- */
@@ -468,7 +472,7 @@
   .cal-when {
     font-family: var(--display); font-size: 17px; font-weight: 600;
     letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--chile); min-width: 92px; flex: none;
+    color: var(--chile-ink); min-width: 92px; flex: none;
   }
 
   .cal-what { font-size: 15px; }
@@ -476,7 +480,7 @@
 
   .cal-map {
     display: inline-block; margin-top: 3px;
-    font-size: 13.5px; color: var(--chile);
+    font-size: 13.5px; color: var(--chile-ink);
     text-decoration: underline; text-underline-offset: 2px;
     text-decoration-color: color-mix(in srgb, var(--chile) 40%, transparent);
   }
@@ -493,7 +497,9 @@
 
   .story { background: var(--char); color: var(--bone); }
   .story h2 { color: #FBF6EF; }
-  .story .eyebrow { color: var(--flame); }
+  /* --char is dark in both themes, so this cannot follow --flame: the light
+     theme's flame only reaches 4.03 on it. */
+  .story .eyebrow { color: #BE5F27; }
 
   .story-quote {
     font-family: var(--display);
@@ -543,8 +549,8 @@
   .write-status {
     min-height: 1.4em; margin: 4px 0 0; font-size: 15px; color: var(--ink-mid);
   }
-  .write-status.is-err { color: var(--chile); }
-  .write-status a { color: var(--chile); text-decoration: underline; }
+  .write-status.is-err { color: var(--chile-ink); }
+  .write-status a { color: var(--chile-ink); text-decoration: underline; }
 
   /* ---------------- footer ---------------- */
 
@@ -559,7 +565,7 @@
   .foot h2 { color: #FBF6EF; margin: 0; }
   .foot-meta { display: flex; flex-wrap: wrap; gap: 10px 40px; padding-top: 26px; font-size: 14.5px; color: #B3A492; }
   .foot-meta a { color: #E5D6C2; }
-  .foot-legal { margin-top: 26px; font-size: 13px; color: #7E7263; line-height: 1.6; max-width: 68ch; }
+  .foot-legal { margin-top: 26px; font-size: 13px; color: #867A6B; line-height: 1.6; max-width: 68ch; }
 
   .theme-toggle {
     margin-top: 22px;
@@ -898,7 +904,7 @@
     </div>
 
     <div class="cta-row" style="margin-top: 34px;">
-      <a class="btn btn-primary" href="#">Shop All Jars <span class="stub" style="color:#FFD9C9;border-color:#FFD9C9">Square link</span></a>
+      <a class="btn btn-primary" href="#">Shop All Jars <span class="stub" style="color:#FFF6F2;border-color:#FFF6F2">Square link</span></a>
     </div>
   </div>
 </section>
@@ -990,7 +996,7 @@
     <div class="foot-top">
       <h2>Come get some.<svg class="flourish flourish-holes" viewBox="0 0 118 52" aria-hidden="true" focusable="false"><g class="crack"><path d="M22 24 L6 12"/><path d="M22 24 L38 13"/><path d="M22 24 L18 44"/><path d="M22 24 L37 37"/><path d="M63 17 L51 5"/><path d="M63 17 L77 10"/><path d="M63 17 L60 32"/><path d="M95 34 L110 26"/><path d="M95 34 L86 47"/><path d="M95 34 L106 45"/></g><circle class="hole" cx="22" cy="24" r="8.5"/><circle class="rim" cx="22" cy="24" r="10"/><circle class="hole" cx="63" cy="17" r="6"/><circle class="rim" cx="63" cy="17" r="7.4"/><circle class="hole" cx="95" cy="34" r="7"/><circle class="rim" cx="95" cy="34" r="8.5"/></svg></h2>
       <div class="cta-row">
-        <a class="btn btn-primary" href="#">Shop Online <span class="stub" style="color:#FFD9C9;border-color:#FFD9C9">Square</span></a>
+        <a class="btn btn-primary" href="#">Shop Online <span class="stub" style="color:#FFF6F2;border-color:#FFF6F2">Square</span></a>
         <a class="btn btn-ghost" href="https://www.facebook.com/paulassalsa">Facebook</a>
       </div>
     </div>
