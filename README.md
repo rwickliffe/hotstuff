@@ -1,5 +1,7 @@
 # Paula and Crazy John's Hot Stuff
 
+[![check](https://github.com/rwickliffe/hotstuff/actions/workflows/check.yml/badge.svg)](https://github.com/rwickliffe/hotstuff/actions/workflows/check.yml)
+
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
@@ -173,7 +175,8 @@ non-zero, so it works as a habit before pushing:
 
 It parses the page script and the Worker, confirms the generated art block is
 current, runs both test suites, and rewrites the sheet URLs to local fixtures.
-Nothing touches the network. The pieces run on their own too:
+Nothing touches the network. GitHub Actions runs the same command on every
+push, so the badge above and a clean local run mean the same thing. The pieces run on their own too:
 
 ```bash
 node --test tools/ worker/        # both suites

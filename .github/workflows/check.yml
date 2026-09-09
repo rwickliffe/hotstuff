@@ -1,0 +1,26 @@
+# Runs ./check on every push. Same command, same steps as running it locally,
+# so a green tick here means exactly what a clean local run means.
+name: check
+
+on:
+  push:
+  pull_request:
+
+# Nothing here writes to the repo.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ./check needs node for the two test suites. python3 for
+      # tools/make-assets.py is already on the runner, and that script uses
+      # only the standard library.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: ./check
