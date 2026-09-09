@@ -179,7 +179,7 @@ Nothing touches the network. GitHub Actions runs the same command on every
 push, so the badge above and a clean local run mean the same thing. The pieces run on their own too:
 
 ```bash
-node --test tools/ worker/        # both suites
+node --test tools/test-parsing.mjs worker/test-worker.mjs   # both suites
 tools/make-assets.py --check      # generated art is up to date
 tools/test-integrations.sh        # sheet plumbing
 ```

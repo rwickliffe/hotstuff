@@ -37,7 +37,10 @@ page_js () {
 step "page script parses"   page_js
 step "worker parses"        node --check worker/src/worker.js
 step "generated art is current" tools/make-assets.py --check
-step "unit tests"           node --test tools/ worker/
+# Name the files rather than the directories they sit in: passing a
+# directory to --test is not handled the same way across Node versions,
+# and CI runs an older one than this machine.
+step "unit tests"           node --test tools/test-parsing.mjs worker/test-worker.mjs
 step "sheet integration"    tools/test-integrations.sh
 
 if [ "$failed" -ne 0 ]; then

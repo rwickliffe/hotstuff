@@ -14,12 +14,15 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # ./check needs node for the two test suites. python3 for
       # tools/make-assets.py is already on the runner, and that script uses
       # only the standard library.
-      - uses: actions/setup-node@v4
+      # Deliberately not the version used for development. Pinning CI to LTS
+      # means it catches runtime drift instead of hiding it - which is how the
+      # first run of this workflow found a Node-version-dependent bug.
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
 
