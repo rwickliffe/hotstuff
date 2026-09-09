@@ -157,12 +157,19 @@ image loads. The `img { height: auto }` rule in the stylesheet has to stay
 with them: those attributes are presentational hints, so without it the
 height is pinned to the intrinsic pixel value and every image stretches.
 
-Build a single self-contained file with the images inlined, for emailing or
-dropping on a host as one file:
+Build a single self-contained file, for emailing or dropping on a host as one
+file:
 
 ```bash
 tools/inline.sh index.html dist/index.html
 ```
+
+Images and web fonts both go in as data: URIs, so the result fetches nothing
+and looks right opened from a USB stick with no network. Only the Latin
+subsets are kept - the page is English, and taking every subset Google offers
+would pull each family in five times over. The script itself needs network on
+the way in, since the fonts come from Google; the file it writes does not,
+which is the whole point. Expect about 1.3 MB.
 
 ## Checks
 
