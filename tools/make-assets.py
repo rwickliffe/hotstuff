@@ -193,10 +193,6 @@ def torn_edge_svg(seed=20260906, torn=("right", "bottom"), corner="bl",
     return _svg(d)
 
 
-
-
-
-
 def _stains(seed, blotches=(5, 8), scuffs=(0, 2)):
     """A random scatter of blotches and scuffs, as a CSS background stack."""
     rnd = random.Random(seed)
