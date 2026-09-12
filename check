@@ -34,9 +34,23 @@ page_js () {
   return $rc
 }
 
+# The stylesheet lives beside the page, and everything it references is a
+# data: URI. That is what lets tools/inline.sh fold it back into one file, and
+# what lets index.html render from file:// with nothing to fetch.
+stylesheet () {
+  grep -q '<link rel="stylesheet" href="styles.css">' index.html ||
+    { echo "index.html does not link styles.css"; return 1; }
+  local stray
+  # The generated block writes url("data:..."), so allow either quoting.
+  stray=$(grep -o 'url([^)]*' styles.css | grep -vE 'url\(["'"'"']?data:') || true
+  [ -z "$stray" ] ||
+    { printf 'styles.css reaches outside itself:\n%s\n' "$stray"; return 1; }
+}
+
 step "page script parses"   page_js
 step "worker parses"        node --check worker/src/worker.js
 step "generated art is current" tools/make-assets.py --check
+step "stylesheet is self-contained" stylesheet
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
