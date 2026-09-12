@@ -1,7 +1,7 @@
 #!/bin/bash
-# Produce a single self-contained HTML file: images and web fonts embedded as
-# data: URIs, nothing left to fetch. For emailing, or opening from a USB stick
-# with no network.
+# Produce a single self-contained HTML file: the stylesheet folded back in,
+# images and web fonts embedded as data: URIs, nothing left to fetch. For
+# emailing, or opening from a USB stick with no network.
 #
 #   tools/inline.sh [src] [out]        default: index.html -> dist/index.html
 #
@@ -28,6 +28,35 @@ s = s.replace('src="%s"' % path, 'src="data:image/jpeg;base64,%s"' % b64)
 open(out, "w", encoding="utf-8").write(s)
 PY
 done
+
+# The page links its stylesheet; the single-file build cannot. Fold it back
+# into a <style> block, resolved relative to the source file rather than the
+# working directory, so this still works when [src] is somewhere else.
+python3 - "$out" "$src" <<'CSS'
+import os, re, sys
+
+out, src = sys.argv[1], sys.argv[2]
+html = open(out, encoding="utf-8").read()
+
+link = re.search(r'<link rel="stylesheet" href="(?!https?:)([^"]+)">', html)
+if not link:
+    print("  no local stylesheet link, nothing to fold in")
+    sys.exit(0)
+
+path = os.path.join(os.path.dirname(os.path.abspath(src)), link.group(1))
+if not os.path.exists(path):
+    sys.exit("FAIL: %s links %s, which does not exist" % (src, link.group(1)))
+
+css = open(path, encoding="utf-8").read()
+# A closing tag anywhere in the CSS would end the block early and spill the
+# rest of the stylesheet into the page as text.
+if "</style" in css.lower():
+    sys.exit("FAIL: %s contains a </style sequence and cannot be inlined" % path)
+
+html = html.replace(link.group(0), "<style>\n" + css + "</style>")
+open(out, "w", encoding="utf-8").write(html)
+print("  folded in %s (%d bytes)" % (link.group(1), len(css)))
+CSS
 
 python3 - "$out" <<'PY'
 import base64, re, sys, urllib.request
