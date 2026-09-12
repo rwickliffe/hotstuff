@@ -34,9 +34,11 @@ page_js () {
   return $rc
 }
 
-# The stylesheet lives beside the page, and everything it references is a
-# data: URI. That is what lets tools/inline.sh fold it back into one file, and
-# what lets index.html render from file:// with nothing to fetch.
+# The stylesheet lives beside the page, and every asset it references is a
+# data: URI rather than a second file. That is what lets tools/inline.sh fold
+# it into one <style> block safely, and what keeps the art from costing a
+# request each. It says nothing about the photos or the fonts, which the page
+# still fetches.
 stylesheet () {
   grep -q '<link rel="stylesheet" href="styles.css">' index.html ||
     { echo "index.html does not link styles.css"; return 1; }
