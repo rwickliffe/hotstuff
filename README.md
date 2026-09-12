@@ -5,8 +5,8 @@
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
-A single static page. No build step, no framework, no server. Open
-`index.html` in a browser and it works.
+A static site: one HTML page, one stylesheet, and a Google Sheet the owners
+edit themselves. No build step, no framework, no server.
 
 ## Why it is built this way
 
@@ -164,7 +164,8 @@ file:
 tools/inline.sh index.html dist/index.html
 ```
 
-Images and web fonts both go in as data: URIs, so the result fetches nothing
+The stylesheet is folded back into the page, and images and web fonts go in
+as data: URIs, so the result fetches nothing
 and looks right opened from a USB stick with no network. Only the Latin
 subsets are kept - the page is English, and taking every subset Google offers
 would pull each family in five times over. The script itself needs network on
@@ -181,7 +182,8 @@ non-zero, so it works as a habit before pushing:
 ```
 
 It parses the page script and the Worker, confirms the generated art block is
-current, runs both test suites, and rewrites the sheet URLs to local fixtures.
+current and that the stylesheet reaches nothing outside itself, runs both test
+suites, and rewrites the sheet URLs to local fixtures.
 Nothing touches the network. GitHub Actions runs the same command on every
 push, so the badge above and a clean local run mean the same thing. The pieces run on their own too:
 
@@ -244,7 +246,7 @@ photograph are all procedural, generated once and baked into the stylesheet as
 custom properties inside a marked block:
 
 ```bash
-tools/make-assets.py            # rewrite the block in index.html
+tools/make-assets.py            # rewrite the block in styles.css
 tools/make-assets.py --check    # fail if the block is out of date
 ```
 
