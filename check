@@ -36,6 +36,11 @@ step () {
 # every asset the stylesheet references has to be a data: URI rather than a
 # second file, so the art costs no request of its own. It says nothing about
 # the photos or the fonts, which the pages still fetch.
+page_types () {
+  [ -x "$tsc" ] || return 0
+  "$tsc" --noEmit --project tsconfig.json
+}
+
 worker_types () {
   [ -x "$tsc" ] || return 0
   "$tsc" --noEmit --project worker/tsconfig.json
@@ -74,6 +79,7 @@ flame () {
 
 step "page script parses"   node --check site.js
 step "data module parses"   node --check lib/data.js
+step "page types"           page_types
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
 step "pages are wired up"       pages
