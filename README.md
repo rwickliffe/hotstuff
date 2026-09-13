@@ -5,7 +5,7 @@
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
-A static site: two HTML pages, one stylesheet, two ES modules, and a Google
+A static site: two HTML pages, one stylesheet, three ES modules, and a Google
 Sheet the owners edit themselves. No build step, no framework, no server.
 
 `index.html` leads with a handful of featured jars per maker.
@@ -34,8 +34,8 @@ Contact notes and newsletter signups go to Resend through the Worker when
 
 One spreadsheet with two tabs drives the page. Each tab is published
 separately and gets its own CSV address. Both are constants near the top of
-the top of `site.js`, and either left empty falls back to the sample content
-baked in below them, so both pages always render.
+`site.js`. Left empty, the pages still render: the catalog is written into the
+HTML ahead of time, and the schedule says where the dates go up.
 
 ```js
 const PRODUCTS_CSV_URL = "";   // products tab
@@ -62,13 +62,14 @@ Two lookalikes that do not work, both returning HTML rather than CSV:
 - `.../edit#gid=...` is the editor address from the browser bar. It needs a login.
 
 Neither errors. The page fetches them successfully, finds no rows it
-recognises, and quietly keeps its built-in list, so the site looks stale
-rather than broken. There is a console warning for exactly this case.
+recognises, and keeps the catalog already written into the page, so the site
+looks stale rather than broken. There is a console warning for exactly this
+case.
 
 Google edge-caches published CSVs, so an edit can take a few minutes to reach
 the site. That is usually the explanation when a change does not show up.
 
-**Catalog.** The `products` tab. Replaces the built-in list on page load.
+**Catalog.** The `products` tab. Replaces the baked-in catalog on page load.
 
 Columns:
 
@@ -193,6 +194,36 @@ other note, which is the whole mechanism: counting how many people asked for a
 thing needs no database, only a mail folder and a consistent sentence to
 search for.
 
+## Without JavaScript
+
+The catalog is written into both pages by `tools/make-catalog.mjs`, so a
+visitor whose browser never runs the script still gets every jar, its heat
+rating and its price:
+
+```bash
+tools/make-catalog.mjs            # rewrite the blocks
+tools/make-catalog.mjs --check    # fail if they are out of date
+```
+
+It builds those cards with `productCard` out of `lib/render.js` - the same
+function the browser calls - against a DOM shim. Writing a second renderer here
+in string concatenation would work right up until the two drifted, and then it
+would be wrong quietly.
+
+**The schedule is deliberately not baked.** It drops dates before today, so its
+output depends on when it ran, and a generated file whose `--check` fails every
+morning is worse than no generated file. Without script it says where the dates
+go up, which is true and is where they go up anyway.
+
+Nothing else is left sitting there dead. The heat filter and the theme toggle
+need script, so they are hidden until one line in the `<head>` marks the page
+as scripted. The list signup ships closed and script opens it, rather than the
+other way round - it used to ship open and be closed on load, which meant a
+scriptless browser showed a signup form for a list that was not taking
+signups, with no `action` on it to send anywhere. The contact form is the one
+control that cannot simply be hidden, because it is how you reach them, so a
+`<noscript>` beside it gives the phone number instead.
+
 ## Checks
 
 One command runs everything. It is quiet unless something fails, and exits
@@ -202,10 +233,11 @@ non-zero, so it works as a habit before pushing:
 ./check
 ```
 
-It parses both page modules, type-checks the page and the Worker, confirms the generated art
-block is current and that the stylesheet reaches nothing outside itself, checks
-both pages are wired to the shared files, runs both test suites, and rewrites
-the sheet URLs to local fixtures. Nothing touches the network. GitHub Actions
+It parses the three page modules, type-checks the page and the Worker,
+confirms the generated art
+block and the baked catalog are current and that the stylesheet reaches nothing
+outside itself, checks both pages are wired to the shared files, runs both test
+suites, and rewrites the sheet URLs to local fixtures. Nothing touches the network. GitHub Actions
 runs the same command on every push, so the badge above and a clean local run
 mean the same thing. The pieces run on their own too:
 
@@ -219,9 +251,11 @@ tools/test-integrations.sh        # sheet plumbing
 The type check is the only step that needs anything installed. On a fresh
 clone it prints a note and skips, so `./check` still runs with nothing fetched;
 CI runs `npm ci` first, which is what makes it stricter than a bare clone
-rather than merely different. There are two dev dependencies, `typescript` and
-the Workers runtime types. Nothing is shipped from `node_modules`: the site is
-static files and wrangler bundles the Worker at deploy.
+rather than merely different. There are three dev dependencies: `typescript`,
+the Workers runtime types, and `linkedom`, a DOM shim that lets
+`tools/make-catalog.mjs` run the real card renderer in Node. Nothing is shipped
+from `node_modules`: the site is static files and wrangler bundles the Worker
+at deploy.
 
 `tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
 the date parser, the heat scale. Rather than keep a second copy of them, it
@@ -256,9 +290,9 @@ products   live sheet (18 rows)
 events     live sheet (6 rows)
 ```
 
-`live sheet` in green means the spreadsheet was read. `built-in list` or
-`built-in dates` in orange means it was not, and the page is showing the
-samples baked into the file, with the reason underneath.
+`live sheet` in green means the spreadsheet was read. Orange means it was not,
+and the page is showing the catalog baked into the HTML - or, for the
+schedule, nothing at all - with the reason underneath.
 
 This matters because the fallback is deliberately invisible to customers. A
 broken sheet produces a page that looks completely normal and is quietly out
