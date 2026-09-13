@@ -46,8 +46,8 @@ pages () {
   for page in index.html products.html; do
     grep -q '<link rel="stylesheet" href="styles.css">' "$page" ||
       { echo "$page does not link styles.css"; return 1; }
-    grep -q '<script src="site.js"></script>' "$page" ||
-      { echo "$page does not load site.js"; return 1; }
+    grep -q '<script type="module" src="site.js"></script>' "$page" ||
+      { echo "$page does not load site.js as a module"; return 1; }
   done
   local stray
   # The generated block writes url("data:..."), so allow either quoting.
@@ -73,6 +73,7 @@ flame () {
 }
 
 step "page script parses"   node --check site.js
+step "data module parses"   node --check lib/data.js
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
 step "pages are wired up"       pages

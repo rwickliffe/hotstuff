@@ -1,52 +1,23 @@
-/* Checks on the pure data functions in site.js.
+/* Checks on the pure data functions in lib/data.js.
  *
- *     node --test tools/ worker/
+ *     node --test tools/test-parsing.mjs worker/test-worker.mjs
  *
- * site.js ships as one IIFE with no exports, so rather than keep a second copy
- * of these functions to test, this lifts them out by name and runs the real
- * shipped source. Rename one and the extraction fails loudly rather than
- * testing something that no longer exists.
+ * These are the real shipped functions, imported rather than copied, so there
+ * is no second version to drift. Rename one and this file stops resolving.
  *
  * Only pure functions belong here: no DOM, no fetch, no clock.
  */
 import assert from "node:assert/strict";
 import test from "node:test";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const src = fs.readFileSync(path.join(here, "..", "site.js"), "utf8");
-
-function lift(name, opener) {
-  const start = src.indexOf(opener);
-  assert.notEqual(start, -1, `${name} not found in site.js - renamed?`);
-  // Balance whichever bracket the declaration opens with: a function body is
-  // {...}, the heat table is [...].
-  const open = /[[{]/.exec(src.slice(start))[0];
-  const close = open === "{" ? "}" : "]";
-  let depth = 0;
-  for (let j = src.indexOf(open, start); j < src.length; j++) {
-    if (src[j] === open) depth++;
-    else if (src[j] === close && --depth === 0) return src.slice(start, j + 1);
-  }
-  throw new Error(`unbalanced ${open} while lifting ${name}`);
-}
-
-const sandbox = [
-  lift("BANDS", "const BANDS = ["),
-  lift("bandByKey", "function bandByKey("),
-  lift("heatWord", "function heatWord("),
-  lift("parseCSV", "function parseCSV("),
-  lift("csvToObjects", "function csvToObjects("),
-  lift("parseDay", "function parseDay("),
-  "return { BANDS, bandByKey, heatWord, parseCSV, csvToObjects, parseDay };"
-].join("\n");
-// new Function, not eval: a direct eval would hoist these declarations into
-// this module's scope and collide with the bindings below.
-const { BANDS, bandByKey, heatWord, parseCSV, csvToObjects, parseDay } =
-  new Function(sandbox)();
-
+import {
+  BANDS,
+  bandByKey,
+  csvToObjects,
+  heatWord,
+  parseCSV,
+  parseDay,
+} from "../lib/data.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>
