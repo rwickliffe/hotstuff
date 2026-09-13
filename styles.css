@@ -418,6 +418,25 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 .see-all:hover { border-color: var(--chile); color: var(--chile-ink); }
 .see-all:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
 
+/* The only control on a card, and only on one that is out. Asking is how a
+   customer votes for what gets put up next. */
+.ask {
+  /* Sits where a price would, so it matches the price's weight and optical
+     size rather than the filter buttons' up top. */
+  flex: none;
+  font-family: var(--cond); font-size: 14.5px; font-weight: 600;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  /* Full-strength ink, not the muted tone the rest of the card uses: the card
+     is dimmed to 0.62 and that composite drags --ink-mid under 3:1. The one
+     thing on a sold-out card you can still act on has to stay readable. */
+  background: transparent; color: var(--ink);
+  border: 1.5px solid var(--rule-firm);
+  padding: 6px 14px; cursor: pointer;
+  transition: color 130ms ease, border-color 130ms ease;
+}
+.ask:hover { border-color: var(--chile); color: var(--chile-ink); }
+.ask:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
+
 /* The catalog's masthead: dark like the hero so the two pages read as one
    site, without the hero's photograph or its height. Colours are the hero's
    own, which are already measured against this ground. */

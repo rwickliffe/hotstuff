@@ -27,5 +27,7 @@ grep -q 'src="integration-site.js"' integration-test.html || { echo "FAIL: test 
 echo "OK. Serve the folder and open: http://localhost:8765/integration-test.html"
 echo
 echo "Expect in the catalog:  Brand New Peach Salsa, Chow Chow (All gone), Widowmaker."
+echo "                        Chow Chow is featured AND out, so it carries the"
+echo "                        Ask for this button on the front page."
 echo "Expect in the schedule: 3 events, earliest first. The 2020 row must NOT"
 echo "                        appear, it tests that past dates are dropped."

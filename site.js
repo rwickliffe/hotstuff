@@ -196,27 +196,90 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     left.appendChild(scale);
     left.appendChild(word);
 
-    const price = document.createElement("span");
+    // A jar that is out has no price to show, so the ask takes that slot
+    // rather than adding a row: the card keeps the shape of every other card.
+    let tail;
     if (soldOut) {
-      price.className = "price sold-out";
-      price.textContent = "All gone";
+      tail = askButton(p.name);
     } else {
-      price.className = "price";
-      price.textContent = p.price ? "$" + p.price : "";
+      tail = document.createElement("span");
+      tail.className = "price";
+      tail.textContent = p.price ? "$" + p.price : "";
       if (p.price_quart) {
         const qt = document.createElement("small");
         qt.className = "price-qt";
         qt.textContent = "$" + p.price_quart + " qt";
-        price.appendChild(qt);
+        tail.appendChild(qt);
       }
     }
 
     foot.appendChild(left);
-    foot.appendChild(price);
+    foot.appendChild(tail);
     el.appendChild(h3);
     el.appendChild(made);
     el.appendChild(foot);
     return el;
+  }
+
+  const ASK_PARAM = "ask";
+
+  function askLine(name) {
+    return 'Is "' + name + '" coming back? I would like some when it is.';
+  }
+
+  // Returns false when this page has no contact form, which is how
+  // requestProduct knows it has to travel.
+  //
+  // Two arrivals, and only one of them needs scrolling. A click further up
+  // this page glides down to the form. An arrival from the catalog comes in on
+  // #write, which the browser has already scrolled to, so scrolling again only
+  // fights it - fill the box and take the caret, nothing more.
+  function applyAsk(name, travelled) {
+    const box = document.getElementById("contact-message");
+    if (!box) return false;
+    if (!box.value.trim()) box.value = askLine(name);
+    const sec = document.getElementById("write");
+    if (sec && !travelled) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+    box.focus({ preventScroll: true });
+    return true;
+  }
+
+  // On the front page the form is already here. From the catalog it is not, so
+  // carry the name in the address: it survives the navigation, a reload and a
+  // browser with storage switched off, none of which sessionStorage manages.
+  function requestProduct(name) {
+    if (applyAsk(name, false)) return;
+    location.href = "index.html?" + ASK_PARAM + "=" +
+                    encodeURIComponent(name) + "#write";
+  }
+
+  function wirePendingAsk() {
+    const name = new URLSearchParams(location.search).get(ASK_PARAM);
+    if (!name) return;
+    // Out of the address bar, so a reload or a forwarded link does not keep
+    // re-asking on someone else's behalf.
+    history.replaceState(null, "", location.pathname + location.hash);
+    // The browser does its own jump to the #write fragment as the page
+    // finishes loading. That lands after this script runs and would undo both
+    // the scroll and the focus, so wait until it is done.
+    if (document.readyState === "complete") { applyAsk(name, true); return; }
+    window.addEventListener("load", function () { applyAsk(name, true); });
+  }
+
+  // Stock rotates, so a gap is ordinary rather than a mistake. Asking routes
+  // into the contact form, which means requests can be counted in an inbox
+  // without this page needing anywhere to keep them.
+  function askButton(name) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "ask";
+    b.textContent = "Ask for this";
+    // "Ask for this" repeated down a page names nothing, and the card's only
+    // remaining sign that the jar is out is that it looks faded. Both are
+    // fixed by spelling it out here.
+    b.setAttribute("aria-label", "Ask for " + name + ", all gone");
+    b.addEventListener("click", function () { requestProduct(name); });
+    return b;
   }
 
   function forMaker(products, who) {
@@ -592,6 +655,7 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     fillScaleKey();
     SHEETS.forEach(loadSheet);
     wireMailForms();
+    wirePendingAsk();
     showDiag();
     wireThemeToggle();
   }
