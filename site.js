@@ -340,13 +340,16 @@ function wireThemeToggle() {
 }
 
 function wireMailForms() {
+  // The markup ships with the list closed, so the failure mode of this script
+  // never running is a form nobody can see rather than one nobody can send.
   const listBox = document.getElementById("list-box");
-  if (listBox && !LIST_OPEN) {
-    listBox.hidden = true;
+  if (listBox && LIST_OPEN) {
+    listBox.hidden = false;
+    const grid = /** @type {HTMLElement | null} */ (listBox.closest(".write-grid"));
+    if (grid) grid.removeAttribute("data-list-closed");
+  } else {
     const sub = document.getElementById("subscribe-form");
     if (sub) sub.remove();
-    const grid = /** @type {HTMLElement | null} */ (listBox.closest(".write-grid"));
-    if (grid) grid.style.gridTemplateColumns = "1fr";
   }
 
   /** @param {HTMLElement | null} el @param {string} html @param {boolean} isErr */

@@ -400,6 +400,14 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 
 .grid-empty { padding: 34px 4px; color: var(--ink-mid); font-style: italic; display: none; }
 
+/* Controls that do nothing without script. The pages render from a sheet and
+   work without JavaScript, but these two do not, so they stay out of the way
+   rather than sitting there inert. The class is set by one line in the head,
+   before paint, so neither ever flashes. */
+.filters, .theme-toggle { display: none; }
+.js .filters { display: flex; }
+.js .theme-toggle { display: inline-block; }
+
 /* ---------------- catalog ---------------- */
 
 /* Sits under a featured grid on the front page and reads as the way through
@@ -574,6 +582,9 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 .story-body p { margin: 0; color: #CBBDAC; }
 
 /* ---------------- write us ---------------- */
+
+/* One column while the list is closed, which is how the markup ships. */
+.write-grid[data-list-closed] { grid-template-columns: 1fr; }
 
 .write-grid {
   display: grid;

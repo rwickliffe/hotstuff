@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Comic+Neue:ital,wght@1,700&family=Barlow:ital,wght@0,400;0,600;1,400&family=Barlow+Condensed:wght@500;600&display=swap">
+<script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -176,7 +177,7 @@
       <p class="lede">Orders, questions, or something you want put in a jar. We read every one. If the wire is down, call or find us on Facebook.</p>
     </div>
 
-    <div class="write-grid">
+    <div class="write-grid" data-list-closed>
       <form class="write-form" id="contact-form">
         <label for="contact-name">Name
           <input id="contact-name" name="name" type="text" autocomplete="name" required maxlength="100">
@@ -194,7 +195,7 @@
         <p class="write-status" id="contact-status" role="status" aria-live="polite" tabindex="-1"></p>
       </form>
 
-      <div id="list-box">
+      <div id="list-box" hidden>
         <p class="eyebrow">The list</p>
         <h2 style="font-size:clamp(24px,3.4vw,32px)">Join the list</h2>
         <p class="lede" style="margin-top:10px">We write when there is something to say. It may be a while. You will get a confirm email first.</p>
