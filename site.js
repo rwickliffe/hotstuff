@@ -156,30 +156,16 @@ function renderProducts(products) {
   // A grid marked data-featured leads with the picks; a plain one carries
   // the lot. That is the whole difference between the front page and the
   // catalog, so both run the same render.
-  /** @type {Record<string, number>} */
-  const shownPerMaker = {};
   const grids = /** @type {NodeListOf<HTMLElement>} */ (
     document.querySelectorAll("[data-grid]"));
   grids.forEach(function (grid) {
     const who = (grid.dataset.grid || "").toLowerCase();
     const mine = forMaker(products, who);
     const shown = "featured" in grid.dataset ? featuredFrom(mine) : mine;
-    shownPerMaker[who] = shown.length;
     grid.innerHTML = "";
     shown.forEach(function (p) { grid.appendChild(productCard(p)); });
   });
 
-  // The count only exists once a sheet has landed, so the link is written
-  // here rather than guessed at in the markup, and hides itself when there
-  // is nothing further to see.
-  const links = /** @type {NodeListOf<HTMLElement>} */ (
-    document.querySelectorAll("[data-see-all]"));
-  links.forEach(function (link) {
-    const who = (link.dataset.seeAll || "").toLowerCase();
-    const total = forMaker(products, who).length;
-    link.textContent = "See all " + total + " of " + link.dataset.whose;
-    link.hidden = total <= (shownPerMaker[who] || 0);
-  });
   wireFilter();
 }
 
