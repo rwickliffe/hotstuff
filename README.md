@@ -114,6 +114,10 @@ mean entering every market twice. The sheet is the only place dates live.
       during local development
 - [ ] Flip `LIST_OPEN` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
+- [ ] Move the repo to their GitHub organization and Pages to their Cloudflare,
+      then re-point the four places that name the developer's accounts: the
+      JSON-LD `url` and `image`, the CI badge, `WORKER_URL`, and the Worker's
+      CORS allowlist
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Have each of them tick `featured` for the jars they want on the front
       page. Until they do, it leads with whatever is at the top of their tab
@@ -341,10 +345,30 @@ git show <sha>^:build-horror.py                # read the last version
 
 ## Hosting
 
-GitHub Pages serves this repo as-is: Settings, Pages, deploy from `main`,
-root. A custom domain can be attached later in the same place. Keep the
-repo public. Pages, Actions, and a custom domain's HTTPS certificate are
-free on a public repo; the only recurring bill is the domain itself.
+Today GitHub Pages serves this repo as-is, from `main`, root. That is the
+development arrangement, not the launch one.
+
+At launch both the repo and the hosting move to accounts the owners hold:
+
+- The repo moves to a GitHub organization **Paula** owns, with the developer
+  added as a co-owner. She creates the account with her own address and clicks
+  the verification link herself. An account someone else made with an address
+  she cannot open is not hers.
+- **Cloudflare Pages**, in their Cloudflare account, deploys from that repo.
+  The registrar, the DNS and the mail Worker are already there, so the site
+  joins them rather than sitting in a second place.
+
+Keep the repo public either way: Pages, Actions and a custom domain's
+certificate are free on a public repo, the developer's commits keep their
+authorship after a transfer, and whoever comes next can fork it. The only
+recurring bill is the domain.
+
+Nothing in the live data path depends on the developer's account, and it needs
+to stay that way. Today the browser reads the spreadsheet directly, so the site
+would keep updating from it even if the developer vanished. If that is ever
+replaced by a scheduled build that pulls the sheet, the schedule and the build
+belong in their Cloudflare rather than in a GitHub Action here - a stalled job
+in somebody else's account freezes their prices with no error they can see.
 
 Register the name at Cloudflare if they have the TLD (they do for `.com`).
 At-cost, privacy included, and it is the same login as the Worker and
