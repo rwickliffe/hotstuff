@@ -198,17 +198,26 @@ non-zero, so it works as a habit before pushing:
 ./check
 ```
 
-It parses the page script and the Worker, confirms the generated art block is
-current and that the stylesheet reaches nothing outside itself, runs both test
-suites, and rewrites the sheet URLs to local fixtures.
-Nothing touches the network. GitHub Actions runs the same command on every
-push, so the badge above and a clean local run mean the same thing. The pieces run on their own too:
+It parses the page script, type-checks the Worker, confirms the generated art
+block is current and that the stylesheet reaches nothing outside itself, checks
+both pages are wired to the shared files, runs both test suites, and rewrites
+the sheet URLs to local fixtures. Nothing touches the network. GitHub Actions
+runs the same command on every push, so the badge above and a clean local run
+mean the same thing. The pieces run on their own too:
 
 ```bash
 node --test tools/test-parsing.mjs worker/test-worker.mjs   # both suites
+npx tsc --noEmit --project worker/tsconfig.json             # Worker types
 tools/make-assets.py --check      # generated art is up to date
 tools/test-integrations.sh        # sheet plumbing
 ```
+
+The type check is the only step that needs anything installed. On a fresh
+clone it prints a note and skips, so `./check` still runs with nothing fetched;
+CI runs `npm ci` first, which is what makes it stricter than a bare clone
+rather than merely different. There are two dev dependencies, `typescript` and
+the Workers runtime types. Nothing is shipped from `node_modules`: the site is
+static files and wrangler bundles the Worker at deploy.
 
 `tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
 the date parser, the heat scale. Rather than keep a second copy of them, it
@@ -333,6 +342,24 @@ Open `?debug` to see whether `WORKER_URL` is set, and after a failed mail
 attempt whether the note says `Resend daily cap` or `could not reach`.
 
 Account ownership and handoff steps stay in local `ops.md` (gitignored).
+
+### Why the Worker is TypeScript and the page is not
+
+The Worker already had a build step - `wrangler` bundles it with esbuild on
+every deploy and takes a `.ts` entry directly - so types cost it nothing
+structurally. The page has no build step and is not going to get one, so it
+stays JavaScript.
+
+What that buys is the `Env` interface. Seven secrets and three rate limit
+bindings are set by hand, in an account that will not be ours, and a misspelt
+one used to read `undefined` and surface much later as a confusing Resend
+error. It is now a compile error that suggests the right name.
+
+Two things worth knowing if you touch it. `node --check` cannot read a `.ts`
+file - it parses it as CommonJS and trips on the first `export` - which is why
+that check is the type checker instead. And `worker/test-worker.mjs` imports
+the `.ts` source directly, relying on Node stripping the types at run time,
+which needs Node 22.18 or newer.
 
 ## Later
 
