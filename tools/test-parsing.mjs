@@ -1,11 +1,11 @@
-/* Checks on the pure data functions in index.html.
+/* Checks on the pure data functions in site.js.
  *
  *     node --test tools/ worker/
  *
- * The page is deliberately one self-contained file, so rather than keep a
- * second copy of these functions to test, this lifts them out of index.html by
- * name and runs the real shipped source. Rename one and the extraction fails
- * loudly rather than testing something that no longer exists.
+ * site.js ships as one IIFE with no exports, so rather than keep a second copy
+ * of these functions to test, this lifts them out by name and runs the real
+ * shipped source. Rename one and the extraction fails loudly rather than
+ * testing something that no longer exists.
  *
  * Only pure functions belong here: no DOM, no fetch, no clock.
  */
@@ -16,11 +16,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const src = fs.readFileSync(path.join(here, "..", "index.html"), "utf8");
+const src = fs.readFileSync(path.join(here, "..", "site.js"), "utf8");
 
 function lift(name, opener) {
   const start = src.indexOf(opener);
-  assert.notEqual(start, -1, `${name} not found in index.html - renamed?`);
+  assert.notEqual(start, -1, `${name} not found in site.js - renamed?`);
   // Balance whichever bracket the declaration opens with: a function body is
   // {...}, the heat table is [...].
   const open = /[[{]/.exec(src.slice(start))[0];

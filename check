@@ -23,17 +23,6 @@ step () {
   fi
 }
 
-# The page script is inlined, so pull it out before handing it to node.
-page_js () {
-  # needs a .js suffix or node reads it as an ES module
-  local tmp="${TMPDIR:-/tmp}/hotstuff-page.$$.js"
-  awk '/<script>/{f=1;next} /<\/script>/{f=0} f' index.html > "$tmp"
-  node --check "$tmp"
-  local rc=$?
-  rm -f "$tmp"
-  return $rc
-}
-
 # The stylesheet lives beside the page, and every asset it references is a
 # data: URI rather than a second file, so the art costs no request of its own
 # and there are no relative paths to break when a page moves. It says nothing
@@ -48,7 +37,7 @@ stylesheet () {
     { printf 'styles.css reaches outside itself:\n%s\n' "$stray"; return 1; }
 }
 
-step "page script parses"   page_js
+step "page script parses"   node --check site.js
 step "worker parses"        node --check worker/src/worker.js
 step "generated art is current" tools/make-assets.py --check
 step "stylesheet is self-contained" stylesheet

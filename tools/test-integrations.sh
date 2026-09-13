@@ -11,13 +11,18 @@ set -euo pipefail
 # Paths below are repo-relative, so run from the repo root wherever invoked.
 cd "$(dirname "$0")/.."
 
+# The URLs live in site.js now, so the copy is a pair: a rewritten script and
+# a page that points at it instead of the real one.
 sed -E \
   -e 's|(var\|let\|const) PRODUCTS_CSV_URL = "[^"]*";|const PRODUCTS_CSV_URL = "/data/fixtures/products.csv";|' \
   -e 's|(var\|let\|const) EVENTS_CSV_URL = "[^"]*";|const EVENTS_CSV_URL = "/data/fixtures/events.csv";|' \
-  index.html > integration-test.html
+  site.js > integration-site.js
 
-grep -q '"/data/fixtures/products.csv"' integration-test.html || { echo "FAIL: catalog URL not substituted";  exit 1; }
-grep -q '"/data/fixtures/events.csv"' integration-test.html || { echo "FAIL: schedule URL not substituted"; exit 1; }
+sed 's|src="site.js"|src="integration-site.js"|' index.html > integration-test.html
+
+grep -q '"/data/fixtures/products.csv"' integration-site.js || { echo "FAIL: catalog URL not substituted";  exit 1; }
+grep -q '"/data/fixtures/events.csv"' integration-site.js || { echo "FAIL: schedule URL not substituted"; exit 1; }
+grep -q 'src="integration-site.js"' integration-test.html || { echo "FAIL: test page still points at the real script"; exit 1; }
 
 echo "OK. Serve the folder and open: http://localhost:8765/integration-test.html"
 echo
