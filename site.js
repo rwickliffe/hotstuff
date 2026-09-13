@@ -96,25 +96,7 @@ function showDiag() {
 }
 
 
-/**
- * One row of the products sheet. It came out of a spreadsheet, so every field
- * is a string and nothing is a number until something parses it.
- * @typedef {Record<string, string>} Product
- */
-
-/**
- * What the ?debug panel prints about one data source.
- * @typedef {{ state: string, rows?: number | null, note?: string }} Source
- */
-
-/**
- * A tab of the spreadsheet, and everything needed to render it.
- * @typedef {{ label: string, url: string, seed: string, source: Source,
- *   render: (rows: Product[], isLive: boolean) => void,
- *   hint: string, fallback: string }} Sheet
- */
-
-/** What postMail answers with. @typedef {{ ok: boolean, reason?: string }} MailResult */
+/** @import { MailResult, Product, Sheet, Source } from "./types.js" */
 
 // --- pepper / skull pips ---
 /** @param {Element} into @param {string | number} heat */

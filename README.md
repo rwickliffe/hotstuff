@@ -369,11 +369,27 @@ The Worker already had a build step - `wrangler` bundles it with esbuild on
 every deploy and takes a `.ts` entry directly - so `.ts` costs it nothing
 structurally, and it is written in TypeScript.
 
-The page has no build step and is not getting one, so it stays JavaScript and
-is annotated with JSDoc, checked by `tsc --noEmit` under `checkJs`. The types
-are comments. **The file that ships is the file in the repo**, byte for byte,
-which is the whole point: nothing compiles, nothing is generated, and what you
-read is what the browser runs.
+The page has no build step for now, so it stays JavaScript and is annotated
+with JSDoc, checked by `tsc --noEmit` under `checkJs`. The types are comments.
+**The file that ships is the file in the repo**, byte for byte: nothing
+compiles, nothing is generated, and what you read is what the browser runs.
+
+The shapes themselves live in `types.d.ts` as ordinary TypeScript, because
+`Sheet` written as a JSDoc `@typedef` is unpleasant to read. `site.js` pulls
+the names in with one line:
+
+```js
+/** @import { MailResult, Product, Sheet, Source } from "./types.js" */
+```
+
+`@import` is a comment, so nothing is imported at run time, and the names stay
+scoped to the file rather than becoming ambient globals - delete that line and
+the type check fails rather than silently carrying on.
+
+Revisit this if the site moves to Cloudflare Pages. A build command there is a
+dashboard field rather than a pipeline to build, which removes most of the
+reason not to write the page in TypeScript too; `types.d.ts` is already
+TypeScript and would move across untouched.
 
 That check is not decoration. Turning it on found three places that were right
 only by accident: `isNaN(d)` passed a Date where a number was expected and

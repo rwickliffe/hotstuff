@@ -10,5 +10,5 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["site.js", "lib/**/*.js"]
+  "include": ["site.js", "types.d.ts", "lib/**/*.js"]
 }
