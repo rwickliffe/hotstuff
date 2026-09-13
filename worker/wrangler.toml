@@ -1,4 +1,4 @@
-# Secrets, set with `wrangler secret put NAME`. One prefix per route family.
+# Secrets, set with `npx wrangler secret put NAME`. One prefix per route family.
 #
 #   RESEND_API_KEY             from resend.com. Full access: /confirm writes a
 #                              Contact and /send creates a Broadcast, and a

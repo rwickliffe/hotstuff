@@ -350,6 +350,15 @@ every deploy and takes a `.ts` entry directly - so types cost it nothing
 structurally. The page has no build step and is not going to get one, so it
 stays JavaScript.
 
+Wrangler is run through `npx wrangler ...` rather than installed globally, so
+there is nothing to keep in step across machines:
+
+```bash
+npx wrangler deploy --dry-run    # bundle without uploading, to check a change
+npx wrangler deploy              # into whichever account is logged in
+npx wrangler secret put NAME
+```
+
 What that buys is the `Env` interface. Seven secrets and three rate limit
 bindings are set by hand, in an account that will not be ours, and a misspelt
 one used to read `undefined` and surface much later as a confusing Resend
