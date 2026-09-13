@@ -5,8 +5,13 @@
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
-A static site: one HTML page, one stylesheet, and a Google Sheet the owners
-edit themselves. No build step, no framework, no server.
+A static site: two HTML pages, one stylesheet, one script, and a Google Sheet
+the owners edit themselves. No build step, no framework, no server.
+
+`index.html` leads with a handful of featured jars per maker.
+`products.html` carries the full list, which runs to sixty-odd items and
+turns over with the season. Both render from the same sheet through the same
+`site.js`, so there is one copy of every rule about how a jar is drawn.
 
 ## Why it is built this way
 
@@ -29,8 +34,8 @@ Contact notes and newsletter signups go to Resend through the Worker when
 
 One spreadsheet with two tabs drives the page. Each tab is published
 separately and gets its own CSV address. Both are constants near the top of
-the `<script>` block in `index.html`, and either left empty falls back to the
-sample content baked in, so the page always renders.
+the top of `site.js`, and either left empty falls back to the sample content
+baked in below them, so both pages always render.
 
 ```js
 const PRODUCTS_CSV_URL = "";   // products tab
@@ -75,7 +80,8 @@ Columns:
 | `heat` | `1` to `6`. Drives the flame rating and the card's colour. |
 | `price` | Number only, no dollar sign. |
 | `price_quart` | Leave empty unless the item comes in quarts. |
-| `sold_out` | `yes` to grey the card out and show "All gone". |
+| `sold_out` | `yes` to grey the card out, show "All gone", and offer the visitor an **Ask for this** button. |
+| `featured` | `yes` to lift the item onto the front page. Up to six per maker. Leave the whole column empty and the front page simply leads with the first six, so a blank column is never an empty shelf. |
 
 Use a spreadsheet that holds nothing but this list. Publishing to web makes it
 public, so it should not sit in a file that also has costs or supplier notes
@@ -108,6 +114,8 @@ mean entering every market twice. The sheet is the only place dates live.
 - [ ] Flip `LIST_OPEN` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
+- [ ] Have each of them tick `featured` for the jars they want on the front
+      page. Until they do, it leads with whatever is at the top of their tab
 - [ ] Delete the preview scaffolding: the `.draft` CSS block and the
       `<div class="draft">` ribbon
 
@@ -117,7 +125,7 @@ mean entering every market twice. The sheet is the only place dates live.
 python3 -m http.server 8765     # then open http://localhost:8765
 ```
 
-**Do not open `index.html` straight off disk.** From a `file://` path the
+**Do not open the pages straight off disk.** From a `file://` path the
 browser treats the page as having no origin and blocks the requests to Google,
 so both sheets fail and the page quietly falls back to its built-in sample
 products and dates. It looks like it works. It is just not reading the
@@ -157,6 +165,30 @@ image loads. The `img { height: auto }` rule in the stylesheet has to stay
 with them: those attributes are presentational hints, so without it the
 height is pinned to the intrinsic pixel value and every image stretches.
 
+## The two pages
+
+The front page shows what the sheet's `featured` column marks, capped at six a
+maker, and links on to the catalog with a live count: *See all 34 of Crazy
+John's*. The link hides itself when there is nothing more to see, so a maker
+with four jars does not get a link to a page showing the same four.
+
+The heat filter lives on `products.html` and not on the front page. Filtering
+six hand-picked jars sorts nothing; filtering forty is the reason the control
+exists.
+
+**Asking for what is out.** Stock rotates, so jars are out often and that is
+ordinary. A sold-out card carries an *Ask for this* button, which drops the
+product into the contact form:
+
+> Is "Smoked Ghostly Salsa" coming back? I would like some when it is.
+
+From the front page it scrolls down to the form. From the catalog it travels,
+carrying the name in the address (`index.html?ask=...#write`) and clearing it
+out of the address bar on arrival. Requests land in the same inbox as any
+other note, which is the whole mechanism: counting how many people asked for a
+thing needs no database, only a mail folder and a consistent sentence to
+search for.
+
 ## Checks
 
 One command runs everything. It is quiet unless something fails, and exits
@@ -180,7 +212,7 @@ tools/test-integrations.sh        # sheet plumbing
 
 `tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
 the date parser, the heat scale. Rather than keep a second copy of them, it
-lifts the real functions out of `index.html` by name, so renaming one fails
+lifts the real functions out of `site.js` by name, so renaming one fails
 loudly instead of quietly testing something that no longer exists.
 
 `worker/test-worker.mjs` covers token signing and expiry, email and HTML
