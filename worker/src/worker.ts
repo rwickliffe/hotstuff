@@ -47,6 +47,31 @@ const SITE = {
   },
 };
 
+/**
+ * Everything the Worker is handed at runtime. The seven secrets are set with
+ * `wrangler secret put NAME`; the three limiters come from the [[ratelimits]]
+ * blocks in wrangler.toml. A name misspelt here is a compile error now, where
+ * before it read undefined and surfaced later as a puzzling Resend failure.
+ */
+export interface Env {
+  RESEND_API_KEY: string;
+  RESEND_FROM: string;
+  RESEND_SEGMENT_ID: string;
+  CONTACT_TO: string;
+  SUBSCRIBE_SIGNING_KEY: string;
+  BROADCAST_PASSWORD: string;
+  BROADCAST_POSTAL_ADDRESS: string;
+  MAIL_IP: RateLimit;
+  MAIL_EMAIL: RateLimit;
+  SEND_IP: RateLimit;
+}
+
+/** The limiters only, so `limited` cannot be handed the name of a secret. */
+type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
+
+/** A decoded JSON body. Off the wire, so every field is still unproven. */
+type Payload = Record<string, unknown>;
+
 const MAX_BODY = 8192;
 const MAX_SEND_BODY = 65536;
 const MAX_NAME = 100;
@@ -57,7 +82,7 @@ const MAX_BROADCAST = 8000;
 const CONFIRM_TTL_MS = 60 * 60 * 1000;
 
 export default {
-  async fetch(req, env) {
+  async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname.replace(/\/+$/, "") || "/";
 
@@ -79,7 +104,7 @@ export default {
   },
 };
 
-function cors(req, res) {
+function cors(req: Request, res: Response): Response {
   const origin = req.headers.get("Origin") || "";
   const headers = new Headers(res.headers);
   if (SITE.origins.includes(origin)) {
@@ -91,30 +116,30 @@ function cors(req, res) {
   return new Response(res.body, { status: res.status, headers });
 }
 
-function json(obj, status) {
+function json(obj: unknown, status: number): Response {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 }
 
-function html(body, status) {
+function html(body: string, status?: number): Response {
   return new Response(body, {
     status: status || 200,
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
 
-function ipOf(req) {
+function ipOf(req: Request): string {
   return req.headers.get("CF-Connecting-IP") || "unknown";
 }
 
-async function limited(env, binding, key) {
+async function limited(env: Env, binding: Limiter, key: string): Promise<boolean> {
   const { success } = await env[binding].limit({ key });
   return success;
 }
 
-function emailOk(s) {
+function emailOk(s: unknown): boolean {
   if (typeof s !== "string") return false;
   const e = s.trim().toLowerCase();
   if (e.length < 5 || e.length > MAX_EMAIL) return false;
@@ -124,7 +149,7 @@ function emailOk(s) {
     .every((label) => !label.startsWith("-") && !label.endsWith("-"));
 }
 
-async function readJson(req, maxBody = MAX_BODY) {
+async function readJson(req: Request, maxBody: number = MAX_BODY): Promise<{ err?: Response; data?: Payload }> {
   const len = Number(req.headers.get("Content-Length") || "0");
   if (len > maxBody) return { err: json({ ok: false, reason: "size" }, 413) };
   const text = await req.text();
@@ -136,11 +161,11 @@ async function readJson(req, maxBody = MAX_BODY) {
   }
 }
 
-function honeypot(data) {
+function honeypot(data: Payload): boolean {
   return !!(data && (data.company || data.website));
 }
 
-async function resendSend(env, payload) {
+async function resendSend(env: Env, payload: unknown): Promise<{ ok?: true; reason?: string }> {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -154,12 +179,12 @@ async function resendSend(env, payload) {
   return { ok: true };
 }
 
-function resendFail(reason) {
+function resendFail(reason: string | undefined): Response {
   if (reason === "quota") return json({ ok: false, reason: "quota" }, 429);
   return json({ ok: false, reason: "down" }, 502);
 }
 
-async function contact(req, env) {
+async function contact(req: Request, env: Env): Promise<Response> {
   const parsed = await readJson(req);
   if (parsed.err) return parsed.err;
   const data = parsed.data || {};
@@ -192,7 +217,7 @@ async function contact(req, env) {
   return json({ ok: true }, 200);
 }
 
-async function subscribe(req, env) {
+async function subscribe(req: Request, env: Env): Promise<Response> {
   const parsed = await readJson(req);
   if (parsed.err) return parsed.err;
   const data = parsed.data || {};
@@ -228,7 +253,7 @@ async function subscribe(req, env) {
   return json({ ok: true }, 200);
 }
 
-async function confirmGet(url, env) {
+async function confirmGet(url: URL, env: Env): Promise<Response> {
   const token = url.searchParams.get("t") || "";
   const email = await verifyToken(token, env.SUBSCRIBE_SIGNING_KEY);
   if (!email) {
@@ -245,7 +270,7 @@ async function confirmGet(url, env) {
   ));
 }
 
-async function confirmPost(req, env) {
+async function confirmPost(req: Request, env: Env): Promise<Response> {
   let token = "";
   const ct = req.headers.get("Content-Type") || "";
   if (ct.includes("application/x-www-form-urlencoded")) {
@@ -308,7 +333,7 @@ async function confirmPost(req, env) {
   ));
 }
 
-function composePage(env) {
+function composePage(env: Env): Response {
   const ready = !!(env.BROADCAST_POSTAL_ADDRESS && String(env.BROADCAST_POSTAL_ADDRESS).trim());
   const gate = ready
     ? "<p class=\"muted\">Broadcasts go to the whole list. Preview only until you hit send.</p>"
@@ -342,7 +367,7 @@ function composePage(env) {
   ));
 }
 
-async function sendBroadcast(req, env) {
+async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   if (!(await limited(env, "SEND_IP", "send:" + ipOf(req)))) {
     return json({ ok: false, reason: "rate" }, 429);
   }
@@ -398,24 +423,25 @@ async function sendBroadcast(req, env) {
   return json({ ok: true }, 200);
 }
 
-function timingSafeEqual(a, b) {
+function timingSafeEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
   const aa = enc.encode(a);
   const bb = enc.encode(b);
   if (aa.length !== bb.length) return false;
   let out = 0;
-  for (let i = 0; i < aa.length; i++) out |= aa[i] ^ bb[i];
+  // Bounded by aa.length, and bb is the same length, so neither read can miss.
+  for (let i = 0; i < aa.length; i++) out |= aa[i]! ^ bb[i]!;
   return out === 0;
 }
 
-function b64url(bytes) {
+function b64url(bytes: Uint8Array | ArrayBuffer): string {
   let s = "";
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+  for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]!);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function fromB64url(s) {
+function fromB64url(s: string): Uint8Array {
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
   const bin = atob(b64);
@@ -424,7 +450,7 @@ function fromB64url(s) {
   return out;
 }
 
-async function hmacKey(secret) {
+async function hmacKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -434,25 +460,29 @@ async function hmacKey(secret) {
   );
 }
 
-async function makeToken(email, exp, secret) {
+async function makeToken(email: string, exp: number, secret: string): Promise<string> {
   const payload = email + "|" + exp;
   const key = await hmacKey(secret);
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   return b64url(new TextEncoder().encode(payload)) + "." + b64url(sig);
 }
 
-async function verifyToken(token, secret) {
+async function verifyToken(token: string, secret: string): Promise<string | null> {
   if (!token || typeof token !== "string") return null;
   const parts = token.split(".");
+  // Exactly two, so a token carrying extra dots is refused rather than having
+  // the tail quietly ignored. The pair is pulled out after that check so the
+  // reads below are provably present rather than asserted to be.
   if (parts.length !== 2) return null;
+  const [body, sig] = parts as [string, string];
   let payload, ok;
   try {
-    payload = new TextDecoder().decode(fromB64url(parts[0]));
+    payload = new TextDecoder().decode(fromB64url(body));
     const key = await hmacKey(secret);
     ok = await crypto.subtle.verify(
       "HMAC",
       key,
-      fromB64url(parts[1]),
+      fromB64url(sig),
       new TextEncoder().encode(payload)
     );
   } catch {
@@ -467,7 +497,7 @@ async function verifyToken(token, secret) {
   return email;
 }
 
-function esc(s) {
+function esc(s: unknown): string {
   return String(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -476,7 +506,7 @@ function esc(s) {
     .replace(/'/g, "&#39;");
 }
 
-function thinPage(title, inner) {
+function thinPage(title: string, inner: string): string {
   return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
     "<title>" + esc(title) + " · " + esc(SITE.name) + "</title>" +

@@ -10,7 +10,7 @@ import worker, {
   makeToken,
   timingSafeEqual,
   verifyToken,
-} from "./src/worker.js";
+} from "./src/worker.ts";
 
 const limiter = { limit: async () => ({ success: true }) };
 

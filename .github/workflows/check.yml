@@ -25,5 +25,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+          cache: npm
+
+      # The type checker is the one step that needs an install. ./check skips
+      # it with a note when it is absent, so this is what makes CI stricter
+      # than a fresh clone rather than merely different from it.
+      - run: npm ci
 
       - run: ./check

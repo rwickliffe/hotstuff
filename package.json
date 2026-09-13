@@ -1,0 +1,12 @@
+{
+  "name": "hotstuff",
+  "private": true,
+  "description": "Development tooling only. Nothing in here ships: the site is static files served as-is, and the Worker is bundled by wrangler at deploy time.",
+  "scripts": {
+    "types": "tsc --noEmit --project worker/tsconfig.json"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260911.1",
+    "typescript": "^7.0.2"
+  }
+}

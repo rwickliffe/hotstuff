@@ -11,6 +11,15 @@ cd "$(dirname "$0")"
 
 failed=0
 
+# node --check cannot read TypeScript: it parses a .ts file as CommonJS and
+# trips on the first export. The type checker does both jobs instead. It is the
+# one step that needs an install, so it is skipped rather than failed on a
+# fresh clone - running ./check has never required fetching anything.
+tsc=node_modules/.bin/tsc
+if [ ! -x "$tsc" ]; then
+  printf '  note  typescript not installed, skipping the type check (npm install)\n'
+fi
+
 step () {
   local name="$1"; shift
   local out
@@ -27,6 +36,11 @@ step () {
 # every asset the stylesheet references has to be a data: URI rather than a
 # second file, so the art costs no request of its own. It says nothing about
 # the photos or the fonts, which the pages still fetch.
+worker_types () {
+  [ -x "$tsc" ] || return 0
+  "$tsc" --noEmit --project worker/tsconfig.json
+}
+
 pages () {
   local page
   for page in index.html products.html; do
@@ -59,7 +73,7 @@ flame () {
 }
 
 step "page script parses"   node --check site.js
-step "worker parses"        node --check worker/src/worker.js
+step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
 step "pages are wired up"       pages
 step "favicon matches the sprite" flame

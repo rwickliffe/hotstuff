@@ -31,5 +31,9 @@ ops.md
 
 # Wrangler local state
 worker/.wrangler/
+
+# Dev dependencies: the type checker and the Workers runtime types. Nothing
+# here ships - the site is static files and wrangler bundles the Worker.
+node_modules/
 worker/node_modules/
 
