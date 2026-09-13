@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260911.1",
+    "linkedom": "^0.18.13",
     "typescript": "^7.0.2"
   }
 }
