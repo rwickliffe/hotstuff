@@ -127,7 +127,8 @@ python3 -m http.server 8765     # then open http://localhost:8765
 
 **The pages need a server. `file://` does not work at all any more.** A module
 script is fetched under CORS rules and a `file://` document has no origin to
-satisfy them, so `site.js` never loads and both grids stay empty. Before the
+satisfy them, so `site.js` never loads: both product grids and the schedule
+come up empty, since all three render from it. Before the
 move to modules this failed more quietly - the script ran, the sheet fetches
 were blocked, and the page fell back to its built-in list while looking
 perfectly fine. The loud version is the better one: an empty page is obviously
@@ -201,7 +202,7 @@ non-zero, so it works as a habit before pushing:
 ./check
 ```
 
-It parses both page modules, type-checks the Worker, confirms the generated art
+It parses both page modules, type-checks the page and the Worker, confirms the generated art
 block is current and that the stylesheet reaches nothing outside itself, checks
 both pages are wired to the shared files, runs both test suites, and rewrites
 the sheet URLs to local fixtures. Nothing touches the network. GitHub Actions
@@ -210,7 +211,7 @@ mean the same thing. The pieces run on their own too:
 
 ```bash
 node --test tools/test-parsing.mjs worker/test-worker.mjs   # both suites
-npx tsc --noEmit --project worker/tsconfig.json             # Worker types
+npm run types                                               # both projects
 tools/make-assets.py --check      # generated art is up to date
 tools/test-integrations.sh        # sheet plumbing
 ```
@@ -359,12 +360,29 @@ do in forty-nine lines that no longer exist.
 Both pages load `site.js` as `type="module"`, which means it is deferred and
 runs after parsing rather than partway through it.
 
-### Why the Worker is TypeScript and the page is not
+### Types, without the page gaining a build step
+
+Both halves are type-checked. They get there differently, because they are not
+in the same position.
 
 The Worker already had a build step - `wrangler` bundles it with esbuild on
-every deploy and takes a `.ts` entry directly - so types cost it nothing
-structurally. The page has no build step and is not going to get one, so it
-stays JavaScript.
+every deploy and takes a `.ts` entry directly - so `.ts` costs it nothing
+structurally, and it is written in TypeScript.
+
+The page has no build step and is not getting one, so it stays JavaScript and
+is annotated with JSDoc, checked by `tsc --noEmit` under `checkJs`. The types
+are comments. **The file that ships is the file in the repo**, byte for byte,
+which is the whole point: nothing compiles, nothing is generated, and what you
+read is what the browser runs.
+
+That check is not decoration. Turning it on found three places that were right
+only by accident: `isNaN(d)` passed a Date where a number was expected and
+worked through coercion; `new Error(response.status)` did the same with a
+number where a string belongs; and `syncToggleLabel` dereferenced the theme
+toggle with the null guard sitting in its caller, one call site away from
+throwing on a page that has no toggle. It also found the schedule hanging a
+`Date` on the string-keyed sheet rows as `_d` and then sorting with
+`a._d - b._d`, subtracting one object from another.
 
 Wrangler is run through `npx wrangler ...` rather than installed globally, so
 there is nothing to keep in step across machines:
