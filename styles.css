@@ -400,6 +400,61 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 
 .grid-empty { padding: 34px 4px; color: var(--ink-mid); font-style: italic; display: none; }
 
+/* ---------------- catalog ---------------- */
+
+/* Sits under a featured grid on the front page and reads as the way through
+   to the rest, not as another jar. Hidden until the script knows the count. */
+.see-all-row { margin: 24px 0 0; }
+
+.see-all {
+  display: inline-block;
+  font-family: var(--cond); font-size: 15.5px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-mid); text-decoration: none;
+  border: 1.5px solid var(--rule-firm);
+  padding: 9px 19px;
+  transition: color 130ms ease, border-color 130ms ease;
+}
+.see-all:hover { border-color: var(--chile); color: var(--chile-ink); }
+.see-all:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
+
+/* The catalog's masthead: dark like the hero so the two pages read as one
+   site, without the hero's photograph or its height. Colours are the hero's
+   own, which are already measured against this ground. */
+.page-head {
+  background: var(--char); color: var(--bone);
+  padding: clamp(30px, 5vw, 52px) 0 clamp(34px, 5vw, 56px);
+}
+.page-head h1 {
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(31px, 5.4vw, 54px);
+  line-height: 1.04; color: var(--bone);
+  margin: 16px 0 0; max-width: 18ch; text-wrap: balance;
+}
+.page-head .lede { color: #E4D8C8; max-width: 56ch; }
+
+.page-back {
+  font-family: var(--cond); font-size: 14.5px; font-weight: 600;
+  letter-spacing: 0.13em; text-transform: uppercase;
+  color: #E4D8C8; text-decoration: none;
+}
+.page-back::before { content: "\2190"; margin-right: 9px; }
+.page-back:hover { color: #FFF6F2; }
+.page-back:focus-visible { outline: 3px solid var(--flame); outline-offset: 3px; }
+
+.maker-jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.maker-jump a {
+  font-family: var(--cond); font-size: 15.5px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: #F6EFE6; text-decoration: none;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(246,239,230,0.5);
+  padding: 8px 17px;
+  transition: background 130ms ease, border-color 130ms ease;
+}
+.maker-jump a:hover { background: rgba(255,255,255,0.13); border-color: #F6EFE6; }
+.maker-jump a:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
+
 /* ---------------- pricing ---------------- */
 
 .pricing { background: var(--paper-sunk); }

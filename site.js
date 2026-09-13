@@ -19,6 +19,11 @@
   const WORKER_URL = "https://hotstuff-mail.rwickliffe.workers.dev";
   const LIST_OPEN = false;
 
+  // How many jars the front page leads with per maker. The catalog shows the
+  // lot. Six tiles evenly at one, two, three and six columns, which is every
+  // width the grid actually settles on.
+  const FEATURED_MAX = 6;
+
   // Where each dataset actually came from. Surfaced only at ?debug, because a
   // customer should never see "our spreadsheet is broken" on a salsa website,
   // but Paula needs a way to check that an edit actually landed.
@@ -27,25 +32,25 @@
   // configured and cannot be reached. It doubles as the column format, and is
   // the same content as data/products.csv and data/events.csv. It lives here
   // rather than in a page so the front page and the catalog cannot drift.
-  const SEED_PRODUCTS = `maker,name,description,heat,price,price_quart,sold_out
-Paula,Mild Smoked Jalapeño Salsa,"Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",1,10,,
-Paula,Jalapeño Salsa,"Tomato, jalapeños, serrano pepper, cilantro, garlic, onion and lime juice.",2,10,,
-Paula,Tropical Fire Salsa,"Mango, papaya, strawberry, habanero, jalapeño, serrano, bell pepper, cilantro and lime.",4,10,,
-Paula,Smoked Ghostly Salsa,"Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",5,10,,
-Paula,Cowboy Candy,"Candied jalapeños with sugar, spices and cider vinegar. Sweet first, then not.",2,10,,
-Paula,Pineapple Cowboy Candy,"Pineapple, jalapeños, sugar, ginger, spices and cider vinegar.",2,10,,
-Paula,What's Yer Garlicky Dill,"Cucumber, garlic, onion and bell pepper. The one that disappears first.",1,10,15,
-Paula,Spicy Bread n Butter,"Cucumber, onion, sugar, bell pepper and spices, with a little heat behind it.",2,10,15,
-Paula,Chow Chow,"Made the old way. Back when the cabbage is ready.",1,10,,yes
-John,Vampire Killer,"Red jalapeño, garlic, lemon juice, onion, cilantro, olive oil and white vinegar.",2,10,,
-John,Honey Jalapeño,"Jalapeño, honey, lemon juice, garlic, onion, olive oil and cider vinegar.",2,10,,
-John,Tropical Scotch Bonnet,"Scotch bonnet, pineapple, garlic, onion, cilantro, olive oil and lemon juice.",4,10,,
-John,Smoked Dragon's Breath,"Smoked habanero, garlic, onion, cilantro, olive oil and cider vinegar.",5,10,,
-John,Ghostly Blackberry,"Ghost pepper, blackberries, garlic, onion, cilantro and cider vinegar.",5,10,,
-John,Reaper's Luscious Peaches,"Carolina reaper, peaches, lime juice, avocado oil, whiskey and spices.",6,10,,
-John,Insanity,"Carolina reaper, ghost pepper, garlic, onion, cilantro and cider vinegar.",6,10,,
-John,Blueberry Fields of Death,"Carolina reaper, blueberries, onion, cilantro, olive oil and cider vinegar.",6,10,,
-John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpion pepper, ghost pepper, garlic, onion and cilantro.",6,10,,`;
+  const SEED_PRODUCTS = `maker,name,description,heat,price,price_quart,sold_out,featured
+Paula,Mild Smoked Jalapeño Salsa,"Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",1,10,,,
+Paula,Jalapeño Salsa,"Tomato, jalapeños, serrano pepper, cilantro, garlic, onion and lime juice.",2,10,,,yes
+Paula,Tropical Fire Salsa,"Mango, papaya, strawberry, habanero, jalapeño, serrano, bell pepper, cilantro and lime.",4,10,,,yes
+Paula,Smoked Ghostly Salsa,"Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",5,10,,,
+Paula,Cowboy Candy,"Candied jalapeños with sugar, spices and cider vinegar. Sweet first, then not.",2,10,,,yes
+Paula,Pineapple Cowboy Candy,"Pineapple, jalapeños, sugar, ginger, spices and cider vinegar.",2,10,,,
+Paula,What's Yer Garlicky Dill,"Cucumber, garlic, onion and bell pepper. The one that disappears first.",1,10,15,,yes
+Paula,Spicy Bread n Butter,"Cucumber, onion, sugar, bell pepper and spices, with a little heat behind it.",2,10,15,,
+Paula,Chow Chow,Made the old way. Back when the cabbage is ready.,1,10,,yes,
+John,Vampire Killer,"Red jalapeño, garlic, lemon juice, onion, cilantro, olive oil and white vinegar.",2,10,,,yes
+John,Honey Jalapeño,"Jalapeño, honey, lemon juice, garlic, onion, olive oil and cider vinegar.",2,10,,,
+John,Tropical Scotch Bonnet,"Scotch bonnet, pineapple, garlic, onion, cilantro, olive oil and lemon juice.",4,10,,,yes
+John,Smoked Dragon's Breath,"Smoked habanero, garlic, onion, cilantro, olive oil and cider vinegar.",5,10,,,
+John,Ghostly Blackberry,"Ghost pepper, blackberries, garlic, onion, cilantro and cider vinegar.",5,10,,,yes
+John,Reaper's Luscious Peaches,"Carolina reaper, peaches, lime juice, avocado oil, whiskey and spices.",6,10,,,
+John,Insanity,"Carolina reaper, ghost pepper, garlic, onion, cilantro and cider vinegar.",6,10,,,yes
+John,Blueberry Fields of Death,"Carolina reaper, blueberries, onion, cilantro, olive oil and cider vinegar.",6,10,,,
+John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpion pepper, ghost pepper, garlic, onion and cilantro.",6,10,,,`;
 
   const SEED_EVENTS = `date,name,time,address
 2026-09-06,Elgin Farmers Market,8:00am to 1:00pm,"Main St, Elgin, TX 78621"
@@ -157,9 +162,15 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     into.setAttribute("aria-label", n + " out of 6, " + (heatWord(n) || "unrated"));
   }
 
+  // The sheet is typed by hand, so accept the spellings a person actually
+  // uses. sold_out and featured are both read through here.
+  function isYes(v) {
+    return /^(y|yes|true|1|x|sold ?out)$/i.test(String(v || "").trim());
+  }
+
   function productCard(p) {
     const heat = parseInt(p.heat, 10) || 0;
-    const soldOut = /^(y|yes|true|1|sold ?out)$/i.test(p.sold_out || "");
+    const soldOut = isYes(p.sold_out);
     const el = document.createElement("article");
     el.className = "prod" + (heat ? " heat-" + heat : "") +
                    (soldOut ? " sold-out" : "");
@@ -208,13 +219,41 @@ John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpio
     return el;
   }
 
+  function forMaker(products, who) {
+    return products.filter(function (p) {
+      return (p.maker || "").trim().toLowerCase() === who;
+    });
+  }
+
+  function featuredFrom(mine) {
+    const picked = mine.filter(function (p) { return isYes(p.featured); });
+    // Nobody has ticked the column yet: lead with the top of their list rather
+    // than an empty shelf.
+    return (picked.length ? picked : mine).slice(0, FEATURED_MAX);
+  }
+
   function renderProducts(products) {
+    // A grid marked data-featured leads with the picks; a plain one carries
+    // the lot. That is the whole difference between the front page and the
+    // catalog, so both run the same render.
+    const shownPerMaker = {};
     document.querySelectorAll("[data-grid]").forEach(function (grid) {
       const who = grid.dataset.grid.toLowerCase();
+      const mine = forMaker(products, who);
+      const shown = "featured" in grid.dataset ? featuredFrom(mine) : mine;
+      shownPerMaker[who] = shown.length;
       grid.innerHTML = "";
-      products
-        .filter(function (p) { return (p.maker || "").trim().toLowerCase() === who; })
-        .forEach(function (p) { grid.appendChild(productCard(p)); });
+      shown.forEach(function (p) { grid.appendChild(productCard(p)); });
+    });
+
+    // The count only exists once a sheet has landed, so the link is written
+    // here rather than guessed at in the markup, and hides itself when there
+    // is nothing further to see.
+    document.querySelectorAll("[data-see-all]").forEach(function (link) {
+      const who = link.dataset.seeAll.toLowerCase();
+      const total = forMaker(products, who).length;
+      link.textContent = "See all " + total + " of " + link.dataset.whose;
+      link.hidden = total <= (shownPerMaker[who] || 0);
     });
     wireFilter();
   }

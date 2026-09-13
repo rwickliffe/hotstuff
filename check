@@ -23,13 +23,18 @@ step () {
   fi
 }
 
-# The stylesheet lives beside the page, and every asset it references is a
-# data: URI rather than a second file, so the art costs no request of its own
-# and there are no relative paths to break when a page moves. It says nothing
-# about the photos or the fonts, which the page still fetches.
-stylesheet () {
-  grep -q '<link rel="stylesheet" href="styles.css">' index.html ||
-    { echo "index.html does not link styles.css"; return 1; }
+# Both pages have to reach the shared stylesheet and the shared script, and
+# every asset the stylesheet references has to be a data: URI rather than a
+# second file, so the art costs no request of its own. It says nothing about
+# the photos or the fonts, which the pages still fetch.
+pages () {
+  local page
+  for page in index.html products.html; do
+    grep -q '<link rel="stylesheet" href="styles.css">' "$page" ||
+      { echo "$page does not link styles.css"; return 1; }
+    grep -q '<script src="site.js"></script>' "$page" ||
+      { echo "$page does not load site.js"; return 1; }
+  done
   local stray
   # The generated block writes url("data:..."), so allow either quoting.
   stray=$(grep -o 'url([^)]*' styles.css | grep -vE 'url\(["'"'"']?data:') || true
@@ -37,10 +42,27 @@ stylesheet () {
     { printf 'styles.css reaches outside itself:\n%s\n' "$stray"; return 1; }
 }
 
+# The favicon carries its own copy of the flame path. It has to: a standalone
+# icon needs a baked-in fill to render at all, and the sprite must not have one
+# or the heat pips cannot take their colour from the stylesheet. Two copies of
+# one shape is the price of that, so check they have not drifted. Anchor the
+# match on a space, or id="i-flame" answers to d=" as well.
+flame () {
+  local sprite page icon
+  sprite=$(grep -o ' d="[^"]*"' flame.svg | sed 's/^ d="//; s/"$//')
+  [ -n "$sprite" ] || { echo "no path found in flame.svg"; return 1; }
+  for page in index.html products.html; do
+    icon=$(grep -o " d='[^']*'" "$page" | head -1 | sed "s/^ d='//; s/'$//")
+    [ "$icon" = "$sprite" ] ||
+      { echo "the favicon in $page has drifted from flame.svg"; return 1; }
+  done
+}
+
 step "page script parses"   node --check site.js
 step "worker parses"        node --check worker/src/worker.js
 step "generated art is current" tools/make-assets.py --check
-step "stylesheet is self-contained" stylesheet
+step "pages are wired up"       pages
+step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
