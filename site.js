@@ -77,6 +77,7 @@ function showDiag() {
     "background:#14100E;color:#F0E7DC;border:1px solid #46392F;border-radius:4px;" +
     "padding:12px 14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;" +
     "box-shadow:0 6px 24px rgba(0,0,0,.4)";
+  /** @param {string} name @param {Source} source */
   function sourceLine(name, source) {
     const live = /^live/.test(source.state) || source.state === "set";
     const rows =
@@ -95,13 +96,30 @@ function showDiag() {
 }
 
 
+/**
+ * One row of the products sheet. It came out of a spreadsheet, so every field
+ * is a string and nothing is a number until something parses it.
+ * @typedef {Record<string, string>} Product
+ */
 
+/**
+ * What the ?debug panel prints about one data source.
+ * @typedef {{ state: string, rows?: number | null, note?: string }} Source
+ */
 
+/**
+ * A tab of the spreadsheet, and everything needed to render it.
+ * @typedef {{ label: string, url: string, seed: string, source: Source,
+ *   render: (rows: Product[], isLive: boolean) => void,
+ *   hint: string, fallback: string }} Sheet
+ */
 
+/** What postMail answers with. @typedef {{ ok: boolean, reason?: string }} MailResult */
 
 // --- pepper / skull pips ---
+/** @param {Element} into @param {string | number} heat */
 function fillHeatPips(into, heat) {
-  const n = Math.max(0, Math.min(6, parseInt(heat, 10) || 0));
+  const n = Math.max(0, Math.min(6, parseInt(String(heat), 10) || 0));
   into.innerHTML = "";
   for (let i = 1; i <= 6; i++) {
     const on = i <= n;
@@ -121,6 +139,7 @@ function fillHeatPips(into, heat) {
 }
 
 
+/** @param {Product} p @returns {HTMLElement} */
 function productCard(p) {
   const heat = parseInt(p.heat, 10) || 0;
   const soldOut = isYes(p.sold_out);
@@ -176,6 +195,7 @@ function productCard(p) {
 
 const ASK_PARAM = "ask";
 
+/** @param {string} name */
 function askLine(name) {
   return 'Is "' + name + '" coming back? I would like some when it is.';
 }
@@ -187,8 +207,10 @@ function askLine(name) {
 // this page glides down to the form. An arrival from the catalog comes in on
 // #write, which the browser has already scrolled to, so scrolling again only
 // fights it - fill the box and take the caret, nothing more.
+/** @param {string} name @param {boolean} travelled @returns {boolean} */
 function applyAsk(name, travelled) {
-  const box = document.getElementById("contact-message");
+  const box = /** @type {HTMLTextAreaElement | null} */ (
+    document.getElementById("contact-message"));
   if (!box) return false;
   if (!box.value.trim()) box.value = askLine(name);
   const sec = document.getElementById("write");
@@ -200,6 +222,7 @@ function applyAsk(name, travelled) {
 // On the front page the form is already here. From the catalog it is not, so
 // carry the name in the address: it survives the navigation, a reload and a
 // browser with storage switched off, none of which sessionStorage manages.
+/** @param {string} name */
 function requestProduct(name) {
   if (applyAsk(name, false)) return;
   location.href = "index.html?" + ASK_PARAM + "=" +
@@ -222,6 +245,7 @@ function wirePendingAsk() {
 // Stock rotates, so a gap is ordinary rather than a mistake. Asking routes
 // into the contact form, which means requests can be counted in an inbox
 // without this page needing anywhere to keep them.
+/** @param {string} name @returns {HTMLButtonElement} */
 function askButton(name) {
   const b = document.createElement("button");
   b.type = "button";
@@ -235,12 +259,14 @@ function askButton(name) {
   return b;
 }
 
+/** @param {Product[]} products @param {string} who @returns {Product[]} */
 function forMaker(products, who) {
   return products.filter(function (p) {
     return (p.maker || "").trim().toLowerCase() === who;
   });
 }
 
+/** @param {Product[]} mine @returns {Product[]} */
 function featuredFrom(mine) {
   const picked = mine.filter(function (p) { return isYes(p.featured); });
   // Nobody has ticked the column yet: lead with the top of their list rather
@@ -248,13 +274,17 @@ function featuredFrom(mine) {
   return (picked.length ? picked : mine).slice(0, FEATURED_MAX);
 }
 
+/** @param {Product[]} products */
 function renderProducts(products) {
   // A grid marked data-featured leads with the picks; a plain one carries
   // the lot. That is the whole difference between the front page and the
   // catalog, so both run the same render.
+  /** @type {Record<string, number>} */
   const shownPerMaker = {};
-  document.querySelectorAll("[data-grid]").forEach(function (grid) {
-    const who = grid.dataset.grid.toLowerCase();
+  const grids = /** @type {NodeListOf<HTMLElement>} */ (
+    document.querySelectorAll("[data-grid]"));
+  grids.forEach(function (grid) {
+    const who = (grid.dataset.grid || "").toLowerCase();
     const mine = forMaker(products, who);
     const shown = "featured" in grid.dataset ? featuredFrom(mine) : mine;
     shownPerMaker[who] = shown.length;
@@ -265,8 +295,10 @@ function renderProducts(products) {
   // The count only exists once a sheet has landed, so the link is written
   // here rather than guessed at in the markup, and hides itself when there
   // is nothing further to see.
-  document.querySelectorAll("[data-see-all]").forEach(function (link) {
-    const who = link.dataset.seeAll.toLowerCase();
+  const links = /** @type {NodeListOf<HTMLElement>} */ (
+    document.querySelectorAll("[data-see-all]"));
+  links.forEach(function (link) {
+    const who = (link.dataset.seeAll || "").toLowerCase();
     const total = forMaker(products, who).length;
     link.textContent = "See all " + total + " of " + link.dataset.whose;
     link.hidden = total <= (shownPerMaker[who] || 0);
@@ -276,19 +308,21 @@ function renderProducts(products) {
 
 // --- heat filter over John's grid ---
 function wireFilter() {
-  const buttons = document.querySelectorAll(".filters button");
-  const cards = document.querySelectorAll('[data-grid="John"] .prod');
+  const buttons = /** @type {NodeListOf<HTMLButtonElement>} */ (
+    document.querySelectorAll(".filters button"));
+  const cards = /** @type {NodeListOf<HTMLElement>} */ (
+    document.querySelectorAll('[data-grid="John"] .prod'));
   const empty = document.getElementById("grid-empty");
   if (!buttons.length) return;
 
   buttons.forEach(function (btn) {
-    btn.textContent = bandByKey(btn.dataset.band).label;
+    btn.textContent = bandByKey(btn.dataset.band || "").label;
     btn.onclick = function () {
-      const range = bandByKey(btn.dataset.band).range;
+      const range = bandByKey(btn.dataset.band || "").range;
       buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
       let shown = 0;
       cards.forEach(function (c) {
-        const h = parseInt(c.dataset.heat, 10) || 0;
+        const h = parseInt(c.dataset.heat || "", 10) || 0;
         const fits = h >= range[0] && h <= range[1];
         c.style.display = fits ? "" : "none";
         if (fits) shown++;
@@ -300,10 +334,13 @@ function wireFilter() {
 
 // --- the legend above the grid: one sample jar per band ---
 function fillScaleKey() {
-  document.querySelectorAll(".heat[data-key]").forEach(function (sample) {
-    fillHeatPips(sample, sample.dataset.key);
-    const caption = sample.parentNode.querySelector("small");
-    if (caption) caption.textContent = heatWord(parseInt(sample.dataset.key, 10));
+  const samples = /** @type {NodeListOf<HTMLElement>} */ (
+    document.querySelectorAll(".heat[data-key]"));
+  samples.forEach(function (sample) {
+    const key = sample.dataset.key || "";
+    fillHeatPips(sample, key);
+    const caption = sample.parentElement && sample.parentElement.querySelector("small");
+    if (caption) caption.textContent = heatWord(parseInt(key, 10));
   });
 }
 
@@ -312,6 +349,7 @@ const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 
+/** @param {Product[]} rows @param {boolean} isLive */
 function renderEvents(rows, isLive) {
   const host = document.getElementById("cal-rows");
   if (!host) return;
@@ -319,11 +357,14 @@ function renderEvents(rows, isLive) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const upcoming = rows
-    .map(function (e) { e._d = parseDay(e.date); return e; })
-    .filter(function (e) { return e._d && e._d >= today; })
-    .sort(function (a, b) { return a._d - b._d; })
-    .slice(0, 30);
+  /** @type {{ row: Product, when: Date }[]} */
+  const upcoming = [];
+  rows.forEach(function (r) {
+    const when = parseDay(r.date);
+    if (when && when >= today) upcoming.push({ row: r, when: when });
+  });
+  upcoming.sort(function (a, b) { return a.when.getTime() - b.when.getTime(); });
+  upcoming.splice(30);
 
   host.innerHTML = "";
 
@@ -335,28 +376,30 @@ function renderEvents(rows, isLive) {
   }
 
   upcoming.forEach(function (e) {
+    const cells = e.row;
     const row = document.createElement("div");
     row.className = "cal-row";
 
     const when = document.createElement("span");
     when.className = "cal-when";
-    when.textContent = DAYS[e._d.getDay()] + " " + e._d.getDate() + " " + MONTHS[e._d.getMonth()];
+    when.textContent = DAYS[e.when.getDay()] + " " + e.when.getDate() + " " +
+                       MONTHS[e.when.getMonth()];
 
     const what = document.createElement("span");
     what.className = "cal-what";
-    what.appendChild(document.createTextNode(e.name || ""));
+    what.appendChild(document.createTextNode(cells.name || ""));
 
-    if (e.time) {
+    if (cells.time) {
       const t = document.createElement("small");
-      t.textContent = e.time;
+      t.textContent = cells.time;
       what.appendChild(t);
     }
 
-    if (e.address) {
+    if (cells.address) {
       const a = document.createElement("a");
       a.className = "cal-map";
-      a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(e.address);
-      a.textContent = e.address;
+      a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(cells.address);
+      a.textContent = cells.address;
       what.appendChild(a);
     }
 
@@ -376,6 +419,7 @@ function renderEvents(rows, isLive) {
 // only the target markup and the wording differ. A renderer takes
 // (rows, isLive) - products ignores isLive, events uses it to drop the
 // "sample dates" badge.
+/** @param {Sheet} sheet */
 function loadSheet(sheet) {
   const seedRows = csvToObjects(sheet.seed);
   sheet.render(seedRows, false);
@@ -385,7 +429,7 @@ function loadSheet(sheet) {
 
   fetch(sheet.url, { cache: "no-store" })
     .then(function (response) {
-      if (!response.ok) throw new Error(response.status);
+      if (!response.ok) throw new Error(String(response.status));
       return response.text();
     })
     .then(function (text) {
@@ -444,6 +488,7 @@ const toggle = document.getElementById("theme-toggle");
 function isDark() { return root.getAttribute("data-theme") === "dark"; }
 
 function syncToggleLabel() {
+  if (!toggle) return;
   toggle.textContent = isDark() ? "Lights on" : "Lights out";
 }
 
@@ -473,11 +518,13 @@ function wireMailForms() {
     listBox.hidden = true;
     const sub = document.getElementById("subscribe-form");
     if (sub) sub.remove();
-    const grid = listBox.closest(".write-grid");
+    const grid = /** @type {HTMLElement | null} */ (listBox.closest(".write-grid"));
     if (grid) grid.style.gridTemplateColumns = "1fr";
   }
 
+  /** @param {HTMLElement | null} el @param {string} html @param {boolean} isErr */
   function setStatus(el, html, isErr) {
+    if (!el) return;
     el.classList.toggle("is-err", !!isErr);
     el.innerHTML = html;
     el.focus();
@@ -489,6 +536,7 @@ function wireMailForms() {
       '<a href="https://www.facebook.com/paulassalsa">Facebook</a>.';
   }
 
+  /** @param {string} reason */
   function noteDiag(reason) {
     if (reason === "quota") DIAG.worker.note = "Resend daily cap";
     else if (reason === "down" || reason === "network") DIAG.worker.note = "could not reach";
@@ -496,6 +544,7 @@ function wireMailForms() {
     showDiag();
   }
 
+  /** @param {string} path @param {unknown} payload @returns {Promise<MailResult>} */
   async function postMail(path, payload) {
     if (!WORKER_URL) return { ok: false, reason: "empty" };
     const r = await fetch(WORKER_URL.replace(/\/+$/, "") + path, {
@@ -503,6 +552,7 @@ function wireMailForms() {
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
     });
+    /** @type {{ reason?: string }} */
     let body = {};
     try { body = await r.json(); } catch (e) { body = {}; }
     if (!r.ok) {
@@ -511,7 +561,8 @@ function wireMailForms() {
     return { ok: true };
   }
 
-  const contact = document.getElementById("contact-form");
+  const contact = /** @type {HTMLFormElement | null} */ (
+    document.getElementById("contact-form"));
   if (contact) {
     contact.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -551,7 +602,8 @@ function wireMailForms() {
     });
   }
 
-  const subscribe = document.getElementById("subscribe-form");
+  const subscribe = /** @type {HTMLFormElement | null} */ (
+    document.getElementById("subscribe-form"));
   if (subscribe) {
     subscribe.addEventListener("submit", async function (e) {
       e.preventDefault();
