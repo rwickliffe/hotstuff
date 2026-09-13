@@ -5,8 +5,8 @@
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
-A static site: two HTML pages, one stylesheet, one script, and a Google Sheet
-the owners edit themselves. No build step, no framework, no server.
+A static site: two HTML pages, one stylesheet, two ES modules, and a Google
+Sheet the owners edit themselves. No build step, no framework, no server.
 
 `index.html` leads with a handful of featured jars per maker.
 `products.html` carries the full list, which runs to sixty-odd items and
@@ -125,13 +125,16 @@ mean entering every market twice. The sheet is the only place dates live.
 python3 -m http.server 8765     # then open http://localhost:8765
 ```
 
-**Do not open the pages straight off disk.** From a `file://` path the
-browser treats the page as having no origin and blocks the requests to Google,
-so both sheets fail and the page quietly falls back to its built-in sample
-products and dates. It looks like it works. It is just not reading the
-spreadsheet. There is a console warning saying so. Always view it over
-`http://localhost`, and note that the published site on GitHub Pages is
-served over https, where this is a non-issue.
+**The pages need a server. `file://` does not work at all any more.** A module
+script is fetched under CORS rules and a `file://` document has no origin to
+satisfy them, so `site.js` never loads and both grids stay empty. Before the
+move to modules this failed more quietly - the script ran, the sheet fetches
+were blocked, and the page fell back to its built-in list while looking
+perfectly fine. The loud version is the better one: an empty page is obviously
+wrong, where a stale page is not.
+
+Always view it over `http://localhost`. The published site is served over
+https, where none of this applies.
 
 Regenerate the served images from the originals in `source/`. That folder is
 gitignored and stays on the developer's machine: the originals are full-size
@@ -198,7 +201,7 @@ non-zero, so it works as a habit before pushing:
 ./check
 ```
 
-It parses the page script, type-checks the Worker, confirms the generated art
+It parses both page modules, type-checks the Worker, confirms the generated art
 block is current and that the stylesheet reaches nothing outside itself, checks
 both pages are wired to the shared files, runs both test suites, and rewrites
 the sheet URLs to local fixtures. Nothing touches the network. GitHub Actions
@@ -221,8 +224,9 @@ static files and wrangler bundles the Worker at deploy.
 
 `tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
 the date parser, the heat scale. Rather than keep a second copy of them, it
-lifts the real functions out of `site.js` by name, so renaming one fails
-loudly instead of quietly testing something that no longer exists.
+imports them from `lib/data.js` and runs exactly what ships - there is no
+second copy to drift, and renaming one breaks the import rather than quietly
+testing something that no longer exists.
 
 `worker/test-worker.mjs` covers token signing and expiry, email and HTML
 validation, password comparison, request-size limits, and the existing-contact
@@ -342,6 +346,18 @@ Open `?debug` to see whether `WORKER_URL` is set, and after a failed mail
 attempt whether the note says `Resend daily cap` or `could not reach`.
 
 Account ownership and handoff steps stay in local `ops.md` (gitignored).
+
+### Why the script is split in two
+
+`lib/data.js` holds the functions with no DOM and no network in them: CSV
+parsing, the date parser, the heat scale. `site.js` holds everything that
+touches the page. The seam is not arbitrary - it is exactly the line the tests
+already drew, so `tools/test-parsing.mjs` can import the real module instead of
+extracting functions from a file by counting brackets, which is what it used to
+do in forty-nine lines that no longer exist.
+
+Both pages load `site.js` as `type="module"`, which means it is deferred and
+runs after parsing rather than partway through it.
 
 ### Why the Worker is TypeScript and the page is not
 
