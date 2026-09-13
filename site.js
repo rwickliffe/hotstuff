@@ -30,36 +30,6 @@ const LIST_OPEN = false;
 // Where each dataset actually came from. Surfaced only at ?debug, because a
 // customer should never see "our spreadsheet is broken" on a salsa website,
 // but Paula needs a way to check that an edit actually landed.
-// FALLBACK CATALOG AND SCHEDULE.
-// What every page shows when no live sheet is configured, or when one is
-// configured and cannot be reached. It doubles as the column format, and is
-// the same content as data/products.csv and data/events.csv. It lives here
-// rather than in a page so the front page and the catalog cannot drift.
-const SEED_PRODUCTS = `maker,name,description,heat,price,price_quart,sold_out,featured
-Paula,Mild Smoked Jalapeño Salsa,"Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",1,10,,,
-Paula,Jalapeño Salsa,"Tomato, jalapeños, serrano pepper, cilantro, garlic, onion and lime juice.",2,10,,,yes
-Paula,Tropical Fire Salsa,"Mango, papaya, strawberry, habanero, jalapeño, serrano, bell pepper, cilantro and lime.",4,10,,,yes
-Paula,Smoked Ghostly Salsa,"Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",5,10,,,
-Paula,Cowboy Candy,"Candied jalapeños with sugar, spices and cider vinegar. Sweet first, then not.",2,10,,,yes
-Paula,Pineapple Cowboy Candy,"Pineapple, jalapeños, sugar, ginger, spices and cider vinegar.",2,10,,,
-Paula,What's Yer Garlicky Dill,"Cucumber, garlic, onion and bell pepper. The one that disappears first.",1,10,15,,yes
-Paula,Spicy Bread n Butter,"Cucumber, onion, sugar, bell pepper and spices, with a little heat behind it.",2,10,15,,
-Paula,Chow Chow,Made the old way. Back when the cabbage is ready.,1,10,,yes,
-John,Vampire Killer,"Red jalapeño, garlic, lemon juice, onion, cilantro, olive oil and white vinegar.",2,10,,,yes
-John,Honey Jalapeño,"Jalapeño, honey, lemon juice, garlic, onion, olive oil and cider vinegar.",2,10,,,
-John,Tropical Scotch Bonnet,"Scotch bonnet, pineapple, garlic, onion, cilantro, olive oil and lemon juice.",4,10,,,yes
-John,Smoked Dragon's Breath,"Smoked habanero, garlic, onion, cilantro, olive oil and cider vinegar.",5,10,,,
-John,Ghostly Blackberry,"Ghost pepper, blackberries, garlic, onion, cilantro and cider vinegar.",5,10,,,yes
-John,Reaper's Luscious Peaches,"Carolina reaper, peaches, lime juice, avocado oil, whiskey and spices.",6,10,,,
-John,Insanity,"Carolina reaper, ghost pepper, garlic, onion, cilantro and cider vinegar.",6,10,,,yes
-John,Blueberry Fields of Death,"Carolina reaper, blueberries, onion, cilantro, olive oil and cider vinegar.",6,10,,,
-John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpion pepper, ghost pepper, garlic, onion and cilantro.",6,10,,,`;
-
-const SEED_EVENTS = `date,name,time,address
-2026-09-06,Elgin Farmers Market,8:00am to 1:00pm,"Main St, Elgin, TX 78621"
-2026-09-13,Fall Festival,10:00am to 4:00pm,"Courthouse Square, Elgin, TX 78621"
-2026-09-21,Makers Market,11:00am to 5:00pm,`;
-
 const DIAG = {
   products: { state: "built-in list", rows: 0, note: "" },
   events:   { state: "built-in dates", rows: 0, note: "" },
@@ -212,8 +182,8 @@ const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 
-/** @param {Product[]} rows @param {boolean} isLive */
-function renderEvents(rows, isLive) {
+/** @param {Product[]} rows */
+function renderEvents(rows) {
   const host = document.getElementById("cal-rows");
   if (!host) return;
 
@@ -270,11 +240,6 @@ function renderEvents(rows, isLive) {
     row.appendChild(what);
     host.appendChild(row);
   });
-
-  if (isLive) {
-    const badge = document.getElementById("cal-badge");
-    if (badge) badge.remove();
-  }
 }
 
 // Seed rows first so the page is never empty, then try the live sheet and
@@ -283,11 +248,12 @@ function renderEvents(rows, isLive) {
 // (rows, isLive) - products ignores isLive, events uses it to drop the
 // "sample dates" badge.
 /** @param {Sheet} sheet */
+// Nothing is rendered up front any more. The catalog is already in the page,
+// written there by tools/make-catalog.mjs, and the schedule's markup says
+// where the dates go up - both better than a copy of the data kept in here,
+// which had to be hand-synced with data/products.csv and went stale on its
+// own where the dates were concerned.
 function loadSheet(sheet) {
-  const seedRows = csvToObjects(sheet.seed);
-  sheet.render(seedRows, false);
-  sheet.source.rows = seedRows.length;
-
   if (!sheet.url) return;
 
   fetch(sheet.url, { cache: "no-store" })
@@ -327,20 +293,18 @@ const SHEETS = [
   {
     label: "products",
     url: PRODUCTS_CSV_URL,
-    seed: SEED_PRODUCTS,
     source: DIAG.products,
     render: renderProducts,
     hint: "Is the URL the CSV one, ending in output=csv?",
-    fallback: "Built-in list left in place."
+    fallback: "Baked-in list left in place."
   },
   {
     label: "events",
     url: EVENTS_CSV_URL,
-    seed: SEED_EVENTS,
     source: DIAG.events,
     render: renderEvents,
     hint: "Check the date column reads YYYY-MM-DD.",
-    fallback: "Sample dates left in place."
+    fallback: "No dates shown."
   }
 ];
 

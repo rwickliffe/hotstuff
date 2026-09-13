@@ -23,7 +23,6 @@ export interface Source {
 export interface Sheet {
   label: string;
   url: string;
-  seed: string;
   source: Source;
   /** products ignores isLive; events uses it to drop the "sample dates" badge. */
   render: (rows: Product[], isLive: boolean) => void;
