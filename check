@@ -78,7 +78,8 @@ flame () {
 }
 
 step "page script parses"   node --check site.js
-step "data module parses"   node --check lib/data.js
+step "lib modules parse"    node --check lib/data.js
+step "render module parses" node --check lib/render.js
 step "page types"           page_types
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
