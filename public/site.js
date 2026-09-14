@@ -21,9 +21,10 @@ const PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdN
 // ===================================================================
 const EVENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv";
 
-// Mail Worker. Empty: forms show a short “not connected” note and do not POST.
+// Mail is same-origin (this Worker serves the site). false: forms show
+// “not connected” and do not POST — for a static preview without wrangler.
 // LIST_OPEN: false until RESEND_SEGMENT_ID is *their* Resend account (see ops.md).
-const WORKER_URL = "https://hotstuff-mail.rwickliffe.workers.dev";
+const MAIL = true;
 const LIST_OPEN = false;
 
 
@@ -33,7 +34,7 @@ const LIST_OPEN = false;
 const DIAG = {
   products: { state: "built-in list", rows: 0, note: "" },
   events:   { state: "built-in dates", rows: 0, note: "" },
-  worker:   { state: WORKER_URL ? "set" : "empty", note: "" }
+  worker:   { state: MAIL ? "same-origin" : "off", note: "" }
 };
 
 function showDiag() {
@@ -47,7 +48,7 @@ function showDiag() {
     "box-shadow:0 6px 24px rgba(0,0,0,.4)";
   /** @param {string} name @param {Source} source */
   function sourceLine(name, source) {
-    const live = /^live/.test(source.state) || source.state === "set";
+    const live = /^live/.test(source.state) || source.state === "same-origin";
     const rows =
       source.rows != null ? " (" + source.rows + " rows)" : "";
     return '<div style="margin-top:6px"><b>' + name + '</b> ' +
@@ -101,7 +102,7 @@ function applyAsk(name, travelled) {
 /** @param {string} name */
 function requestProduct(name) {
   if (applyAsk(name, false)) return;
-  location.href = "index.html?" + ASK_PARAM + "=" +
+  location.href = "/?" + ASK_PARAM + "=" +
                   encodeURIComponent(name) + "#write";
 }
 
@@ -376,8 +377,8 @@ function wireMailForms() {
 
   /** @param {string} path @param {unknown} payload @returns {Promise<MailResult>} */
   async function postMail(path, payload) {
-    if (!WORKER_URL) return { ok: false, reason: "empty" };
-    const r = await fetch(WORKER_URL.replace(/\/+$/, "") + path, {
+    if (!MAIL) return { ok: false, reason: "empty" };
+    const r = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload)
@@ -397,7 +398,7 @@ function wireMailForms() {
     contact.addEventListener("submit", async function (e) {
       e.preventDefault();
       const status = document.getElementById("contact-status");
-      if (!WORKER_URL) {
+      if (!MAIL) {
         setStatus(status, "Mail is not connected yet. " + contactFallback(), true);
         return;
       }
@@ -438,7 +439,7 @@ function wireMailForms() {
     subscribe.addEventListener("submit", async function (e) {
       e.preventDefault();
       const status = document.getElementById("subscribe-status");
-      if (!WORKER_URL) {
+      if (!MAIL) {
         setStatus(status, "The list is not connected yet.", true);
         return;
       }

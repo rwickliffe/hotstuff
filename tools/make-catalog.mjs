@@ -25,13 +25,13 @@ const root = path.join(here, "..");
 // productCard builds detached nodes, so any document will do as a factory.
 globalThis.document = parseHTML("<!doctype html><body></body>").document;
 
-const { csvToObjects, featuredFrom, forMaker } = await import("../lib/data.js");
-const { productCard } = await import("../lib/render.js");
+const { csvToObjects, featuredFrom, forMaker } = await import("../public/lib/data.js");
+const { productCard } = await import("../public/lib/render.js");
 
 const MAKERS = ["Paula", "John"];
 const TARGETS = [
-  { file: "index.html", featured: true },   // the front page leads with picks
-  { file: "products.html", featured: false }, // the catalog carries the lot
+  { file: "public/index.html", featured: true },   // the front page leads with picks
+  { file: "public/products.html", featured: false }, // the catalog carries the lot
 ];
 
 const rows = csvToObjects(fs.readFileSync(path.join(root, "data/products.csv"), "utf8"));

@@ -5,13 +5,14 @@
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
-A static site: two HTML pages, one stylesheet, three ES modules, and a Google
-Sheet the owners edit themselves. No build step, no framework, no server.
+A static site hosted on one Cloudflare Worker: two HTML pages, one stylesheet,
+three ES modules under `public/`, and a Google Sheet the owners edit themselves.
+No framework. Catalog freshness still waits on a deploy until a later phase.
 
-`index.html` leads with a handful of featured jars per maker.
-`products.html` carries the full list, which runs to sixty-odd items and
+`public/index.html` leads with a handful of featured jars per maker.
+`public/products.html` carries the full list, which runs to sixty-odd items and
 turns over with the season. Both render from the same sheet through the same
-`site.js`, so there is one copy of every rule about how a jar is drawn.
+`public/site.js`, so there is one copy of every rule about how a jar is drawn.
 
 ## Why it is built this way
 
@@ -27,8 +28,8 @@ daily:
 | Photos, story, layout | Rarely | A developer | This repo |
 
 Ordering and payment happen on Square, so this site never takes money.
-Contact notes and newsletter signups go to Resend through the Worker when
-`WORKER_URL` is set — not into this repo.
+Contact notes and newsletter signups go to Resend through the same Worker
+that serves the site (`MAIL` in `public/site.js`) — not into this repo.
 
 ## Connecting the Google Sheet
 
@@ -40,7 +41,7 @@ HTML ahead of time, and the schedule says where the dates go up.
 ```js
 const PRODUCTS_CSV_URL = "";   // products tab
 const EVENTS_CSV_URL   = "";   // events tab
-const WORKER_URL       = "";   // Cloudflare Worker, empty = forms idle
+const MAIL             = true; // false = forms idle (static preview without wrangler)
 const LIST_OPEN        = false; // true only on their Resend Segment
 ```
 
@@ -106,19 +107,13 @@ mean entering every market twice. The sheet is the only place dates live.
 ## Before launch
 
 - [ ] Point the JSON-LD `url` and `image` at the custom domain once there is one.
-      They currently read `rwickliffe.github.io/hotstuff`, which is correct until then
+      They currently read `hotstuff.rwickliffe.workers.dev` (interim)
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
-- [ ] Set `WORKER_URL` to the live Worker once contact mail is ready to ship
-- [ ] Drop `http://localhost:8765` from the Worker's CORS allowlist, and add the
-      custom domain. It is there so the contact form can read the Worker's reply
-      during local development
 - [ ] Flip `LIST_OPEN` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
-- [ ] Move the repo to their GitHub organization and Pages to their Cloudflare,
-      then re-point the four places that name the developer's accounts: the
-      JSON-LD `url` and `image`, the CI badge, `WORKER_URL`, and the Worker's
-      CORS allowlist
+- [ ] Move the repo to their GitHub organization and the Worker to their
+      Cloudflare, then re-point JSON-LD and the CI badge
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Have each of them tick `featured` for the jars they want on the front
       page. Until they do, it leads with whatever is at the top of their tab
@@ -128,7 +123,9 @@ mean entering every market twice. The sheet is the only place dates live.
 ## Working on it
 
 ```bash
-python3 -m http.server 8765     # then open http://localhost:8765
+cd worker && npx wrangler dev   # site + mail, same origin
+# or, HTML only:
+cd public && python3 -m http.server 8765
 ```
 
 **The pages need a server. `file://` does not work at all any more.** A module
@@ -140,7 +137,7 @@ were blocked, and the page fell back to its built-in list while looking
 perfectly fine. The loud version is the better one: an empty page is obviously
 wrong, where a stale page is not.
 
-Always view it over `http://localhost`. The published site is served over
+Always view it over `http://localhost` or `wrangler dev`. The published site is served over
 https, where none of this applies.
 
 Regenerate the served images from the originals in `source/`. That folder is
@@ -306,8 +303,8 @@ confirm the row count moved.** Without the flag no panel renders, and there is
 nothing for a visitor to stumble across.
 
 Errors are also written to the browser console, but that is only useful with
-devtools already open. There is no server-side logging: GitHub Pages is static
-hosting, so nothing is recorded anywhere.
+devtools already open. Worker observability covers the mail routes; a bad
+sheet fetch in the browser still only shows in the console (and `?debug`).
 
 ## Generated art
 
@@ -346,30 +343,41 @@ git show <sha>^:build-horror.py                # read the last version
 
 ## Hosting
 
-Today GitHub Pages serves this repo as-is, from `main`, root. That is the
-development arrangement, not the launch one.
+The site and the mail API are one Cloudflare Worker (`hotstuff`), with static
+files in `public/` via Workers Static Assets. Interim public URL:
 
-At launch both the repo and the hosting move to accounts the owners hold:
+`https://hotstuff.<account>.workers.dev`
 
-- The repo moves to a GitHub organization **Paula** owns, with the developer
-  added as a co-owner. She creates the account with her own address and clicks
-  the verification link herself. An account someone else made with an address
-  she cannot open is not hers.
-- **Cloudflare Pages**, in their Cloudflare account, deploys from that repo.
-  The registrar, the DNS and the mail Worker are already there, so the site
-  joins them rather than sitting in a second place.
+GitHub stays the repo and runs `./check` in Actions. GitHub Pages is not used.
+Only `public/` is served — `tools/`, `data/`, and the README are not on the open
+web.
 
-Keep the repo public either way: Pages, Actions and a custom domain's
-certificate are free on a public repo, the developer's commits keep their
-authorship after a transfer, and whoever comes next can fork it. The only
-recurring bill is the domain.
+Local preview of the full stack:
+
+```bash
+cd worker && npx wrangler dev
+```
+
+Static HTML alone (forms idle unless you flip nothing — mail needs the Worker):
+
+```bash
+cd public && python3 -m http.server 8765
+```
+
+At launch the repo still moves to an organization Paula owns, and a custom
+domain on their Cloudflare account replaces `workers.dev`. Until then, Web
+Analytics is the dashboard snippet (automatic injection needs a proxied zone).
+
+Keep the repo public: Actions and a custom domain's certificate stay free on a
+public repo, the developer's commits keep their authorship after a transfer,
+and whoever comes next can fork it.
 
 Nothing in the live data path depends on the developer's account, and it needs
 to stay that way. Today the browser reads the spreadsheet directly, so the site
 would keep updating from it even if the developer vanished. If that is ever
-replaced by a scheduled build that pulls the sheet, the schedule and the build
-belong in their Cloudflare rather than in a GitHub Action here - a stalled job
-in somebody else's account freezes their prices with no error they can see.
+replaced by a scheduled Worker cron that pulls the sheet, that cron belongs in
+*their* Cloudflare — a stalled job in somebody else's account freezes their
+prices with no error they can see.
 
 Register the name at Cloudflare if they have the TLD (they do for `.com`).
 At-cost, privacy included, and it is the same login as the Worker and
@@ -379,10 +387,11 @@ the registrar's email or website builder.
 
 ## Mail
 
-Contact form and confirmed newsletter signup run through one Cloudflare
-Worker and Resend. The page POSTs JSON as `text/plain` to `WORKER_URL`
-(next to the sheet URLs in `index.html`). Empty means the forms stay on
-the page but do not send.
+Contact form and confirmed newsletter signup run through the same Worker that
+serves the site, plus Resend. The page POSTs JSON as `text/plain` to relative
+paths (`/contact`, `/subscribe`). `MAIL = false` in `public/site.js` leaves the
+forms on the page but idle — useful for a static folder preview without
+`wrangler`.
 
 - **Contact** is transactional: Resend emails Paula, Reply-To is the
   visitor. Nothing is stored. Safe to point at your Worker while
@@ -402,8 +411,8 @@ Resend free tier: 3,000 transactional mails a month **and** 100/day, plus
 share the daily cap before the first real send. Do not loop the
 transactional Send API over the list.
 
-Open `?debug` to see whether `WORKER_URL` is set, and after a failed mail
-attempt whether the note says `Resend daily cap` or `could not reach`.
+Open `?debug` to see whether mail is `same-origin` or `off`, and after a failed
+mail attempt whether the note says `Resend daily cap` or `could not reach`.
 
 Account ownership and handoff steps stay in local `ops.md` (gitignored).
 
@@ -445,10 +454,8 @@ the names in with one line:
 scoped to the file rather than becoming ambient globals - delete that line and
 the type check fails rather than silently carrying on.
 
-Revisit this if the site moves to Cloudflare Pages. A build command there is a
-dashboard field rather than a pipeline to build, which removes most of the
-reason not to write the page in TypeScript too; `types.d.ts` is already
-TypeScript and would move across untouched.
+If a later phase adds a real build step, `types.d.ts` is already TypeScript and
+would move across untouched.
 
 That check is not decoration. Turning it on found three places that were right
 only by accident: `isNaN(d)` passed a Date where a number was expected and
@@ -484,9 +491,9 @@ which needs Node 22.18 or newer.
 ## Later
 
 One thing they have asked for that a static page cannot do alone: a
-catalog that matches Square on a busy market day. Stay on Pages. The
-Worker and Resend already cover contact and the list. Secrets live in
-Actions and on the Worker, never in this repo.
+catalog that matches Square on a busy market day. Stay on the Worker. The
+mail routes and Resend already cover contact and the list. Secrets live on
+the Worker, never in this repo.
 
 Do not add a form vendor plus a newsletter vendor. That is two accounts
 and still cannot receive Square webhooks. Do not use Google Forms (cannot
@@ -497,7 +504,7 @@ from Gmail.
 Names and emails from the forms go to Resend, not GitHub.
 
 Do not build this on AWS. It is the same jobs with a billing alarm and a
-SES sandbox ticket. Pages, one Worker, and Resend stay cheaper and
+SES sandbox ticket. One Worker and Resend stay cheaper and
 smaller.
 
 Account ownership and how to develop against a personal Worker stay out

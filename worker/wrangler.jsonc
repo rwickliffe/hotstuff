@@ -26,13 +26,17 @@
 // Regenerate binding types after editing this file:
 //   cd worker && npx wrangler types --include-runtime false
 // Then drop the Cloudflare.GlobalProps block from worker-configuration.d.ts
-// (named test exports on worker.ts are not a Worker entrypoint).
+// unless the entry only exports `default` (named helpers live in mail-helpers.ts).
 {
-  "name": "hotstuff-mail",
+  "name": "hotstuff",
   "main": "src/worker.ts",
   "compatibility_date": "2025-09-19",
   "observability": {
     "enabled": true
+  },
+  "assets": {
+    "directory": "../public",
+    "binding": "ASSETS"
   },
   "ratelimits": [
     {
