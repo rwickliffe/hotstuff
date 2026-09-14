@@ -1,0 +1,54 @@
+// Secrets, set with `npx wrangler secret put NAME`. One prefix per route family.
+//
+//   RESEND_API_KEY             from resend.com. Full access: /confirm writes a
+//                              Contact and /send creates a Broadcast, and a
+//                              sending-only key refuses both with
+//                              restricted_api_key (401). Sending access alone
+//                              covers /contact and /subscribe.
+//   RESEND_FROM                a verified sender on that account
+//   RESEND_SEGMENT_ID          dashboard: Audience -> Segments. Contacts are
+//                              global and can sit in several Segments; a
+//                              Broadcast targets one of them.
+//   CONTACT_TO                 where /contact notes land
+//   SUBSCRIBE_SIGNING_KEY      HMAC key for /confirm links
+//   BROADCAST_PASSWORD         guards /compose and /send
+//   BROADCAST_POSTAL_ADDRESS   CAN-SPAM footer; leave unset to keep /send off
+//
+// Generate the two random ones: openssl rand -base64 24
+// Accepted on Free, confirmed at first deploy 2026-09-08.
+//
+// These numbers are not enforced. Measured against the deployed Worker:
+// 10 sequential POSTs against the 5/60s limit below were all allowed, and
+// a 25-way parallel burst blocked only 2. The binding is live - a missing
+// one returns 502, and none was seen - it simply does not stop sequential
+// traffic, which is what a script makes. See ops.md for the real controls.
+//
+// Regenerate binding types after editing this file:
+//   cd worker && npx wrangler types --include-runtime false
+// Then drop the Cloudflare.GlobalProps block from worker-configuration.d.ts
+// (named test exports on worker.ts are not a Worker entrypoint).
+{
+  "name": "hotstuff-mail",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-09-19",
+  "observability": {
+    "enabled": true
+  },
+  "ratelimits": [
+    {
+      "name": "MAIL_IP",
+      "namespace_id": "1001",
+      "simple": { "limit": 3, "period": 60 }
+    },
+    {
+      "name": "MAIL_EMAIL",
+      "namespace_id": "1002",
+      "simple": { "limit": 1, "period": 60 }
+    },
+    {
+      "name": "SEND_IP",
+      "namespace_id": "1003",
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ]
+}

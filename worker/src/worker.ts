@@ -47,25 +47,6 @@ const SITE = {
   },
 };
 
-/**
- * Everything the Worker is handed at runtime. The seven secrets are set with
- * `wrangler secret put NAME`; the three limiters come from the [[ratelimits]]
- * blocks in wrangler.toml. A name misspelt here is a compile error now, where
- * before it read undefined and surfaced later as a puzzling Resend failure.
- */
-export interface Env {
-  RESEND_API_KEY: string;
-  RESEND_FROM: string;
-  RESEND_SEGMENT_ID: string;
-  CONTACT_TO: string;
-  SUBSCRIBE_SIGNING_KEY: string;
-  BROADCAST_PASSWORD: string;
-  BROADCAST_POSTAL_ADDRESS: string;
-  MAIL_IP: RateLimit;
-  MAIL_EMAIL: RateLimit;
-  SEND_IP: RateLimit;
-}
-
 /** The limiters only, so `limited` cannot be handed the name of a secret. */
 type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
 
@@ -385,7 +366,7 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   // An unset secret leaves both sides empty, and two empty strings compare
   // equal, so without this an empty password would authenticate a broadcast.
   const expected = String(env.BROADCAST_PASSWORD || "");
-  if (!expected || !timingSafeEqual(password, expected)) {
+  if (!expected || !(await timingSafeEqual(password, expected))) {
     return json({ ok: false, reason: "auth" }, 401);
   }
   if (!subject || subject.length > MAX_SUBJECT) return json({ ok: false, reason: "bad" }, 400);
@@ -423,14 +404,23 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   return json({ ok: true }, 200);
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
+/** Compare secrets without leaking length. Hash both sides first so unequal
+ *  lengths still take the same path; digests are always 32 bytes. Prefer
+ *  SubtleCrypto.timingSafeEqual (Workers); fall back to a XOR fold for Node
+ *  tests, which do not expose that method on `crypto.subtle`. */
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   const enc = new TextEncoder();
-  const aa = enc.encode(a);
-  const bb = enc.encode(b);
-  if (aa.length !== bb.length) return false;
+  const [aa, bb] = await Promise.all([
+    crypto.subtle.digest("SHA-256", enc.encode(a)),
+    crypto.subtle.digest("SHA-256", enc.encode(b)),
+  ]);
+  const aBytes = new Uint8Array(aa);
+  const bBytes = new Uint8Array(bb);
+  if (typeof crypto.subtle.timingSafeEqual === "function") {
+    return crypto.subtle.timingSafeEqual(aBytes, bBytes);
+  }
   let out = 0;
-  // Bounded by aa.length, and bb is the same length, so neither read can miss.
-  for (let i = 0; i < aa.length; i++) out |= aa[i]! ^ bb[i]!;
+  for (let i = 0; i < aBytes.length; i++) out |= aBytes[i]! ^ bBytes[i]!;
   return out === 0;
 }
 

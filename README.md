@@ -468,10 +468,12 @@ npx wrangler deploy              # into whichever account is logged in
 npx wrangler secret put NAME
 ```
 
-What that buys is the `Env` interface. Seven secrets and three rate limit
-bindings are set by hand, in an account that will not be ours, and a misspelt
-one used to read `undefined` and surface much later as a confusing Resend
-error. It is now a compile error that suggests the right name.
+What that buys is typed `Env`. Rate-limit bindings come from
+`npx wrangler types --include-runtime false`; secrets are merged in
+`env.d.ts` because they live in the dashboard, not in `wrangler.jsonc`. A
+misspelt binding used to read `undefined` and surface much later as a
+confusing Resend error. It is now a compile error that suggests the right
+name.
 
 Two things worth knowing if you touch it. `node --check` cannot read a `.ts`
 file - it parses it as CommonJS and trips on the first `export` - which is why

@@ -41,12 +41,12 @@ test("esc covers all HTML-sensitive characters", () => {
   );
 });
 
-test("timingSafeEqual compares content and length", () => {
-  assert.equal(timingSafeEqual("same", "same"), true);
-  assert.equal(timingSafeEqual("same", "sAme"), false);
-  assert.equal(timingSafeEqual("short", "longer"), false);
-  assert.equal(timingSafeEqual("", "password"), false);
-  assert.equal(timingSafeEqual("pass", "password"), false);
+test("timingSafeEqual compares content without leaking length", async () => {
+  assert.equal(await timingSafeEqual("same", "same"), true);
+  assert.equal(await timingSafeEqual("same", "sAme"), false);
+  assert.equal(await timingSafeEqual("short", "longer"), false);
+  assert.equal(await timingSafeEqual("", "password"), false);
+  assert.equal(await timingSafeEqual("pass", "password"), false);
 });
 
 test("confirmation tokens verify, expire, and reject tampering", async () => {
