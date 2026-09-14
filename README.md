@@ -44,9 +44,10 @@ const WORKER_URL       = "";   // Cloudflare Worker, empty = forms idle
 const LIST_OPEN        = false; // true only on their Resend Segment
 ```
 
-`data/products.csv` and `data/events.csv` are importable starting points for
-the two tabs. In Google Sheets: File, Import, Upload, and choose "Insert new
-sheet". Rename the resulting tabs `products` and `events`.
+`data/products.csv` is an importable starting point for the products tab (and
+the source the catalog bake reads). There is no committed events seed — the
+schedule lives only in the sheet. In Google Sheets: File, Import, Upload, and
+choose "Insert new sheet". Rename the resulting tabs `products` and `events`.
 
 Publish each tab with File, Share, Publish to web, picking that tab by name
 and CSV as the format, with "Automatically republish when changes are made"

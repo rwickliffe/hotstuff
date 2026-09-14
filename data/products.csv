@@ -1,11 +1,11 @@
 maker,name,description,heat,price,price_quart,sold_out,featured
-Paula,Mild Smoked Jalapeño Salsa,"Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",1,10,,,
+Paula,Mild Smoked Jalapeño Salsa,"Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",1,10,,,yes
 Paula,Jalapeño Salsa,"Tomato, jalapeños, serrano pepper, cilantro, garlic, onion and lime juice.",2,10,,,yes
 Paula,Tropical Fire Salsa,"Mango, papaya, strawberry, habanero, jalapeño, serrano, bell pepper, cilantro and lime.",4,10,,,yes
-Paula,Smoked Ghostly Salsa,"Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",5,10,,,
+Paula,Smoked Ghostly Salsa,"Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",5,10,,,yes
 Paula,Cowboy Candy,"Candied jalapeños with sugar, spices and cider vinegar. Sweet first, then not.",2,10,,,yes
-Paula,Pineapple Cowboy Candy,"Pineapple, jalapeños, sugar, ginger, spices and cider vinegar.",2,10,,,
-Paula,What's Yer Garlicky Dill,"Cucumber, garlic, onion and bell pepper. The one that disappears first.",1,10,15,,yes
+Paula,Pineapple Cowboy Candy,"Pineapple, jalapeños, sugar, ginger, spices and cider vinegar.",2,10,,,yes
+Paula,What's Yer Garlicky Dill,"Cucumber, garlic, onion and bell pepper. The one that disappears first.",1,10,15,,
 Paula,Spicy Bread n Butter,"Cucumber, onion, sugar, bell pepper and spices, with a little heat behind it.",2,10,15,,
 Paula,Chow Chow,Made the old way. Back when the cabbage is ready.,1,10,,yes,
 John,Vampire Killer,"Red jalapeño, garlic, lemon juice, onion, cilantro, olive oil and white vinegar.",2,10,,,yes
@@ -15,5 +15,5 @@ John,Smoked Dragon's Breath,"Smoked habanero, garlic, onion, cilantro, olive oil
 John,Ghostly Blackberry,"Ghost pepper, blackberries, garlic, onion, cilantro and cider vinegar.",5,10,,,yes
 John,Reaper's Luscious Peaches,"Carolina reaper, peaches, lime juice, avocado oil, whiskey and spices.",6,10,,,
 John,Insanity,"Carolina reaper, ghost pepper, garlic, onion, cilantro and cider vinegar.",6,10,,,yes
-John,Blueberry Fields of Death,"Carolina reaper, blueberries, onion, cilantro, olive oil and cider vinegar.",6,10,,,
-John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpion pepper, ghost pepper, garlic, onion and cilantro.",6,10,,,
+John,Blueberry Fields of Death,"Carolina reaper, blueberries, onion, cilantro, olive oil and cider vinegar.",6,10,,,yes
+John,Strawberry Fields of Ultra Insanity,"Strawberries, Carolina reaper, scorpion pepper, ghost pepper, garlic, onion and cilantro.",6,10,,,yes
