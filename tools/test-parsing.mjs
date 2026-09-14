@@ -17,7 +17,7 @@ import {
   heatWord,
   parseCSV,
   parseDay,
-} from "../lib/data.js";
+} from "../public/lib/data.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>

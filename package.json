@@ -2,7 +2,7 @@
   "name": "hotstuff",
   "private": true,
   "type": "module",
-  "description": "Development tooling only. Nothing in here ships: the site is static files served as-is, and the Worker is bundled by wrangler at deploy time.",
+  "description": "Development tooling only. Nothing in here ships: the site is static files under public/, and the Worker is bundled by wrangler at deploy time.",
   "scripts": {
     "types": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project worker/tsconfig.json"
   },
