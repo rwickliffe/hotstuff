@@ -45,6 +45,14 @@
       "preview_id": "90893cb2f6e24778a9519ece796bb77f"
     }
   ],
+  // Custom event counts (asks, successful mail, …). One dataset for the site.
+  // Created on first write. Query with the Analytics Engine SQL API:
+  //   SELECT blob1 AS event, blob2 AS detail, SUM(_sample_interval) AS n
+  //   FROM metrics WHERE timestamp > NOW() - INTERVAL '30' DAY
+  //   GROUP BY event, detail ORDER BY n DESC
+  "analytics_engine_datasets": [
+    { "binding": "METRICS", "dataset": "metrics" }
+  ],
   "triggers": {
     "crons": ["13 * * * *"]
   },

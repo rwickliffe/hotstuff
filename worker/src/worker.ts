@@ -131,6 +131,15 @@ function json(obj: unknown, status: number): Response {
   });
 }
 
+/** Custom events → Analytics Engine. blob1 = event, blob2 = optional detail. */
+function track(env: Env, event: string, detail = "", n = 1): void {
+  env.METRICS.writeDataPoint({
+    blobs: [event, detail],
+    doubles: [n],
+    indexes: [event],
+  });
+}
+
 function html(body: string, status?: number): Response {
   return new Response(body, {
     status: status || 200,
@@ -196,9 +205,12 @@ async function contact(req: Request, env: Env): Promise<Response> {
   const name = String(data.name || "").trim();
   const email = String(data.email || "").trim().toLowerCase();
   const message = String(data.message || "").trim();
+  // Optional product name from the ask button — never email or IP.
+  const ask = String(data.ask || "").trim();
   if (!name || name.length > MAX_NAME) return json({ ok: false, reason: "bad" }, 400);
   if (!emailOk(email)) return json({ ok: false, reason: "bad" }, 400);
   if (!message || message.length > MAX_MSG) return json({ ok: false, reason: "bad" }, 400);
+  if (ask.length > MAX_NAME) return json({ ok: false, reason: "bad" }, 400);
 
   if (!(await limited(env, "MAIL_IP", "contact:" + ipOf(req)))) {
     return json({ ok: false, reason: "rate" }, 429);
@@ -217,6 +229,9 @@ async function contact(req: Request, env: Env): Promise<Response> {
     text: "From: " + name + " <" + email + ">\n\n" + message,
   });
   if (!result.ok) return resendFail(result.reason);
+  track(env, "contact");
+  // Demand signal: product name only — never email or IP.
+  if (ask) track(env, "ask", ask);
   return json({ ok: true }, 200);
 }
 
@@ -253,6 +268,7 @@ async function subscribe(req: Request, env: Env): Promise<Response> {
       SITE.copy.confirmIgnore,
   });
   if (!result.ok) return resendFail(result.reason);
+  track(env, "subscribe");
   return json({ ok: true }, 200);
 }
 

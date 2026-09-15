@@ -64,6 +64,9 @@ function showDiag() {
 
 const ASK_PARAM = "ask";
 
+/** Product name from the last Ask click; sent with /contact for Analytics Engine. */
+let pendingAsk = "";
+
 /** @param {string} name */
 function askLine(name) {
   return 'Is "' + name + '" coming back? I would like some when it is.';
@@ -82,6 +85,7 @@ function applyAsk(name, travelled) {
     document.getElementById("contact-message"));
   if (!box) return false;
   if (!box.value.trim()) box.value = askLine(name);
+  pendingAsk = name;
   const sec = document.getElementById("write");
   if (sec && !travelled) sec.scrollIntoView({ behavior: "smooth", block: "start" });
   box.focus({ preventScroll: true });
@@ -403,16 +407,22 @@ function wireMailForms() {
         return;
       }
       const fd = new FormData(contact);
+      const message = String(fd.get("message") || "").trim();
+      // Only count when the note still names the jar they asked for.
+      const ask =
+        pendingAsk && message.includes(pendingAsk) ? pendingAsk : "";
       setStatus(status, "Sending…", false);
       try {
         const result = await postMail("/contact", {
           name: String(fd.get("name") || "").trim(),
           email: String(fd.get("email") || "").trim(),
-          message: String(fd.get("message") || "").trim(),
+          message,
+          ask,
           company: String(fd.get("company") || "")
         });
         if (result.ok) {
           noteDiag("");
+          pendingAsk = "";
           contact.reset();
           setStatus(status, "Sent. We'll get back to you.", false);
         } else if (result.reason === "rate") {
