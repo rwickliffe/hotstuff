@@ -377,16 +377,36 @@ At launch the repo still moves to an organization Paula owns, and a custom
 domain on their Cloudflare account replaces `workers.dev`. Until then, Web
 Analytics is the dashboard snippet (automatic injection needs a proxied zone).
 
+### Custom events (asks and mail)
+
+Web Analytics covers traffic. **Workers Analytics Engine** answers product
+questions the ask button was for: which jars people request, plus successful
+contact and subscribe mail counts. The Worker writes to the account-scoped
+dataset `hotstuff-metrics` (binding `METRICS`) after Resend accepts the send —
+product name only for asks; never email or IP.
+
+Query with an API token that has Account Analytics Read
+([SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)):
+
+```sql
+SELECT blob1 AS event, blob2 AS detail, SUM(_sample_interval) AS n
+FROM "hotstuff-metrics"
+WHERE timestamp > NOW() - INTERVAL '30' DAY
+GROUP BY event, detail
+ORDER BY n DESC
+```
+
+`event` is `ask`, `contact`, or `subscribe`; for asks, `detail` is the jar name.
+Use `SUM(_sample_interval)`, not `COUNT(*)`, so sampling stays correct.
+
 Keep the repo public: Actions and a custom domain's certificate stay free on a
 public repo, the developer's commits keep their authorship after a transfer,
 and whoever comes next can fork it.
 
 Nothing in the live data path depends on the developer's account, and it needs
-to stay that way. Today the browser reads the spreadsheet directly, so the site
-would keep updating from it even if the developer vanished. If that is ever
-replaced by a scheduled Worker cron that pulls the sheet, that cron belongs in
-*their* Cloudflare — a stalled job in somebody else's account freezes their
-prices with no error they can see.
+to stay that way. The Worker cron pulls the sheet into *their* Cloudflare KV;
+a stalled job in somebody else's account would freeze their prices with no
+error they can see.
 
 Register the name at Cloudflare if they have the TLD (they do for `.com`).
 At-cost, privacy included, and it is the same login as the Worker and
