@@ -9,6 +9,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  MAX_SHEET_BYTES,
+  MAX_SHEET_ROWS,
+  acceptSheet,
   emptyCatalog,
   headersOk,
   isStale,
@@ -45,6 +48,25 @@ test("pubhtml-shaped body is refused (the dangerous 200)", () => {
 test("missing required column fails", () => {
   assert.equal(validateProducts("name,heat\nSalsa,2\n"), null);
   assert.equal(validateEvents("name,time\nMarket,noon\n"), null);
+});
+
+test("oversized body is refused before parse", () => {
+  const head = "maker,name,description,heat,price\n";
+  const huge = head + "x".repeat(MAX_SHEET_BYTES);
+  assert.ok(huge.length > MAX_SHEET_BYTES);
+  assert.equal(acceptSheet("products", huge).error, "too large");
+  assert.equal(validateProducts(huge), null);
+});
+
+test("too many rows is refused", () => {
+  const lines = ["maker,name,description,heat,price"];
+  for (let i = 0; i < MAX_SHEET_ROWS + 1; i++) {
+    lines.push(`Paula,Jar ${i},desc,1,10`);
+  }
+  const text = lines.join("\n") + "\n";
+  assert.ok(text.length < MAX_SHEET_BYTES);
+  assert.equal(acceptSheet("products", text).error, "too many rows");
+  assert.equal(validateProducts(text), null);
 });
 
 test("isStale treats missing fetchedAt as stale", () => {

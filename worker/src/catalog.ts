@@ -9,6 +9,10 @@ export const CATALOG_KEY = "catalog";
 /** Soft age before GET /data refreshes in the background. Cron is the floor. */
 export const STALE_MS = 60 * 60 * 1000;
 
+/** Refuse runaway / garbage sheets before they land in KV. */
+export const MAX_SHEET_BYTES = 256_000;
+export const MAX_SHEET_ROWS = 500;
+
 const PRODUCT_HEADERS = ["maker", "name", "description", "heat", "price"];
 const EVENT_HEADERS = ["date", "name"];
 
@@ -41,15 +45,30 @@ export function headersOk(text: string, required: string[]): boolean {
 }
 
 export function validateProducts(text: string): Record<string, string>[] | null {
-  if (!headersOk(text, PRODUCT_HEADERS)) return null;
-  const rows = csvToObjects(text);
-  return rows.length ? rows : null;
+  const r = acceptSheet("products", text);
+  return r.rows ?? null;
 }
 
 export function validateEvents(text: string): Record<string, string>[] | null {
-  if (!headersOk(text, EVENT_HEADERS)) return null;
-  const rows = csvToObjects(text).filter((r) => parseDay(r.date));
-  return rows.length ? rows : null;
+  const r = acceptSheet("events", text);
+  return r.rows ?? null;
+}
+
+/** Shared accept path: size → headers → rows → row cap. Distinct errors for logs. */
+export function acceptSheet(
+  kind: SheetKind,
+  text: string
+): { rows?: Record<string, string>[]; error?: string } {
+  if (text.length > MAX_SHEET_BYTES) return { error: "too large" };
+  const required = kind === "products" ? PRODUCT_HEADERS : EVENT_HEADERS;
+  if (!headersOk(text, required)) return { error: "bad headers or no usable rows" };
+  let rows =
+    kind === "products"
+      ? csvToObjects(text)
+      : csvToObjects(text).filter((r) => parseDay(r.date));
+  if (!rows.length) return { error: "bad headers or no usable rows" };
+  if (rows.length > MAX_SHEET_ROWS) return { error: "too many rows" };
+  return { rows };
 }
 
 async function readKv(env: CatalogEnv): Promise<CatalogPayload> {
@@ -83,13 +102,17 @@ async function fetchSheet(
     return { error };
   }
   const text = await res.text();
-  const rows = kind === "products" ? validateProducts(text) : validateEvents(text);
-  if (!rows) {
-    const error = "bad headers or no usable rows";
-    console.warn({ sheet: kind, ok: false, error, bytes: text.length });
-    return { error };
+  const accepted = acceptSheet(kind, text);
+  if (accepted.error) {
+    console.warn({
+      sheet: kind,
+      ok: false,
+      error: accepted.error,
+      bytes: text.length,
+    });
+    return { error: accepted.error };
   }
-  return { rows };
+  return { rows: accepted.rows };
 }
 
 /** Fetch both sheets; on partial failure keep the previous good side. */
