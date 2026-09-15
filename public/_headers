@@ -2,9 +2,9 @@
 # Worker-rendered /confirm and /compose set the same family of headers in
 # worker.ts (HTML_CSP). Keep shared CSP directives aligned until phase 4
 # introduces a shared constants module. Intentional differences on this side:
-# style-src/script-src include 'self'; connect-src allows docs.google.com
-# (sheet fetch until phase 3).
+# style-src/script-src include 'self'. connect-src is same-origin only (sheets
+# are fetched by the Worker, not the browser).
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'none'; base-uri 'none'; form-action 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://docs.google.com
+  Content-Security-Policy: default-src 'none'; base-uri 'none'; form-action 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self'

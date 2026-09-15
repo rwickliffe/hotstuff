@@ -15,6 +15,7 @@ import {
   timingSafeEqual,
   verifyToken,
 } from "./mail-helpers.ts";
+import { readCatalog, refreshData, refreshMode } from "./catalog.ts";
 
 // ---------------------------------------------------------------- the site
 // Everything that identifies this client: their names, the copy that mentions
@@ -79,11 +80,12 @@ const MAX_SUBJECT = 200;
 const MAX_BROADCAST = 8000;
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname.replace(/\/+$/, "") || "/";
 
     try {
+      if (path === "/data" && req.method === "GET") return dataGet(env, ctx);
       if (path === "/contact" && req.method === "POST") return contact(req, env);
       if (path === "/subscribe" && req.method === "POST") return subscribe(req, env);
       if (path === "/confirm" && req.method === "GET") return confirmGet(url, env);
@@ -97,7 +99,30 @@ export default {
     // Static files (and 404s) live in public/ via Workers Static Assets.
     return env.ASSETS.fetch(req);
   },
+
+  async scheduled(_controller: ScheduledController, env: Env, _ctx: ExecutionContext) {
+    // Await so Past Events records success/failure of the refresh itself.
+    await refreshData(env);
+  },
 };
+
+async function dataGet(env: Env, ctx: ExecutionContext): Promise<Response> {
+  let catalog = await readCatalog(env);
+  // Cold and stale must not both fire: isStale is true when fetchedAt is null.
+  const mode = refreshMode(catalog);
+  if (mode === "cold") {
+    catalog = await refreshData(env);
+  } else if (mode === "stale") {
+    ctx.waitUntil(refreshData(env));
+  }
+  return new Response(JSON.stringify(catalog), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=60",
+    },
+  });
+}
 
 function json(obj: unknown, status: number): Response {
   return new Response(JSON.stringify(obj), {

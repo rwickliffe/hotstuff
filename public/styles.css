@@ -426,6 +426,13 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 .see-all:hover { border-color: var(--chile); color: var(--chile-ink); }
 .see-all:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
 
+/* Shown only when /data is older than six hours — quiet, not an alarm. */
+.data-age {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-mid);
+}
+
 /* The only control on a card, and only on one that is out. Asking is how a
    customer votes for what gets put up next. */
 .ask {
