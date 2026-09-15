@@ -158,6 +158,92 @@ test("/send refuses when BROADCAST_PASSWORD was never set", async () => {
   }
 });
 
+test("contact records metrics after a successful send", async () => {
+  const points = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ id: "ok" }), { status: 200 });
+
+  try {
+    const env = {
+      MAIL_IP: limiter,
+      MAIL_EMAIL: limiter,
+      CONTACT_TO: "paula@example.com",
+      RESEND_FROM: "Hot Stuff <test@example.com>",
+      RESEND_API_KEY: "key",
+      METRICS: {
+        writeDataPoint(p) {
+          points.push(p);
+        },
+      },
+    };
+    const req = new Request("https://worker.test/contact", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        name: "Pat",
+        email: "pat@example.com",
+        message: 'Is "Chow Chow" coming back?',
+        ask: "Chow Chow",
+        company: "",
+      }),
+    });
+    assert.equal((await worker.fetch(req, env)).status, 200);
+    assert.equal(points.length, 2);
+    assert.deepEqual(points[0].blobs, ["contact", ""]);
+    assert.deepEqual(points[1].blobs, ["ask", "Chow Chow"]);
+
+    points.length = 0;
+    const plain = new Request("https://worker.test/contact", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        name: "Pat",
+        email: "other@example.com",
+        message: "Just saying hi.",
+        company: "",
+      }),
+    });
+    assert.equal((await worker.fetch(plain, env)).status, 200);
+    assert.equal(points.length, 1);
+    assert.deepEqual(points[0].blobs, ["contact", ""]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("subscribe records a metric after a successful confirm mail", async () => {
+  const points = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ id: "ok" }), { status: 200 });
+
+  try {
+    const env = {
+      MAIL_IP: limiter,
+      MAIL_EMAIL: limiter,
+      SUBSCRIBE_SIGNING_KEY: "test secret",
+      RESEND_FROM: "Hot Stuff <test@example.com>",
+      RESEND_API_KEY: "key",
+      METRICS: {
+        writeDataPoint(p) {
+          points.push(p);
+        },
+      },
+    };
+    const req = new Request("https://worker.test/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ email: "pat@example.com", company: "" }),
+    });
+    assert.equal((await worker.fetch(req, env)).status, 200);
+    assert.equal(points.length, 1);
+    assert.deepEqual(points[0].blobs, ["subscribe", ""]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("existing contacts are added to the Segment without an update", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;
