@@ -4,8 +4,7 @@
 #   ./check
 #
 # Exits non-zero if any step fails, so it works as a pre-push habit or in CI.
-# Nothing here touches the network: the suites stub fetch, and the integration
-# script only rewrites the sheet URLs to local fixtures.
+# Nothing here touches the network: the suites stub fetch.
 set -uo pipefail
 cd "$(dirname "$0")"
 
@@ -89,8 +88,7 @@ step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
-step "unit tests"           node --test tools/test-parsing.mjs worker/test-worker.mjs
-step "sheet integration"    tools/test-integrations.sh
+step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs worker/test-worker.mjs
 
 if [ "$failed" -ne 0 ]; then
   printf '\n  something above failed\n'

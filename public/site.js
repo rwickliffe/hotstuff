@@ -1,6 +1,5 @@
 import {
   bandByKey,
-  csvToObjects,
   featuredFrom,
   forMaker,
   heatWord,
@@ -9,17 +8,10 @@ import {
 import { fillHeatPips, productCard } from "./lib/render.js";
 
 // ===================================================================
-// Paste the Google Sheet's "Publish to web -> CSV" address here.
-// Leave it empty and the page just uses the seed list below.
+// Live catalog/schedule come from GET /data (Worker → KV). Sheet URLs
+// live only on the Worker (wrangler.jsonc vars). The bake in the HTML
+// is the floor when /data is empty or unreachable.
 // ===================================================================
-const PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv";
-
-// ===================================================================
-// Schedule. Second tab of the same spreadsheet, published as CSV.
-// Columns: date (YYYY-MM-DD), name, time, address
-// Empty leaves the sample dates below in place.
-// ===================================================================
-const EVENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv";
 
 // Mail is same-origin (this Worker serves the site). false: forms show
 // “not connected” and do not POST — for a static preview without wrangler.
@@ -65,7 +57,7 @@ function showDiag() {
 }
 
 
-/** @import { MailResult, Product, Sheet, Source } from "./types.js" */
+/** @import { MailResult, Product, Source } from "./types.js" */
 
 
 
@@ -243,71 +235,79 @@ function renderEvents(rows) {
   });
 }
 
-// Seed rows first so the page is never empty, then try the live sheet and
-// swap it in if it has anything usable. Both tabs follow the same sequence;
-// only the target markup and the wording differ. A renderer takes
-// (rows, isLive) - products ignores isLive, events uses it to drop the
-// "sample dates" badge.
-/** @param {Sheet} sheet */
-// Nothing is rendered up front any more. The catalog is already in the page,
-// written there by tools/make-catalog.mjs, and the schedule's markup says
-// where the dates go up - both better than a copy of the data kept in here,
-// which had to be hand-synced with data/products.csv and went stale on its
-// own where the dates were concerned.
-function loadSheet(sheet) {
-  if (!sheet.url) return;
-
-  fetch(sheet.url, { cache: "no-store" })
+// Seed rows first so the page is never empty, then try /data and swap in
+// live rows when present. Products and events share one payload.
+function loadCatalog() {
+  fetch("/data", { cache: "no-store" })
     .then(function (response) {
       if (!response.ok) throw new Error(String(response.status));
-      return response.text();
+      return response.json();
     })
-    .then(function (text) {
-      const live = csvToObjects(text);
-      if (live.length) {
-        sheet.render(live, true);
-        sheet.source.state = "live sheet";
-        sheet.source.rows = live.length;
-        sheet.source.note = "";
+    .then(function (data) {
+      const products = Array.isArray(data.products) ? data.products : [];
+      const events = Array.isArray(data.events) ? data.events : [];
+      if (products.length) {
+        renderProducts(products);
+        DIAG.products.state = "live /data";
+        DIAG.products.rows = products.length;
+        DIAG.products.note = "";
       } else {
-        // Reachable but useless is the failure mode that looks like success:
-        // a "publish to web" HTML url answers 200 with a page, not rows.
-        sheet.source.note = "Sheet reachable but no usable rows. " + sheet.hint;
-        console.warn(sheet.label + " sheet returned no usable rows. " +
-                     sheet.hint + " " + sheet.fallback);
+        DIAG.products.note = "No products in /data. Baked-in list left in place.";
+      }
+      if (events.length) {
+        renderEvents(events);
+        DIAG.events.state = "live /data";
+        DIAG.events.rows = events.length;
+        DIAG.events.note = "";
+      } else {
+        DIAG.events.note = "No events in /data. No dates shown.";
+      }
+      if (data.lastError) {
+        if (data.lastError.products) {
+          DIAG.products.note = (DIAG.products.note ? DIAG.products.note + " " : "") +
+            "lastError: " + data.lastError.products;
+        }
+        if (data.lastError.events) {
+          DIAG.events.note = (DIAG.events.note ? DIAG.events.note + " " : "") +
+            "lastError: " + data.lastError.events;
+        }
+      }
+      if (data.fetchedAt) {
+        DIAG.products.note = (DIAG.products.note ? DIAG.products.note + " · " : "") +
+          "fetchedAt " + data.fetchedAt;
+        showDataAge(data.fetchedAt);
       }
       showDiag();
     })
     .catch(function (error) {
       const why = location.protocol === "file:"
-        ? "Opened from a file:// path, which blocks requests to Google. " +
-          "Serve the folder instead: python3 -m http.server 8765"
+        ? "Opened from a file:// path. Use wrangler dev instead."
         : String(error);
-      sheet.source.note = "Could not reach the sheet. " + why;
-      console.warn("Could not reach the " + sheet.label + " sheet, " +
-                   sheet.fallback.toLowerCase(), why);
+      DIAG.products.note = "Could not reach /data. " + why;
+      DIAG.events.note = DIAG.products.note;
+      console.warn("Could not reach /data", why);
       showDiag();
     });
 }
 
-const SHEETS = [
-  {
-    label: "products",
-    url: PRODUCTS_CSV_URL,
-    source: DIAG.products,
-    render: renderProducts,
-    hint: "Is the URL the CSV one, ending in output=csv?",
-    fallback: "Baked-in list left in place."
-  },
-  {
-    label: "events",
-    url: EVENTS_CSV_URL,
-    source: DIAG.events,
-    render: renderEvents,
-    hint: "Check the date column reads YYYY-MM-DD.",
-    fallback: "No dates shown."
+// Quiet line under the grids when the live catalog is older than six hours.
+// Hidden otherwise — customers should not see freshness chrome every visit.
+const DATA_AGE_MS = 6 * 60 * 60 * 1000;
+
+/** @param {string} fetchedAt */
+function showDataAge(fetchedAt) {
+  const el = document.getElementById("data-age");
+  if (!el) return;
+  const t = Date.parse(fetchedAt);
+  if (!Number.isFinite(t) || Date.now() - t < DATA_AGE_MS) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
   }
-];
+  const hours = Math.round((Date.now() - t) / (60 * 60 * 1000));
+  el.textContent = "List last refreshed about " + hours + " hours ago.";
+  el.hidden = false;
+}
 
 // --- theme toggle ---
 const root = document.documentElement;
@@ -486,7 +486,7 @@ function wireAsking() {
 function init() {
   fillScaleKey();
   wireAsking();
-  SHEETS.forEach(loadSheet);
+  loadCatalog();
   wireMailForms();
   wirePendingAsk();
   showDiag();

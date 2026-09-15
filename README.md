@@ -33,16 +33,25 @@ that serves the site (`MAIL` in `public/site.js`) — not into this repo.
 
 ## Connecting the Google Sheet
 
-One spreadsheet with two tabs drives the page. Each tab is published
-separately and gets its own CSV address. Both are constants near the top of
-`site.js`. Left empty, the pages still render: the catalog is written into the
-HTML ahead of time, and the schedule says where the dates go up.
+One spreadsheet with two tabs still drives the catalog and schedule. Paula
+edits the sheet; the Worker fetches the published CSVs on a cron (and when
+`/data` is cold or stale) and stores them in KV. The browser only calls
+`GET /data` — it never talks to Google.
+
+The CSV publish URLs live in `worker/wrangler.jsonc` under `vars`
+(`PRODUCTS_CSV_URL`, `EVENTS_CSV_URL`). Each must end in **`output=csv`**.
 
 ```js
-const PRODUCTS_CSV_URL = "";   // products tab
-const EVENTS_CSV_URL   = "";   // events tab
-const MAIL             = true; // false = forms idle (static preview without wrangler)
-const LIST_OPEN        = false; // true only on their Resend Segment
+// wrangler.jsonc → vars (not secrets)
+PRODUCTS_CSV_URL  // products tab
+EVENTS_CSV_URL    // events tab
+```
+
+`MAIL` / `LIST_OPEN` stay in `public/site.js`:
+
+```js
+const MAIL      = true;  // false = forms idle (static preview without wrangler)
+const LIST_OPEN = false; // true only on their Resend Segment
 ```
 
 `data/products.csv` is an importable starting point for the products tab (and

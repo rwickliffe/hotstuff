@@ -38,6 +38,20 @@
     "directory": "../public",
     "binding": "ASSETS"
   },
+  "kv_namespaces": [
+    {
+      "binding": "CATALOG",
+      "id": "5b6480a293e34ad48d93e63be95c3972",
+      "preview_id": "90893cb2f6e24778a9519ece796bb77f"
+    }
+  ],
+  "triggers": {
+    "crons": ["13 * * * *"]
+  },
+  "vars": {
+    "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv",
+    "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv"
+  },
   "ratelimits": [
     {
       "name": "MAIL_IP",
