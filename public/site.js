@@ -4,7 +4,7 @@
 /** @import { MailResult } from "./types.js" */
 
 // Mail is same-origin (this Worker serves the site). false: forms show
-// “not connected” and do not POST — for a static preview without wrangler.
+// “not connected” and do not POST.
 // LIST_OPEN: false until RESEND_SEGMENT_ID is *their* Resend account (see ops.md).
 const MAIL = true;
 const LIST_OPEN = false;

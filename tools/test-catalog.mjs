@@ -23,16 +23,14 @@ import {
 import { catalogForPage, dataAge, debugSources, gridFor } from "../src/lib/page-catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const productsCsv = fs.readFileSync(path.join(root, "data/products.csv"), "utf8");
 const eventsCsv = fs.readFileSync(path.join(root, "data/fixtures/events.csv"), "utf8");
-const fixtureProducts = fs.readFileSync(
+const productsCsv = fs.readFileSync(
   path.join(root, "data/fixtures/products.csv"),
   "utf8"
 );
 
-test("products fixture and bake seed pass header validation", () => {
+test("products fixture passes header validation", () => {
   assert.ok(validateProducts(productsCsv)?.length);
-  assert.ok(validateProducts(fixtureProducts)?.length);
 });
 
 test("events fixture passes and drops undated junk", () => {

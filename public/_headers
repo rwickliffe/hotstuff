@@ -1,7 +1,7 @@
 # Security headers for Static Assets (CSS, images, …).
 # On-demand HTML CSP is SITE_CSP in src/lib/csp.ts (Worker wrapper).
 # /confirm and /compose use WORKER_HTML_CSP from the same module.
-# Keep the CSP line below aligned with SITE_CSP (phase 4 check will enforce).
+# Keep the CSP line below aligned with SITE_CSP (./check compares them).
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

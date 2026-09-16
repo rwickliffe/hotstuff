@@ -1,5 +1,5 @@
 /** Shared Content-Security-Policy strings for Worker HTML and Astro pages.
- *  Keep public/_headers CSP in sync (./check will enforce later). */
+ *  Keep public/_headers CSP in sync (./check compares them). */
 
 /** /confirm and /compose — no same-origin CSS/JS files. */
 export const WORKER_HTML_CSP =
