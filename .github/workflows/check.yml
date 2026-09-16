@@ -1,5 +1,4 @@
-# Runs ./check on every push. Same command, same steps as running it locally,
-# so a green tick here means exactly what a clean local run means.
+# Runs ./check, then Playwright against wrangler. The badge is this job.
 name: check
 
 on:
@@ -33,3 +32,8 @@ jobs:
       - run: npm ci
 
       - run: ./check
+
+      # Browser net for filter / legend / ?debug / ask. ./check stays
+      # network-free; this boots wrangler against the build from ./check.
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test

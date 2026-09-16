@@ -238,9 +238,7 @@ confirms the generated art block is current, the catalog snapshot has
 products, SITE_CSP matches `public/_headers`, the stylesheet reaches nothing
 outside itself, Base.astro is wired to the shared files, the favicon matches
 the flame sprite, runs the test suites, and compiles with `astro build`.
-Nothing touches the network. GitHub Actions
-runs the same command on every push, so the badge above and a clean local run
-mean the same thing. The pieces run on their own too:
+Nothing touches the network.
 
 ```bash
 node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
@@ -253,9 +251,20 @@ The type check is the only step that needs anything installed. On a fresh
 clone it prints a note and skips, so `./check` still runs with nothing fetched;
 CI runs `npm ci` first, which is what makes it stricter than a bare clone
 rather than merely different. Dev dependencies are `typescript`, the Workers
-runtime types, and `wrangler`. Nothing is shipped
+runtime types, `wrangler`, and Playwright. Nothing is shipped
 from `node_modules`: Astro builds the site and wrangler bundles the Worker
 at deploy.
+
+Playwright is a second command. It builds, boots `wrangler dev`, and clicks
+through the heat filter, legend, ask buttons, and `?debug`. GitHub Actions
+runs `./check` then this on every push, so the badge above and a clean local
+`./check` plus `npx playwright test` mean the same thing:
+
+```bash
+npx playwright test
+```
+
+First time on a machine: `npx playwright install chromium`.
 
 `tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
 the date parser, the heat scale. Rather than keep a second copy of them, it
