@@ -9,6 +9,7 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "noEmit": true
   },
   "include": [
@@ -16,6 +17,7 @@
     "env.d.ts",
     "worker-configuration.d.ts",
     "../lib/data.js",
-    "../lib/page-catalog.ts"
+    "../lib/page-catalog.ts",
+    "../../data/catalog-snapshot.json"
   ]
 }

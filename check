@@ -77,6 +77,19 @@ flame () {
   done
 }
 
+# Committed floor for empty KV. Cron does not update this file.
+snapshot () {
+  local file=data/catalog-snapshot.json
+  [ -f "$file" ] || { echo "missing $file — run tools/pull-catalog.mjs"; return 1; }
+  node -e '
+    const d = JSON.parse(require("fs").readFileSync("data/catalog-snapshot.json", "utf8"));
+    if (!Array.isArray(d.products) || d.products.length < 1) {
+      console.error("catalog snapshot has no products");
+      process.exit(1);
+    }
+  '
+}
+
 step "page script parses"   node --check public/site.js
 step "lib modules parse"    node --check src/lib/data.js
 step "render module parses" node --check tools/render.js
@@ -84,6 +97,7 @@ step "page types"           page_types
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
 step "baked catalog is current" tools/make-catalog.mjs --check
+step "catalog snapshot has products" snapshot
 step "pages are wired up"       pages
 step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a

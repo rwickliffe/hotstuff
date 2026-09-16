@@ -20,7 +20,7 @@ import {
   validateEvents,
   validateProducts,
 } from "../src/worker/catalog.ts";
-import { dataAge, debugSources, gridFor } from "../src/lib/page-catalog.ts";
+import { catalogForPage, dataAge, debugSources, gridFor } from "../src/lib/page-catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const productsCsv = fs.readFileSync(path.join(root, "data/products.csv"), "utf8");
@@ -171,3 +171,34 @@ test("debugSources reports live KV row counts and lastError", () => {
   assert.match(d.events.note, /lastError: too large/);
   assert.match(d.products.note, /fetchedAt 2026-09-15T12:00:00Z/);
 });
+
+test("debugSources names snapshot when KV was empty", () => {
+  const d = debugSources(
+    { products: [{ name: "A" }], events: [{ name: "M" }], fetchedAt: null, lastError: null },
+    "snapshot"
+  );
+  assert.equal(d.products.state, "snapshot");
+  assert.equal(d.events.state, "snapshot");
+});
+
+test("catalogForPage uses KV when it has products and the snapshot otherwise", () => {
+  const floor = {
+    products: [{ name: "Snap" }],
+    events: [],
+    fetchedAt: "2026-01-01T00:00:00Z",
+    lastError: null,
+  };
+  const live = catalogForPage({
+    products: [{ name: "Live" }],
+    events: [],
+    fetchedAt: "2026-09-16T00:00:00Z",
+    lastError: null,
+  }, floor);
+  assert.equal(live.source, "kv");
+  assert.equal(live.catalog.products[0]?.name, "Live");
+
+  const cold = catalogForPage(emptyCatalog(), floor);
+  assert.equal(cold.source, "snapshot");
+  assert.equal(cold.catalog.products[0]?.name, "Snap");
+});
+

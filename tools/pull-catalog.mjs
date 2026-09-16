@@ -1,19 +1,22 @@
 #!/usr/bin/env node
-/* Refresh data/products.csv from the live Worker /data payload so the bake
- * floor matches what the site serves. Events stay sheet-only (not baked).
+/* Refresh the committed catalog floor from live /data.
  *
  *     tools/pull-catalog.mjs
  *     DATA_URL=http://127.0.0.1:8787/data tools/pull-catalog.mjs
  *
- * Default DATA_URL is the deployed workers.dev /data. Then run
- * tools/make-catalog.mjs to rewrite the HTML blocks.
+ * Writes data/catalog-snapshot.json (Astro's empty-KV floor) and
+ * data/products.csv (bake seed until step 4). Cron updates KV only — run
+ * this before deploy when the sheet has meaningfully changed.
+ *
+ * Default DATA_URL is the deployed workers.dev /data.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const out = path.join(root, "data/products.csv");
+const csvOut = path.join(root, "data/products.csv");
+const snapOut = path.join(root, "data/catalog-snapshot.json");
 const dataUrl =
   process.env.DATA_URL || "https://hotstuff.rwickliffe.workers.dev/data";
 
@@ -40,13 +43,27 @@ if (!res.ok) {
   console.error(`FAIL: ${dataUrl} → HTTP ${res.status}`);
   process.exit(1);
 }
-/** @type {{ products?: Record<string, string>[] }} */
+/** @type {{
+ *   products?: Record<string, string>[],
+ *   events?: Record<string, string>[],
+ *   fetchedAt?: string | null,
+ *   lastError?: { products?: string, events?: string } | null
+ * }} */
 const data = await res.json();
 const products = Array.isArray(data.products) ? data.products : [];
+const events = Array.isArray(data.events) ? data.events : [];
 if (!products.length) {
   console.error("FAIL: /data returned no products");
   process.exit(1);
 }
+
+const snapshot = {
+  products,
+  events,
+  fetchedAt: typeof data.fetchedAt === "string" ? data.fetchedAt : null,
+  lastError: data.lastError && typeof data.lastError === "object" ? data.lastError : null,
+};
+fs.writeFileSync(snapOut, JSON.stringify(snapshot, null, 2) + "\n");
 
 const keys = new Set();
 for (const row of products) Object.keys(row).forEach((k) => keys.add(k));
@@ -59,6 +76,8 @@ const lines = [cols.join(",")];
 for (const row of products) {
   lines.push(cols.map((c) => csvCell(row[c])).join(","));
 }
-fs.writeFileSync(out, lines.join("\n") + "\n");
+fs.writeFileSync(csvOut, lines.join("\n") + "\n");
+console.log(
+  `wrote ${products.length} products, ${events.length} events to data/catalog-snapshot.json`
+);
 console.log(`wrote ${products.length} products to data/products.csv from ${dataUrl}`);
-console.log("next: tools/make-catalog.mjs");

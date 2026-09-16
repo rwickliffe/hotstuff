@@ -2,7 +2,7 @@
 // This module only exports `default` (Static Assets rejects named exports).
 
 import { handle } from "@astrojs/cloudflare/handler";
-import { cacheControlForChicago } from "../lib/cache-headers.ts";
+import { cacheControlForChicago, htmlCacheKey } from "../lib/cache-headers.ts";
 import { SITE_CSP } from "../lib/csp.ts";
 import api from "./api.ts";
 
@@ -20,8 +20,17 @@ export default {
     const path = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
     if (API.has(path)) return api.fetch(req, env, ctx);
 
-    const astroResponse = await handle(req, env, ctx);
-    return withSiteHtmlHeaders(astroResponse);
+    const cacheKey = htmlCacheKey(req);
+    if (cacheKey) {
+      const hit = await caches.default.match(cacheKey);
+      if (hit) return hit;
+    }
+
+    const astroResponse = withSiteHtmlHeaders(await handle(req, env, ctx));
+    if (cacheKey && astroResponse.ok) {
+      ctx.waitUntil(caches.default.put(cacheKey, astroResponse.clone()));
+    }
+    return astroResponse;
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {

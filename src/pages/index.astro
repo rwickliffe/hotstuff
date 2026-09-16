@@ -7,17 +7,17 @@ import DebugPanel from "../components/DebugPanel.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
 import Schedule from "../components/Schedule.astro";
-import { dataAge, debugSources, gridFor, isDebug } from "../lib/page-catalog.ts";
+import { dataAge, debugSources, gridFor, isDebug, catalogForPage } from "../lib/page-catalog.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
-const catalog = await readCatalog(env);
+const { catalog, source } = catalogForPage(await readCatalog(env));
 const paula = gridFor(catalog.products, "Paula", true);
 const john = gridFor(catalog.products, "John", true);
 const age = dataAge(catalog.fetchedAt);
 const debug = isDebug(Astro.url);
 ---
 <Base>
-  {debug && <DebugPanel {...debugSources(catalog)} />}
+  {debug && <DebugPanel {...debugSources(catalog, source)} />}
 
   <main>
     <header class="hero">

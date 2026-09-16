@@ -7,10 +7,10 @@ import DebugPanel from "../components/DebugPanel.astro";
 import HeatFilter from "../components/HeatFilter.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
-import { dataAge, debugSources, gridFor, isDebug } from "../lib/page-catalog.ts";
+import { dataAge, debugSources, gridFor, isDebug, catalogForPage } from "../lib/page-catalog.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
-const catalog = await readCatalog(env);
+const { catalog, source } = catalogForPage(await readCatalog(env));
 const paula = gridFor(catalog.products, "Paula", false);
 const john = gridFor(catalog.products, "John", false);
 const age = dataAge(catalog.fetchedAt);
@@ -20,7 +20,7 @@ const debug = isDebug(Astro.url);
   title="Everything they make, Paula and Crazy John's Hot Stuff"
   description="The full list of Paula and Crazy John's salsas, hot sauces, cowboy candy, pickles and chow chow, with heat ratings and what is in stock."
 >
-  {debug && <DebugPanel {...debugSources(catalog)} />}
+  {debug && <DebugPanel {...debugSources(catalog, source)} />}
 
   <main>
     <header class="page-head">

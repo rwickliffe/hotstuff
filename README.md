@@ -35,10 +35,11 @@ that serves the site (`MAIL` in `public/site.js`) — not into this repo.
 
 One spreadsheet with two tabs still drives the catalog and schedule. Paula
 edits the sheet; the Worker fetches the published CSVs on a cron (and when
-`/data` is cold or stale) and stores them in KV. The browser only calls
-`GET /data` — it never talks to Google.
+`/data` is cold or stale) and stores them in KV. Pages render from KV. If KV
+is empty, they fall back to `data/catalog-snapshot.json`. The browser never
+talks to Google.
 
-The CSV publish URLs live in `worker/wrangler.jsonc` under `vars`
+The CSV publish URLs live in `wrangler.jsonc` under `vars`
 (`PRODUCTS_CSV_URL`, `EVENTS_CSV_URL`). Each must end in **`output=csv`**.
 
 ```js
@@ -80,7 +81,8 @@ case.
 Google edge-caches published CSVs, so an edit can take a few minutes to reach
 the site. That is usually the explanation when a change does not show up.
 
-**Catalog.** The `products` tab. Replaces the baked-in catalog on page load.
+**Catalog.** The `products` tab. The Worker stores it in KV; both pages
+render from that on each request.
 
 Columns:
 
@@ -207,24 +209,32 @@ search for.
 
 ## Without JavaScript
 
-The catalog is written into both pages by `tools/make-catalog.mjs`, so a
-visitor whose browser never runs the script still gets every jar, its heat
-rating and its price:
+The catalog is rendered on the Worker from KV, so a visitor whose browser
+never runs the script still gets every jar, its heat rating and its price.
+If KV is empty, `data/catalog-snapshot.json` is the floor. Refresh it from
+live `/data` when the sheet has meaningfully changed (cron updates KV only,
+not this file). A throwing component is a 500 on both pages, not a fallback
+to static HTML — the snapshot protects against empty data, not a broken
+render.
+
+```bash
+tools/pull-catalog.mjs            # snapshot + data/products.csv
+```
+
+Until the bake is retired, `data/products.csv` still feeds
+`tools/make-catalog.mjs` for the parked HTML in `legacy/html/`.
 
 ```bash
 tools/make-catalog.mjs            # rewrite the blocks
 tools/make-catalog.mjs --check    # fail if they are out of date
 ```
 
-It builds those cards with `productCard` out of `lib/render.js` - the same
-function the browser calls - against a DOM shim. Writing a second renderer here
-in string concatenation would work right up until the two drifted, and then it
-would be wrong quietly.
+It builds those cards with `productCard` out of `tools/render.js` against a
+DOM shim. Astro pages use `ProductCard.astro` instead.
 
-**The schedule is deliberately not baked.** It drops dates before today, so its
-output depends on when it ran, and a generated file whose `--check` fails every
-morning is worse than no generated file. Without script it says where the dates
-go up, which is true and is where they go up anyway.
+**The schedule is rendered with the page**, dropping dates before today so
+a generated `--check` does not fail every morning. The parked bake in
+`legacy/html/` still omits dates on purpose.
 
 Nothing else is left sitting there dead. The heat filter and the theme toggle
 need script, so they are hidden until one line in the `<head>` marks the page

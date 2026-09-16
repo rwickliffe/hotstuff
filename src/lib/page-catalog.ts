@@ -1,9 +1,25 @@
 import { featuredFrom, forMaker } from "./data.js";
 import type { CatalogPayload } from "../worker/catalog.ts";
+import snapshot from "../../data/catalog-snapshot.json" with { type: "json" };
 
 export type Product = Record<string, string>;
+export type CatalogSource = "kv" | "snapshot";
+
+const SNAPSHOT = snapshot as CatalogPayload;
 
 const DATA_AGE_MS = 6 * 60 * 60 * 1000;
+
+/** Empty KV uses the committed snapshot so both pages still have jars. */
+export function catalogForPage(
+  kv: CatalogPayload,
+  floor: CatalogPayload = SNAPSHOT
+): {
+  catalog: CatalogPayload;
+  source: CatalogSource;
+} {
+  if (kv.products.length) return { catalog: kv, source: "kv" };
+  return { catalog: floor, source: "snapshot" };
+}
 
 export function gridFor(
   products: Product[],
@@ -34,7 +50,7 @@ export function isDebug(url: URL): boolean {
   return url.searchParams.has("debug");
 }
 
-export function debugSources(catalog: CatalogPayload) {
+export function debugSources(catalog: CatalogPayload, source: CatalogSource = "kv") {
   const fetched = catalog.fetchedAt ? "fetchedAt " + catalog.fetchedAt : "";
   const productNote = [
     catalog.lastError?.products ? "lastError: " + catalog.lastError.products : "",
@@ -48,14 +64,15 @@ export function debugSources(catalog: CatalogPayload) {
   ]
     .filter(Boolean)
     .join(" · ");
+  const live = source === "snapshot" ? "snapshot" : "live KV";
   return {
     products: {
-      state: catalog.products.length ? "live KV" : "empty",
+      state: catalog.products.length ? live : "empty",
       rows: catalog.products.length,
       note: productNote,
     },
     events: {
-      state: catalog.events.length ? "live KV" : "empty",
+      state: catalog.events.length ? live : "empty",
       rows: catalog.events.length,
       note: eventNote,
     },

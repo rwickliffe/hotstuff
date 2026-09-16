@@ -1,0 +1,224 @@
+{
+  "products": [
+    {
+      "maker": "Paula",
+      "name": "Mild Smoked Jalapeño Salsa",
+      "description": "Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",
+      "heat": "1",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Jalapeño Salsa",
+      "description": "Tomato, jalapeños, serrano pepper, cilantro, garlic, onion and lime juice.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Tropical Fire Salsa",
+      "description": "Mango, papaya, strawberry, habanero, jalapeño, serrano, bell pepper, cilantro and lime.",
+      "heat": "4",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Smoked Ghostly Salsa",
+      "description": "Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",
+      "heat": "5",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Cowboy Candy",
+      "description": "Candied jalapeños with sugar, spices and cider vinegar. Sweet first, then not.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Pineapple Cowboy Candy",
+      "description": "Pineapple, jalapeños, sugar, ginger, spices and cider vinegar.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "What's Yer Garlicky Dill",
+      "description": "Cucumber, garlic, onion and bell pepper. The one that disappears first.",
+      "heat": "1",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Spicy Bread n Butter",
+      "description": "Cucumber, onion, sugar, bell pepper and spices, with a little heat behind it.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Chow Chow",
+      "description": "Made the old way. Back when the cabbage is ready.",
+      "heat": "1",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "yes",
+      "featured": ""
+    },
+    {
+      "maker": "John",
+      "name": "Vampire Killer",
+      "description": "Red jalapeño, garlic, lemon juice, onion, cilantro, olive oil and white vinegar.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "John",
+      "name": "Honey Jalapeño",
+      "description": "Jalapeño, honey, lemon juice, garlic, onion, olive oil and cider vinegar.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "John",
+      "name": "Tropical Scotch Bonnet",
+      "description": "Scotch bonnet, pineapple, garlic, onion, cilantro, olive oil and lemon juice.",
+      "heat": "4",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "John",
+      "name": "Smoked Dragon's Breath",
+      "description": "Smoked habanero, garlic, onion, cilantro, olive oil and cider vinegar.",
+      "heat": "5",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "John",
+      "name": "Ghostly Blackberry",
+      "description": "Ghost pepper, blackberries, garlic, onion, cilantro and cider vinegar.",
+      "heat": "5",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "John",
+      "name": "Reaper's Luscious Peaches",
+      "description": "Carolina reaper, peaches, lime juice, avocado oil, whiskey and spices.",
+      "heat": "6",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "John",
+      "name": "Insanity",
+      "description": "Carolina reaper, ghost pepper, garlic, onion, cilantro and cider vinegar.",
+      "heat": "6",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "John",
+      "name": "Blueberry Fields of Death",
+      "description": "Carolina reaper, blueberries, onion, cilantro, olive oil and cider vinegar.",
+      "heat": "6",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "John",
+      "name": "Strawberry Fields of Ultra Insanity",
+      "description": "Strawberries, Carolina reaper, scorpion pepper, ghost pepper, garlic, onion and cilantro.",
+      "heat": "6",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    }
+  ],
+  "events": [
+    {
+      "date": "2026-09-05",
+      "name": "Bastrop 1832 Farmers Market",
+      "time": "10:00am to 2:00pm",
+      "address": "1302 Chestnut St, Bastrop, TX 78602"
+    },
+    {
+      "date": "2026-09-06",
+      "name": "Elgin Farmers Market",
+      "time": "8:00am to 1:00pm",
+      "address": "Main St, Elgin, TX 78621"
+    },
+    {
+      "date": "2026-09-12",
+      "name": "Bastrop 1832 Farmers Market",
+      "time": "10:00am to 2:00pm",
+      "address": "1302 Chestnut St, Bastrop, TX 78602"
+    },
+    {
+      "date": "2026-09-13",
+      "name": "Fall Festival",
+      "time": "10:00am to 4:00pm",
+      "address": "Courthouse Square, Elgin, TX 78621"
+    },
+    {
+      "date": "2026-09-19",
+      "name": "Bastrop 1832 Farmers Market",
+      "time": "10:00am to 2:00pm",
+      "address": "1302 Chestnut St, Bastrop, TX 78602"
+    },
+    {
+      "date": "2026-09-21",
+      "name": "Makers Market",
+      "time": "11:00am to 5:00pm",
+      "address": ""
+    }
+  ],
+  "fetchedAt": "2026-09-16T18:13:57.561Z",
+  "lastError": null
+}

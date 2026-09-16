@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cacheControlForChicago } from "../src/lib/cache-headers.ts";
+import { cacheControlForChicago, htmlCacheKey } from "../src/lib/cache-headers.ts";
 
 // 16 Sep 2026 is CDT (UTC-5). Times below are wall-clock Chicago.
 
@@ -28,3 +28,16 @@ test("the last second of the day still caches for one second", () => {
     "public, max-age=1"
   );
 });
+
+test("htmlCacheKey keeps / and /products, strips query, skips debug", () => {
+  const origin = "https://hotstuff.example";
+  const key = (path) => htmlCacheKey(new Request(origin + path));
+  assert.equal(key("/")?.url, origin + "/");
+  assert.equal(key("/?ask=Chow%20Chow")?.url, origin + "/");
+  assert.equal(key("/products")?.url, origin + "/products");
+  assert.equal(key("/products?debug"), null);
+  assert.equal(key("/?debug=1"), null);
+  assert.equal(key("/data"), null);
+  assert.equal(htmlCacheKey(new Request(origin + "/", { method: "POST" })), null);
+});
+
