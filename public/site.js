@@ -1,17 +1,7 @@
-import {
-  bandByKey,
-  featuredFrom,
-  forMaker,
-  heatWord,
-  parseDay,
-} from "./lib/data.js";
-import { fillHeatPips, productCard } from "./lib/render.js";
+// Client chrome only: heat filter, theme, ask, mail.
+// Grids, legend, schedule, data-age, and ?debug come from the Worker.
 
-// ===================================================================
-// Live catalog/schedule come from GET /data (Worker → KV). Sheet URLs
-// live only on the Worker (wrangler.jsonc vars). The bake in the HTML
-// is the floor when /data is empty or unreachable.
-// ===================================================================
+/** @import { MailResult } from "./types.js" */
 
 // Mail is same-origin (this Worker serves the site). false: forms show
 // “not connected” and do not POST — for a static preview without wrangler.
@@ -19,48 +9,24 @@ import { fillHeatPips, productCard } from "./lib/render.js";
 const MAIL = true;
 const LIST_OPEN = false;
 
-
-// Where each dataset actually came from. Surfaced only at ?debug, because a
-// customer should never see "our spreadsheet is broken" on a salsa website,
-// but Paula needs a way to check that an edit actually landed.
+// Surfaced only at ?debug. Products/events are server-rendered; this object
+// only updates the worker line after a failed POST.
 const DIAG = {
-  products: { state: "built-in list", rows: 0, note: "" },
-  events:   { state: "built-in dates", rows: 0, note: "" },
-  worker:   { state: MAIL ? "same-origin" : "off", note: "" }
+  worker: { state: MAIL ? "same-origin" : "off", note: "" }
 };
 
 function showDiag() {
   if (!/(^|[?&])debug(=|&|$)/.test(location.search)) return;
-  const box = document.getElementById("diag") || document.createElement("div");
-  box.id = "diag";
-  box.style.cssText =
-    "position:fixed;right:12px;bottom:12px;z-index:9999;max-width:340px;" +
-    "background:#14100E;color:#F0E7DC;border:1px solid #46392F;border-radius:4px;" +
-    "padding:12px 14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;" +
-    "box-shadow:0 6px 24px rgba(0,0,0,.4)";
-  /** @param {string} name @param {Source} source */
-  function sourceLine(name, source) {
-    const live = /^live/.test(source.state) || source.state === "same-origin";
-    const rows =
-      source.rows != null ? " (" + source.rows + " rows)" : "";
-    return '<div style="margin-top:6px"><b>' + name + '</b> ' +
-           '<span style="color:' + (live ? "#5CB84A" : "#E8A87C") + '">' +
-           source.state + "</span>" + rows +
-           (source.note ? '<div style="color:#B0A296;margin-top:2px">' + source.note + "</div>" : "") +
-           "</div>";
-  }
-  box.innerHTML = '<div style="color:#B0A296">data sources</div>' +
-                  sourceLine("products", DIAG.products) +
-                  sourceLine("events", DIAG.events) +
-                  sourceLine("worker", DIAG.worker);
-  if (!box.parentNode) document.body.appendChild(box);
+  const el = document.getElementById("diag-worker");
+  if (!el) return;
+  const live = DIAG.worker.state === "same-origin";
+  el.innerHTML =
+    '<span style="color:' + (live ? "#5CB84A" : "#E8A87C") + '">' +
+    DIAG.worker.state + "</span>" +
+    (DIAG.worker.note
+      ? '<div style="color:#B0A296;margin-top:2px">' + DIAG.worker.note + "</div>"
+      : "");
 }
-
-
-/** @import { MailResult, Product, Source } from "./types.js" */
-
-
-
 
 const ASK_PARAM = "ask";
 
@@ -115,28 +81,8 @@ function wirePendingAsk() {
   window.addEventListener("load", function () { applyAsk(name, true); });
 }
 
-
-
-
-/** @param {Product[]} products */
-function renderProducts(products) {
-  // A grid marked data-featured leads with the picks; a plain one carries
-  // the lot. That is the whole difference between the front page and the
-  // catalog, so both run the same render.
-  const grids = /** @type {NodeListOf<HTMLElement>} */ (
-    document.querySelectorAll("[data-grid]"));
-  grids.forEach(function (grid) {
-    const who = (grid.dataset.grid || "").toLowerCase();
-    const mine = forMaker(products, who);
-    const shown = "featured" in grid.dataset ? featuredFrom(mine) : mine;
-    grid.innerHTML = "";
-    shown.forEach(function (p) { grid.appendChild(productCard(p)); });
-  });
-
-  wireFilter();
-}
-
-// --- heat filter over John's grid ---
+// Heat vocabulary lives on the buttons (data-band / data-range / data-label)
+// from BANDS on the server. This only toggles visibility.
 function wireFilter() {
   const buttons = /** @type {NodeListOf<HTMLButtonElement>} */ (
     document.querySelectorAll(".filters button"));
@@ -146,9 +92,14 @@ function wireFilter() {
   if (!buttons.length) return;
 
   buttons.forEach(function (btn) {
-    btn.textContent = bandByKey(btn.dataset.band || "").label;
     btn.onclick = function () {
-      const range = bandByKey(btn.dataset.band || "").range;
+      const parts = (btn.dataset.range || "0,9").split(",");
+      const lo = parseInt(parts[0], 10);
+      const hi = parseInt(parts[1], 10);
+      const range = [
+        Number.isFinite(lo) ? lo : 0,
+        Number.isFinite(hi) ? hi : 9
+      ];
       buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
       let shown = 0;
       cards.forEach(function (c) {
@@ -160,157 +111,6 @@ function wireFilter() {
       if (empty) empty.style.display = shown ? "none" : "block";
     };
   });
-}
-
-// --- the legend above the grid: one sample jar per band ---
-function fillScaleKey() {
-  const samples = /** @type {NodeListOf<HTMLElement>} */ (
-    document.querySelectorAll(".heat[data-key]"));
-  samples.forEach(function (sample) {
-    const key = sample.dataset.key || "";
-    fillHeatPips(sample, key);
-    const caption = sample.parentElement && sample.parentElement.querySelector("small");
-    if (caption) caption.textContent = heatWord(parseInt(key, 10));
-  });
-}
-
-// --- schedule, rendered into our own markup so it matches the page ---
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-
-
-/** @param {Product[]} rows */
-function renderEvents(rows) {
-  const host = document.getElementById("cal-rows");
-  if (!host) return;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  /** @type {{ row: Product, when: Date }[]} */
-  const upcoming = [];
-  rows.forEach(function (r) {
-    const when = parseDay(r.date);
-    if (when && when >= today) upcoming.push({ row: r, when: when });
-  });
-  upcoming.sort(function (a, b) { return a.when.getTime() - b.when.getTime(); });
-  upcoming.splice(30);
-
-  host.innerHTML = "";
-
-  if (!upcoming.length) {
-    const none = document.createElement("p");
-    none.className = "cal-empty";
-    none.textContent = "Nothing on the books right now. Facebook has the latest.";
-    host.appendChild(none);
-  }
-
-  upcoming.forEach(function (e) {
-    const cells = e.row;
-    const row = document.createElement("div");
-    row.className = "cal-row";
-
-    const when = document.createElement("span");
-    when.className = "cal-when";
-    when.textContent = DAYS[e.when.getDay()] + " " + e.when.getDate() + " " +
-                       MONTHS[e.when.getMonth()];
-
-    const what = document.createElement("span");
-    what.className = "cal-what";
-    what.appendChild(document.createTextNode(cells.name || ""));
-
-    if (cells.time) {
-      const t = document.createElement("small");
-      t.textContent = cells.time;
-      what.appendChild(t);
-    }
-
-    if (cells.address) {
-      const a = document.createElement("a");
-      a.className = "cal-map";
-      a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(cells.address);
-      a.textContent = cells.address;
-      what.appendChild(a);
-    }
-
-    row.appendChild(when);
-    row.appendChild(what);
-    host.appendChild(row);
-  });
-}
-
-// Seed rows first so the page is never empty, then try /data and swap in
-// live rows when present. Products and events share one payload.
-function loadCatalog() {
-  fetch("/data", { cache: "no-store" })
-    .then(function (response) {
-      if (!response.ok) throw new Error(String(response.status));
-      return response.json();
-    })
-    .then(function (data) {
-      const products = Array.isArray(data.products) ? data.products : [];
-      const events = Array.isArray(data.events) ? data.events : [];
-      if (products.length) {
-        renderProducts(products);
-        DIAG.products.state = "live /data";
-        DIAG.products.rows = products.length;
-        DIAG.products.note = "";
-      } else {
-        DIAG.products.note = "No products in /data. Baked-in list left in place.";
-      }
-      if (events.length) {
-        renderEvents(events);
-        DIAG.events.state = "live /data";
-        DIAG.events.rows = events.length;
-        DIAG.events.note = "";
-      } else {
-        DIAG.events.note = "No events in /data. No dates shown.";
-      }
-      if (data.lastError) {
-        if (data.lastError.products) {
-          DIAG.products.note = (DIAG.products.note ? DIAG.products.note + " " : "") +
-            "lastError: " + data.lastError.products;
-        }
-        if (data.lastError.events) {
-          DIAG.events.note = (DIAG.events.note ? DIAG.events.note + " " : "") +
-            "lastError: " + data.lastError.events;
-        }
-      }
-      if (data.fetchedAt) {
-        DIAG.products.note = (DIAG.products.note ? DIAG.products.note + " · " : "") +
-          "fetchedAt " + data.fetchedAt;
-        showDataAge(data.fetchedAt);
-      }
-      showDiag();
-    })
-    .catch(function (error) {
-      const why = location.protocol === "file:"
-        ? "Opened from a file:// path. Use wrangler dev instead."
-        : String(error);
-      DIAG.products.note = "Could not reach /data. " + why;
-      DIAG.events.note = DIAG.products.note;
-      console.warn("Could not reach /data", why);
-      showDiag();
-    });
-}
-
-// Quiet line under the grids when the live catalog is older than six hours.
-// Hidden otherwise — customers should not see freshness chrome every visit.
-const DATA_AGE_MS = 6 * 60 * 60 * 1000;
-
-/** @param {string} fetchedAt */
-function showDataAge(fetchedAt) {
-  const el = document.getElementById("data-age");
-  if (!el) return;
-  const t = Date.parse(fetchedAt);
-  if (!Number.isFinite(t) || Date.now() - t < DATA_AGE_MS) {
-    el.hidden = true;
-    el.textContent = "";
-    return;
-  }
-  const hours = Math.round((Date.now() - t) / (60 * 60 * 1000));
-  el.textContent = "List last refreshed about " + hours + " hours ago.";
-  el.hidden = false;
 }
 
 // --- theme toggle ---
@@ -483,8 +283,6 @@ function wireMailForms() {
   }
 }
 
-// Delegated, so it covers the cards tools/make-catalog.mjs baked into the page
-// as well as any this script renders later from the live sheet.
 function wireAsking() {
   document.addEventListener("click", function (e) {
     const target = /** @type {Element | null} */ (e.target);
@@ -494,9 +292,8 @@ function wireAsking() {
 }
 
 function init() {
-  fillScaleKey();
   wireAsking();
-  loadCatalog();
+  wireFilter();
   wireMailForms();
   wirePendingAsk();
   showDiag();

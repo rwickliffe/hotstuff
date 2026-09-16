@@ -20,6 +20,7 @@ import {
   validateEvents,
   validateProducts,
 } from "../src/worker/catalog.ts";
+import { dataAge, debugSources, gridFor } from "../src/lib/page-catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const productsCsv = fs.readFileSync(path.join(root, "data/products.csv"), "utf8");
@@ -136,4 +137,37 @@ test("refreshData merges on partial failure", async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("dataAge hides fresh fetches and names stale hours", () => {
+  const now = Date.parse("2026-09-15T18:00:00Z");
+  assert.equal(dataAge(null, now).hidden, true);
+  assert.equal(dataAge("2026-09-15T17:00:00Z", now).hidden, true);
+  const stale = dataAge("2026-09-15T10:00:00Z", now);
+  assert.equal(stale.hidden, false);
+  assert.match(stale.text, /8 hours/);
+});
+
+test("gridFor featured leads with flagged rows", () => {
+  const rows = [
+    { maker: "John", name: "A", featured: "" },
+    { maker: "John", name: "B", featured: "yes" },
+    { maker: "Paula", name: "C", featured: "yes" },
+  ];
+  assert.deepEqual(gridFor(rows, "john", true).map((p) => p.name), ["B"]);
+  assert.deepEqual(gridFor(rows, "John", false).map((p) => p.name), ["A", "B"]);
+});
+
+test("debugSources reports live KV row counts and lastError", () => {
+  const d = debugSources({
+    products: [{ name: "A" }, { name: "B" }],
+    events: [],
+    fetchedAt: "2026-09-15T12:00:00Z",
+    lastError: { events: "too large" },
+  });
+  assert.equal(d.products.state, "live KV");
+  assert.equal(d.products.rows, 2);
+  assert.equal(d.events.state, "empty");
+  assert.match(d.events.note, /lastError: too large/);
+  assert.match(d.products.note, /fetchedAt 2026-09-15T12:00:00Z/);
 });

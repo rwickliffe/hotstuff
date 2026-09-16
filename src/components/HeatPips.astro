@@ -1,0 +1,21 @@
+---
+import { heatWord } from "../../public/lib/data.js";
+
+interface Props {
+  heat: number;
+}
+
+const n = Math.max(0, Math.min(6, Math.trunc(Astro.props.heat) || 0));
+const word = heatWord(n) || "unrated";
+---
+<span class="heat" role="img" aria-label={`${n} out of 6, ${word}`}>
+  {Array.from({ length: 6 }, (_, i) => (
+    <svg
+      viewBox="0 0 20 24"
+      aria-hidden="true"
+      class:list={i < n ? ["heat-on", `heat-${n}`] : []}
+    >
+      <use href="/flame.svg#i-flame" />
+    </svg>
+  ))}
+</span>

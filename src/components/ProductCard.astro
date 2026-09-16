@@ -1,0 +1,40 @@
+---
+import { heatWord, isYes } from "../../public/lib/data.js";
+import HeatPips from "./HeatPips.astro";
+
+interface Props {
+  product: Record<string, string>;
+}
+
+const p = Astro.props.product;
+const heat = parseInt(p.heat, 10) || 0;
+const soldOut = isYes(p.sold_out);
+---
+<article
+  data-heat={String(heat)}
+  class:list={["prod", heat && `heat-${heat}`, soldOut && "sold-out"]}
+>
+  <h3>{p.name}</h3>
+  <p class="prod-made">{p.description || ""}</p>
+  <div class="prod-foot">
+    <div>
+      <HeatPips heat={heat} />
+      <div class="heat-word">{heatWord(heat)}</div>
+    </div>
+    {soldOut ? (
+      <button
+        data-ask={p.name}
+        aria-label={`Ask for ${p.name}, all gone`}
+        class="ask"
+        type="button"
+      >
+        Ask for this
+      </button>
+    ) : (
+      <span class="price">
+        {p.price ? `$${p.price}` : ""}
+        {p.price_quart ? <small class="price-qt">${p.price_quart} qt</small> : null}
+      </span>
+    )}
+  </div>
+</article>

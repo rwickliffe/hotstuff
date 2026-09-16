@@ -1,0 +1,16 @@
+---
+import { BANDS } from "../../public/lib/data.js";
+---
+<div class="filters" role="group" aria-label="Filter by heat">
+  {BANDS.map((band, i) => (
+    <button
+      type="button"
+      data-band={band.key}
+      data-label={band.label}
+      data-range={`${band.range[0]},${band.range[1]}`}
+      aria-pressed={i === 0 ? "true" : "false"}
+    >
+      {band.label}
+    </button>
+  ))}
+</div>

@@ -15,6 +15,7 @@
     "./**/*.ts",
     "env.d.ts",
     "worker-configuration.d.ts",
-    "../../public/lib/data.js"
+    "../../public/lib/data.js",
+    "../lib/page-catalog.ts"
   ]
 }
