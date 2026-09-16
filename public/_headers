@@ -1,9 +1,7 @@
-# Security headers for Static Assets (HTML, CSS, images, …).
-# Worker-rendered /confirm and /compose set the same family of headers in
-# worker.ts (HTML_CSP). Keep shared CSP directives aligned until phase 4
-# introduces a shared constants module. Intentional differences on this side:
-# style-src/script-src include 'self'. connect-src is same-origin only (sheets
-# are fetched by the Worker, not the browser).
+# Security headers for Static Assets (CSS, images, …).
+# On-demand HTML CSP is SITE_CSP in src/lib/csp.ts (Worker wrapper).
+# /confirm and /compose use WORKER_HTML_CSP from the same module.
+# Keep the CSP line below aligned with SITE_CSP (phase 4 check will enforce).
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

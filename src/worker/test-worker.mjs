@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import worker from "./index.ts";
+import worker from "./api.ts";
 import {
   CONFIRM_TTL_MS,
   MAX_BODY,
