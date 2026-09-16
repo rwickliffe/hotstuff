@@ -19,7 +19,7 @@ import {
   refreshMode,
   validateEvents,
   validateProducts,
-} from "../worker/src/catalog.ts";
+} from "../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const productsCsv = fs.readFileSync(path.join(root, "data/products.csv"), "utf8");

@@ -30,8 +30,8 @@ const { productCard } = await import("../public/lib/render.js");
 
 const MAKERS = ["Paula", "John"];
 const TARGETS = [
-  { file: "public/index.html", featured: true },   // the front page leads with picks
-  { file: "public/products.html", featured: false }, // the catalog carries the lot
+  { file: "legacy/html/index.html", featured: true },   // pre-Astro bake (step 4 deletes)
+  { file: "legacy/html/products.html", featured: false },
 ];
 
 const rows = csvToObjects(fs.readFileSync(path.join(root, "data/products.csv"), "utf8"));

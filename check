@@ -42,12 +42,13 @@ page_types () {
 
 worker_types () {
   [ -x "$tsc" ] || return 0
-  "$tsc" --noEmit --project worker/tsconfig.json
+  "$tsc" --noEmit --project src/worker/tsconfig.json
 }
 
 pages () {
   local page
-  for page in public/index.html public/products.html; do
+  # Pre-Astro bake kept under legacy/html until step 4 retires it.
+  for page in legacy/html/index.html legacy/html/products.html; do
     grep -q '<link rel="stylesheet" href="styles.css">' "$page" ||
       { echo "$page does not link styles.css"; return 1; }
     grep -q '<script type="module" src="site.js"></script>' "$page" ||
@@ -69,7 +70,7 @@ flame () {
   local sprite page icon
   sprite=$(grep -o ' d="[^"]*"' public/flame.svg | sed 's/^ d="//; s/"$//')
   [ -n "$sprite" ] || { echo "no path found in flame.svg"; return 1; }
-  for page in public/index.html public/products.html; do
+  for page in legacy/html/index.html legacy/html/products.html; do
     icon=$(grep -o " d='[^']*'" "$page" | head -1 | sed "s/^ d='//; s/'$//")
     [ "$icon" = "$sprite" ] ||
       { echo "the favicon in $page has drifted from flame.svg"; return 1; }
@@ -88,7 +89,7 @@ step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
-step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs worker/test-worker.mjs
+step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs src/worker/test-worker.mjs
 
 if [ "$failed" -ne 0 ]; then
   printf '\n  something above failed\n'
