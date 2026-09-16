@@ -1,4 +1,4 @@
-/* Checks on the pure data functions in lib/data.js.
+/* Checks on the pure data functions in src/lib/data.js.
  *
  *     node --test tools/test-parsing.mjs worker/test-worker.mjs
  *
@@ -17,7 +17,7 @@ import {
   heatWord,
   parseCSV,
   parseDay,
-} from "../public/lib/data.js";
+} from "../src/lib/data.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>

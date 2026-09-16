@@ -78,8 +78,8 @@ flame () {
 }
 
 step "page script parses"   node --check public/site.js
-step "lib modules parse"    node --check public/lib/data.js
-step "render module parses" node --check public/lib/render.js
+step "lib modules parse"    node --check src/lib/data.js
+step "render module parses" node --check tools/render.js
 step "page types"           page_types
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
@@ -89,7 +89,7 @@ step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
-step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs src/worker/test-worker.mjs
+step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
 
 if [ "$failed" -ne 0 ]; then
   printf '\n  something above failed\n'

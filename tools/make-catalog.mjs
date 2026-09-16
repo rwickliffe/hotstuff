@@ -5,10 +5,8 @@
  *     tools/make-catalog.mjs            rewrite the blocks
  *     tools/make-catalog.mjs --check    fail if they are out of date
  *
- * The cards are built by lib/render.js - the same productCard the browser
- * calls - against a DOM shim, so there is one definition of what a card is.
- * Reimplementing it here in string concatenation would work until the day the
- * two drifted, and then it would be wrong silently.
+ * The cards are built by tools/render.js against a DOM shim. Astro pages use
+ * ProductCard.astro instead; this bake remains until step 4 retires it.
  *
  * The schedule is deliberately not baked. renderEvents drops dates before
  * today, so its output depends on when it ran, and a generated file whose
@@ -25,8 +23,8 @@ const root = path.join(here, "..");
 // productCard builds detached nodes, so any document will do as a factory.
 globalThis.document = parseHTML("<!doctype html><body></body>").document;
 
-const { csvToObjects, featuredFrom, forMaker } = await import("../public/lib/data.js");
-const { productCard } = await import("../public/lib/render.js");
+const { csvToObjects, featuredFrom, forMaker } = await import("../src/lib/data.js");
+const { productCard } = await import("./render.js");
 
 const MAKERS = ["Paula", "John"];
 const TARGETS = [

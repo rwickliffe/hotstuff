@@ -1,4 +1,4 @@
-import { featuredFrom, forMaker } from "../../public/lib/data.js";
+import { featuredFrom, forMaker } from "./data.js";
 import type { CatalogPayload } from "../worker/catalog.ts";
 
 export type Product = Record<string, string>;

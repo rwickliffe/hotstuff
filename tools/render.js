@@ -1,11 +1,9 @@
-// Building a product card, in one place. site.js calls this in the browser
-// and tools/make-catalog.mjs calls it in Node against a DOM shim, so the
-// markup a visitor without JavaScript sees is made by the same function as
-// the markup everyone else sees. Nothing here reads the document: pass in
+// Bake-only card builder. Astro pages use ProductCard.astro; this stays until
+// step 4 deletes make-catalog.mjs. Nothing here reads the document: pass in
 // what it needs and it returns detached nodes.
 
-/** @import { Product } from "../types.js" */
-import { heatWord, isYes } from "./data.js";
+/** @import { Product } from "../public/types.d.ts" */
+import { heatWord, isYes } from "../src/lib/data.js";
 
 // --- pepper / skull pips ---
 /** @param {Element} into @param {string | number} heat */
