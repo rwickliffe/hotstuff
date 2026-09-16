@@ -233,16 +233,19 @@ non-zero, so it works as a habit before pushing:
 ./check
 ```
 
+`npm test` runs the same command.
+
 It parses the page modules, type-checks the page and the Worker,
 confirms the generated art block is current, the catalog snapshot has
 products, SITE_CSP matches `public/_headers`, the stylesheet reaches nothing
 outside itself, Base.astro is wired to the shared files, the favicon matches
-the flame sprite, runs the test suites, and compiles with `astro build`.
+the flame sprite, runs the test suites, type-checks `.astro` files, and compiles with `astro build`.
 Nothing touches the network.
 
 ```bash
 node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
-npm run types                                               # both projects
+npm run types                                               # wrangler Env types
+npm run check:types                                         # tsc + astro check
 tools/make-assets.py --check      # generated art is up to date
 npm run build                     # astro build
 ```
@@ -251,7 +254,7 @@ The type check is the only step that needs anything installed. On a fresh
 clone it prints a note and skips, so `./check` still runs with nothing fetched;
 CI runs `npm ci` first, which is what makes it stricter than a bare clone
 rather than merely different. Dev dependencies are `typescript`, the Workers
-runtime types, `wrangler`, and Playwright. Nothing is shipped
+runtime types, `wrangler`, `@astrojs/check`, and Playwright. Nothing is shipped
 from `node_modules`: Astro builds the site and wrangler bundles the Worker
 at deploy.
 

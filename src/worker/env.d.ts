@@ -10,3 +10,7 @@ interface Env {
   BROADCAST_PASSWORD: string;
   BROADCAST_POSTAL_ADDRESS: string;
 }
+
+declare namespace Cloudflare {
+  interface Env extends globalThis.Env {}
+}

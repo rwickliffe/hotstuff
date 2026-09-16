@@ -97,6 +97,12 @@ csp () {
   '
 }
 
+site_astro_types () {
+  [ -x "$astro" ] || return 0
+  [ -d node_modules/@astrojs/check ] || return 0
+  "$astro" check --tsconfig tsconfig.astro.json
+}
+
 site_build () {
   [ -x "$astro" ] || return 0
   "$astro" build
@@ -115,8 +121,7 @@ step "favicon matches the sprite" flame
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
 step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
-# astro check is not wired: @astrojs/check@0.9.10 peers typescript ^5 || ^6;
-# this repo is on 7. Build does not catch invalid .astro props.
+step "astro check"          site_astro_types
 step "astro build"          site_build
 
 if [ "$failed" -ne 0 ]; then

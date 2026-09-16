@@ -1,5 +1,5 @@
-/** Cache-Control for on-demand HTML: min(1 hour, seconds until Chicago midnight). */
-export function cacheControlForChicago(now = new Date()): string {
+/** Wall clock in America/Chicago — markets and the HTML cache both use this. */
+function chicagoParts(now: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Chicago",
     year: "numeric",
@@ -11,10 +11,26 @@ export function cacheControlForChicago(now = new Date()): string {
     hourCycle: "h23",
   }).formatToParts(now);
   const get = (type: string) => parts.find((p) => p.type === type)?.value || "0";
-  const h = Number(get("hour"));
-  const min = Number(get("minute"));
-  const s = Number(get("second"));
-  const secondsUntilMidnight = 24 * 3600 - (h * 3600 + min * 60 + s);
+  return {
+    year: get("year"),
+    month: get("month"),
+    day: get("day"),
+    hour: Number(get("hour")),
+    minute: Number(get("minute")),
+    second: Number(get("second")),
+  };
+}
+
+/** YYYY-MM-DD in Chicago. Isolate local midnight is UTC, which is evening in Texas. */
+export function chicagoCalendarDay(now = new Date()): string {
+  const p = chicagoParts(now);
+  return p.year + "-" + p.month + "-" + p.day;
+}
+
+/** Cache-Control for on-demand HTML: min(1 hour, seconds until Chicago midnight). */
+export function cacheControlForChicago(now = new Date()): string {
+  const p = chicagoParts(now);
+  const secondsUntilMidnight = 24 * 3600 - (p.hour * 3600 + p.minute * 60 + p.second);
   const maxAge = Math.max(1, Math.min(3600, secondsUntilMidnight));
   // No no-transform — Web Analytics injection may need to transform.
   return `public, max-age=${maxAge}`;
