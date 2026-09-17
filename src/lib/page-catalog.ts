@@ -1,4 +1,5 @@
 import { featuredFrom, forMaker } from "./data.js";
+import { DEBUG_PARAM } from "../site-config.ts";
 import type { CatalogPayload } from "../worker/catalog.ts";
 import snapshot from "../../data/catalog-snapshot.json" with { type: "json" };
 
@@ -47,7 +48,7 @@ export function dataAge(
 }
 
 export function isDebug(url: URL): boolean {
-  return url.searchParams.has("debug");
+  return url.searchParams.has(DEBUG_PARAM);
 }
 
 export function debugSources(catalog: CatalogPayload, source: CatalogSource = "kv") {

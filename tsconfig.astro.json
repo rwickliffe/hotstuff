@@ -6,6 +6,7 @@
   "include": [
     ".astro/types.d.ts",
     "src/env.d.ts",
+    "src/site-config.ts",
     "src/**/*.astro",
     "src/lib/**/*.ts",
     "src/lib/**/*.js",

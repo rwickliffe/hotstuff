@@ -16,6 +16,8 @@ const DIAG = {
 };
 
 function showDiag() {
+  // Hardcoded: this file is served from public/ and cannot import
+  // DEBUG_PARAM from src/site-config.ts.
   if (!/(^|[?&])debug(=|&|$)/.test(location.search)) return;
   const el = document.getElementById("diag-worker");
   if (!el) return;
