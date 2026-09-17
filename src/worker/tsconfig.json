@@ -16,8 +16,8 @@
     "./**/*.ts",
     "env.d.ts",
     "worker-configuration.d.ts",
-    "../lib/data.js",
-    "../lib/page-catalog.ts",
+    "../lib/csv.js",
+    "../domain/page-catalog.ts",
     "../site-config.ts",
     "../../data/catalog-snapshot.json"
   ]

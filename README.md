@@ -269,11 +269,11 @@ npx playwright test
 
 First time on a machine: `npx playwright install chromium`.
 
-`tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
-the date parser, the heat scale. Rather than keep a second copy of them, it
-imports them from `src/lib/data.js` and runs exactly what ships - there is no
-second copy to drift, and renaming one breaks the import rather than quietly
-testing something that no longer exists.
+`tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing
+in `src/lib/csv.js`, the date parser, and the heat scale in
+`src/domain/heat-scale.js`. Rather than keep a second copy of them, it
+imports what ships - there is no second copy to drift, and renaming one
+breaks the import rather than quietly testing something that no longer exists.
 
 `src/worker/test-worker.mjs` covers token signing and expiry, email and HTML
 validation, password comparison, request-size limits, and the existing-contact
@@ -433,12 +433,13 @@ Account ownership and handoff steps stay in local `ops.md` (gitignored).
 
 ### Why the script is split in two
 
-`src/lib/data.js` holds the functions with no DOM and no network in them: CSV
-parsing, the date parser, the heat scale. `site.js` holds everything that
-touches the page. The seam is not arbitrary - it is exactly the line the tests
-already drew, so `tools/test-parsing.mjs` can import the real module instead of
-extracting functions from a file by counting brackets, which is what it used to
-do in forty-nine lines that no longer exist.
+`src/lib/csv.js` and `src/lib/grid.js` hold the generic functions with no DOM
+and no network in them. The heat scale lives in `src/domain/heat-scale.js`.
+`site.js` holds everything that touches the page. The seam is not arbitrary
+- it is exactly the line the tests already drew, so `tools/test-parsing.mjs`
+can import the real modules instead of extracting functions from a file by
+counting brackets, which is what it used to do in forty-nine lines that no
+longer exist.
 
 Both pages load `site.js` as `type="module"`, which means it is deferred and
 runs after parsing rather than partway through it.

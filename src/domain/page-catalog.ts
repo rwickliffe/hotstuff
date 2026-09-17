@@ -1,4 +1,3 @@
-import { featuredFrom, forMaker } from "./data.js";
 import { DEBUG_PARAM } from "../site-config.ts";
 import type { CatalogPayload } from "../worker/catalog.ts";
 import snapshot from "../../data/catalog-snapshot.json" with { type: "json" };
@@ -20,15 +19,6 @@ export function catalogForPage(
 } {
   if (kv.products.length) return { catalog: kv, source: "kv" };
   return { catalog: floor, source: "snapshot" };
-}
-
-export function gridFor(
-  products: Product[],
-  maker: string,
-  featured: boolean
-): Product[] {
-  const mine = forMaker(products, maker.trim().toLowerCase());
-  return featured ? featuredFrom(mine) : mine;
 }
 
 export function dataAge(

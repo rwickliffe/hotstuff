@@ -1,5 +1,6 @@
 ---
-import { heatWord, isYes } from "../lib/data.js";
+import { heatWord } from "../domain/heat-scale.js";
+import { isSoldOut } from "../domain/products.ts";
 import HeatPips from "./HeatPips.astro";
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 
 const p = Astro.props.product;
 const heat = parseInt(p.heat, 10) || 0;
-const soldOut = isYes(p.sold_out);
+const soldOut = isSoldOut(p);
 ---
 <article
   data-heat={String(heat)}

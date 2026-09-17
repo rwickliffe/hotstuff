@@ -7,12 +7,13 @@ import DebugPanel from "../components/DebugPanel.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
 import Schedule from "../components/Schedule.astro";
-import { dataAge, debugSources, gridFor, isDebug, catalogForPage } from "../lib/page-catalog.ts";
+import { dataAge, debugSources, isDebug, catalogForPage } from "../domain/page-catalog.ts";
+import { featuredByMaker } from "../domain/products.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
 const { catalog, source } = catalogForPage(await readCatalog(env));
-const paula = gridFor(catalog.products, "Paula", true);
-const john = gridFor(catalog.products, "John", true);
+const paula = featuredByMaker(catalog.products, "Paula");
+const john = featuredByMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);
 const debug = isDebug(Astro.url);
 ---

@@ -1,4 +1,4 @@
-/* Checks on the pure data functions in src/lib/data.js.
+/* Checks on the pure parse and heat-scale functions.
  *
  *     node --test tools/test-parsing.mjs src/worker/test-worker.mjs
  *
@@ -10,14 +10,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  BANDS,
-  bandByKey,
-  csvToObjects,
-  heatWord,
-  parseCSV,
-  parseDay,
-} from "../src/lib/data.js";
+import { csvToObjects, isYes, parseCSV, parseDay } from "../src/lib/csv.js";
+import { BANDS, bandByKey, heatWord } from "../src/domain/heat-scale.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>
@@ -57,9 +51,12 @@ test("fills missing trailing cells", () =>
   assert.deepEqual(csvToObjects("name,heat,price\nVerde,3\n"),
     [{ name: "Verde", heat: "3", price: "" }]));
 
-test("drops rows with no name", () =>
+test("keeps rows with no name", () =>
   assert.deepEqual(csvToObjects("name,heat\n,4\nVerde,3\n"),
-    [{ name: "Verde", heat: "3" }]));
+    [{ name: "", heat: "4" }, { name: "Verde", heat: "3" }]));
+
+test("sold out is not a yes", () =>
+  assert.equal(isYes("sold out"), false));
 
 test("returns nothing for a header alone", () =>
   assert.deepEqual(csvToObjects("name,heat\n"), []));

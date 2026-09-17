@@ -20,7 +20,8 @@ import {
   validateEvents,
   validateProducts,
 } from "../src/worker/catalog.ts";
-import { catalogForPage, dataAge, debugSources, gridFor } from "../src/lib/page-catalog.ts";
+import { catalogForPage, dataAge, debugSources } from "../src/domain/page-catalog.ts";
+import { byMaker, featuredByMaker, isSoldOut } from "../src/domain/products.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const eventsCsv = fs.readFileSync(path.join(root, "data/fixtures/events.csv"), "utf8");
@@ -146,15 +147,18 @@ test("dataAge hides fresh fetches and names stale hours", () => {
   assert.match(stale.text, /8 hours/);
 });
 
-test("gridFor featured leads with flagged rows", () => {
+test("featuredByMaker leads with flagged rows", () => {
   const rows = [
     { maker: "John", name: "A", featured: "" },
     { maker: "John", name: "B", featured: "yes" },
     { maker: "Paula", name: "C", featured: "yes" },
   ];
-  assert.deepEqual(gridFor(rows, "john", true).map((p) => p.name), ["B"]);
-  assert.deepEqual(gridFor(rows, "John", false).map((p) => p.name), ["A", "B"]);
+  assert.deepEqual(featuredByMaker(rows, "john").map((p) => p.name), ["B"]);
+  assert.deepEqual(byMaker(rows, "John").map((p) => p.name), ["A", "B"]);
 });
+
+test("isSoldOut accepts the sheet spelling", () =>
+  assert.equal(isSoldOut({ sold_out: "sold out" }), true));
 
 test("debugSources reports live KV row counts and lastError", () => {
   const d = debugSources({

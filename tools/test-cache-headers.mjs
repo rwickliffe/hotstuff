@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { cacheControlForChicago, chicagoCalendarDay, htmlCacheKey } from "../src/lib/cache-headers.ts";
-import { parseDay } from "../src/lib/data.js";
+import { parseDay } from "../src/lib/csv.js";
 
 // 16 Sep 2026 is CDT (UTC-5). Times below are wall-clock Chicago.
 

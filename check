@@ -108,8 +108,14 @@ site_build () {
   "$astro" build
 }
 
+lib_parses () {
+  for f in src/lib/csv.js src/lib/grid.js src/domain/heat-scale.js; do
+    node --check "$f" || return 1
+  done
+}
+
 step "page script parses"   node --check public/site.js
-step "lib modules parse"    node --check src/lib/data.js
+step "hand-written modules parse" lib_parses
 step "page types"           page_types
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check

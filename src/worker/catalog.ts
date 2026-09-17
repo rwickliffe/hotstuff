@@ -2,7 +2,7 @@
 // Pure validation helpers are exported for unit tests (this module is not
 // the Worker entrypoint, so named exports are fine).
 
-import { csvToObjects, parseDay } from "../lib/data.js";
+import { csvToObjects, parseDay } from "../lib/csv.js";
 
 export const CATALOG_KEY = "catalog";
 
@@ -64,7 +64,7 @@ export function acceptSheet(
   if (!headersOk(text, required)) return { error: "bad headers or no usable rows" };
   let rows =
     kind === "products"
-      ? csvToObjects(text)
+      ? csvToObjects(text).filter((r) => r.name)
       : csvToObjects(text).filter((r) => parseDay(r.date));
   if (!rows.length) return { error: "bad headers or no usable rows" };
   if (rows.length > MAX_SHEET_ROWS) return { error: "too many rows" };

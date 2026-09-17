@@ -7,7 +7,7 @@
 /**
  * One row of either sheet. It came out of a spreadsheet, so every field is a
  * string and nothing is a number until something parses it. Structurally the
- * same as what csvToObjects returns, which is why lib/data.js needs no
+ * same as what csvToObjects returns, which is why lib/csv.js needs no
  * knowledge of this file.
  */
 export type Product = Record<string, string>;
