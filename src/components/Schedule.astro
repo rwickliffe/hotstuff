@@ -1,0 +1,49 @@
+---
+import { parseDay } from "../lib/data.js";
+import { chicagoCalendarDay } from "../lib/cache-headers.ts";
+
+interface Props {
+  events: Record<string, string>[];
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const today = parseDay(chicagoCalendarDay());
+
+const upcoming = Astro.props.events
+  .map((row) => ({ row, when: parseDay(row.date) }))
+  .filter((e): e is { row: Record<string, string>; when: Date } =>
+    e.when instanceof Date && today instanceof Date && e.when >= today
+  )
+  .sort((a, b) => a.when.getTime() - b.when.getTime())
+  .slice(0, 30);
+---
+<div id="cal-rows">
+  {upcoming.length === 0 ? (
+    <p class="cal-empty">
+      Nothing on the books right now.{" "}
+      <a href="https://www.facebook.com/paulassalsa">Facebook</a> has the latest.
+    </p>
+  ) : (
+    upcoming.map((e) => (
+      <div class="cal-row">
+        <span class="cal-when">
+          {DAYS[e.when.getDay()]} {e.when.getDate()} {MONTHS[e.when.getMonth()]}
+        </span>
+        <span class="cal-what">
+          {e.row.name || ""}
+          {e.row.time ? <small>{e.row.time}</small> : null}
+          {e.row.address ? (
+            <a
+              class="cal-map"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.row.address)}`}
+            >
+              {e.row.address}
+            </a>
+          ) : null}
+        </span>
+      </div>
+    ))
+  )}
+</div>

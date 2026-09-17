@@ -2,7 +2,7 @@
 // Pure validation helpers are exported for unit tests (this module is not
 // the Worker entrypoint, so named exports are fine).
 
-import { csvToObjects, parseDay } from "../../public/lib/data.js";
+import { csvToObjects, parseDay } from "../lib/data.js";
 
 export const CATALOG_KEY = "catalog";
 

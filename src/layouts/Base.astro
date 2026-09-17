@@ -1,0 +1,104 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const title = Astro.props.title ?? "Paula and Crazy John's Hot Stuff, Elgin Texas";
+const description =
+  Astro.props.description ??
+  "Small-batch salsa, hot sauce, cowboy candy, pickles and chow chow. Home grown ingredients, made in Elgin, Texas.";
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-2 0 24 24'><path fill='%23E24634' d='M10.6.6c-.4-.5-1.2-.3-1.4.3-.5 2-1.6 3.7-3.2 5.2C3.5 8.3 2 10.9 2 14.2 2 19.6 5.7 23.4 10 23.4s8-3.8 8-9.2c0-2.6-1-4.8-2.6-6.8-.4-.5-1.2-.3-1.4.3-.3 1-.8 1.8-1.5 2.4.2-3.4-.6-6.5-1.9-9.5zM10 20.6c-2 0-3.5-1.7-3.5-3.9 0-1.5.7-2.6 1.7-3.6.7-.7 1.2-1.5 1.5-2.4.2-.5.9-.6 1.2-.1.6.8 1.1 1.6 1.6 2.4.7 1.1 1 2.1 1 3.7 0 2.2-1.5 3.9-3.5 3.9z'/></svg>"
+    />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Comic+Neue:ital,wght@1,700&family=Barlow:ital,wght@0,400;0,600;1,400&family=Barlow+Condensed:wght@500;600&display=swap"
+    />
+    <script is:inline>document.documentElement.classList.add("js")</script>
+    <link rel="stylesheet" href="/styles.css" />
+    <slot name="head" />
+  </head>
+  <body>
+    <div class="draft">
+      <span>
+        Draft preview. Product list, prices and heat ratings still need Paula
+        &amp; Crazy John to confirm.
+      </span>
+    </div>
+
+    <slot />
+
+    <footer class="foot">
+      <div class="shell">
+        <div class="foot-top">
+          <h2>
+            Come get some.<svg
+              class="flourish flourish-holes"
+              viewBox="0 0 118 52"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <g class="crack">
+                <path d="M22 24 L6 12"></path>
+                <path d="M22 24 L38 13"></path>
+                <path d="M22 24 L18 44"></path>
+                <path d="M22 24 L37 37"></path>
+                <path d="M63 17 L51 5"></path>
+                <path d="M63 17 L77 10"></path>
+                <path d="M63 17 L60 32"></path>
+                <path d="M95 34 L110 26"></path>
+                <path d="M95 34 L86 47"></path>
+                <path d="M95 34 L106 45"></path>
+              </g>
+              <circle class="hole" cx="22" cy="24" r="8.5"></circle>
+              <circle class="rim" cx="22" cy="24" r="10"></circle>
+              <circle class="hole" cx="63" cy="17" r="6"></circle>
+              <circle class="rim" cx="63" cy="17" r="7.4"></circle>
+              <circle class="hole" cx="95" cy="34" r="7"></circle>
+              <circle class="rim" cx="95" cy="34" r="8.5"></circle>
+            </svg>
+          </h2>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#">
+              Shop Online{" "}
+              <span class="stub" style="color:#FFF6F2;border-color:#FFF6F2">Square</span>
+            </a>
+            <a class="btn btn-ghost" href="https://www.facebook.com/paulassalsa">
+              Facebook
+            </a>
+          </div>
+        </div>
+
+        <div class="foot-meta">
+          <span>Elgin, Texas</span>
+          <span>Orders: <a href="tel:+15126619723">(512) 661-9723</a></span>
+          <span>
+            <a href="https://www.facebook.com/paulassalsa">facebook.com/paulassalsa</a>
+          </span>
+        </div>
+
+        <p class="foot-legal">
+          Made in a home kitchen that is not inspected by the Texas Department of
+          State Health Services or a local health department, under the Texas
+          Cottage Food Law. Refrigerate after opening.
+        </p>
+
+        <button class="theme-toggle" id="theme-toggle" type="button">Lights on</button>
+      </div>
+    </footer>
+
+    <script type="module" src="/site.js"></script>
+  </body>
+</html>

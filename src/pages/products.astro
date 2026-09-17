@@ -1,0 +1,75 @@
+---
+export const prerender = false;
+
+import { env } from "cloudflare:workers";
+import Base from "../layouts/Base.astro";
+import DebugPanel from "../components/DebugPanel.astro";
+import HeatFilter from "../components/HeatFilter.astro";
+import HeatLegend from "../components/HeatLegend.astro";
+import ProductCard from "../components/ProductCard.astro";
+import { dataAge, debugSources, gridFor, isDebug, catalogForPage } from "../lib/page-catalog.ts";
+import { readCatalog } from "../worker/catalog.ts";
+
+const { catalog, source } = catalogForPage(await readCatalog(env));
+const paula = gridFor(catalog.products, "Paula", false);
+const john = gridFor(catalog.products, "John", false);
+const age = dataAge(catalog.fetchedAt);
+const debug = isDebug(Astro.url);
+---
+<Base
+  title="Everything they make, Paula and Crazy John's Hot Stuff"
+  description="The full list of Paula and Crazy John's salsas, hot sauces, cowboy candy, pickles and chow chow, with heat ratings and what is in stock."
+>
+  {debug && <DebugPanel {...debugSources(catalog, source)} />}
+
+  <main>
+    <header class="page-head">
+      <div class="shell">
+        <a class="page-back" href="/">Paula and Crazy John's Hot Stuff</a>
+        <h1>Everything they make</h1>
+        <p class="lede">
+          The whole list, both sides of the table. Stock turns over with the
+          garden and the season, so a gap here is ordinary rather than a mistake.
+          If something you want is out, ask for it: that is how they decide what
+          to put up next.
+        </p>
+        <nav class="maker-jump" aria-label="Jump to a maker">
+          <a href="#paula">Paula's</a>
+          <a href="#john">Crazy John's</a>
+        </nav>
+      </div>
+    </header>
+
+    <section id="paula">
+      <div class="shell">
+        <div class="sec-head">
+          <p class="eyebrow maker">Paula's</p>
+          <h2>Salsas, pickles, cowboy candy &amp; more</h2>
+        </div>
+        <div class="grid" data-grid="Paula">
+          {paula.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+
+    <section id="john" style="background: var(--paper-sunk);">
+      <div class="shell">
+        <div class="sec-head">
+          <p class="eyebrow maker">Crazy John's</p>
+          <h2>The hot sauces</h2>
+        </div>
+
+        <HeatLegend />
+        <HeatFilter />
+
+        <div class="grid" data-grid="John">
+          {john.map((p) => <ProductCard product={p} />)}
+        </div>
+        <p class="grid-empty" id="grid-empty">
+          Nothing in that range. It's quiet. Too quiet.
+        </p>
+        <p class="data-age" id="data-age" hidden={age.hidden || undefined}>{age.text}</p>
+      </div>
+    </section>
+  </main>
+</Base>

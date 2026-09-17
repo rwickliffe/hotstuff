@@ -10,5 +10,5 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["public/site.js", "public/types.d.ts", "public/lib/**/*.js"]
+  "include": ["public/site.js", "public/types.d.ts"]
 }

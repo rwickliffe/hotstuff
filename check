@@ -4,7 +4,8 @@
 #   ./check
 #
 # Exits non-zero if any step fails, so it works as a pre-push habit or in CI.
-# Nothing here touches the network: the suites stub fetch.
+# Nothing here touches the network: the suites stub fetch. `astro build` is
+# local compile only.
 set -uo pipefail
 cd "$(dirname "$0")"
 
@@ -15,6 +16,7 @@ failed=0
 # one step that needs an install, so it is skipped rather than failed on a
 # fresh clone - running ./check has never required fetching anything.
 tsc=node_modules/.bin/tsc
+astro=node_modules/.bin/astro
 if [ ! -x "$tsc" ]; then
   printf '  note  typescript not installed, skipping the type check (npm install)\n'
 fi
@@ -31,10 +33,6 @@ step () {
   fi
 }
 
-# Both pages have to reach the shared stylesheet and the shared script, and
-# every asset the stylesheet references has to be a data: URI rather than a
-# second file, so the art costs no request of its own. It says nothing about
-# the photos or the fonts, which the pages still fetch.
 page_types () {
   [ -x "$tsc" ] || return 0
   "$tsc" --noEmit --project tsconfig.json
@@ -42,19 +40,15 @@ page_types () {
 
 worker_types () {
   [ -x "$tsc" ] || return 0
-  "$tsc" --noEmit --project worker/tsconfig.json
+  "$tsc" --noEmit --project src/worker/tsconfig.json
 }
 
 pages () {
-  local page
-  for page in public/index.html public/products.html; do
-    grep -q '<link rel="stylesheet" href="styles.css">' "$page" ||
-      { echo "$page does not link styles.css"; return 1; }
-    grep -q '<script type="module" src="site.js"></script>' "$page" ||
-      { echo "$page does not load site.js as a module"; return 1; }
-  done
+  grep -q 'href="/styles.css"' src/layouts/Base.astro ||
+    { echo "Base.astro does not link /styles.css"; return 1; }
+  grep -q 'src="/site.js"' src/layouts/Base.astro ||
+    { echo "Base.astro does not load /site.js as a module"; return 1; }
   local stray
-  # The generated block writes url("data:..."), so allow either quoting.
   stray=$(grep -o 'url([^)]*' public/styles.css | grep -vE 'url\(["'"'"']?data:') || true
   [ -z "$stray" ] ||
     { printf 'styles.css reaches outside itself:\n%s\n' "$stray"; return 1; }
@@ -66,29 +60,69 @@ pages () {
 # one shape is the price of that, so check they have not drifted. Anchor the
 # match on a space, or id="i-flame" answers to d=" as well.
 flame () {
-  local sprite page icon
+  local sprite icon
   sprite=$(grep -o ' d="[^"]*"' public/flame.svg | sed 's/^ d="//; s/"$//')
   [ -n "$sprite" ] || { echo "no path found in flame.svg"; return 1; }
-  for page in public/index.html public/products.html; do
-    icon=$(grep -o " d='[^']*'" "$page" | head -1 | sed "s/^ d='//; s/'$//")
-    [ "$icon" = "$sprite" ] ||
-      { echo "the favicon in $page has drifted from flame.svg"; return 1; }
-  done
+  icon=$(grep -o " d='[^']*'" src/layouts/Base.astro | head -1 | sed "s/^ d='//; s/'$//")
+  [ "$icon" = "$sprite" ] ||
+    { echo "the favicon in Base.astro has drifted from flame.svg"; return 1; }
+}
+
+# Committed floor for empty KV. Cron does not update this file.
+snapshot () {
+  local file=data/catalog-snapshot.json
+  [ -f "$file" ] || { echo "missing $file — run tools/pull-catalog.mjs"; return 1; }
+  node -e '
+    const d = JSON.parse(require("fs").readFileSync("data/catalog-snapshot.json", "utf8"));
+    if (!Array.isArray(d.products) || d.products.length < 1) {
+      console.error("catalog snapshot has no products");
+      process.exit(1);
+    }
+  '
+}
+
+csp () {
+  node --input-type=module -e '
+    import fs from "node:fs";
+    import { SITE_CSP } from "./src/lib/csp.ts";
+    const headers = fs.readFileSync("public/_headers", "utf8");
+    const m = headers.match(/Content-Security-Policy:\s*(.+)/);
+    const fromHeaders = (m?.[1] || "").trim();
+    if (fromHeaders !== SITE_CSP) {
+      console.error("public/_headers CSP does not match SITE_CSP");
+      console.error("  _headers:", fromHeaders);
+      console.error("  SITE_CSP:", SITE_CSP);
+      process.exit(1);
+    }
+  '
+}
+
+site_astro_types () {
+  [ -x "$astro" ] || return 0
+  [ -d node_modules/@astrojs/check ] || return 0
+  "$astro" check --tsconfig tsconfig.astro.json
+}
+
+site_build () {
+  [ -x "$astro" ] || return 0
+  "$astro" build
 }
 
 step "page script parses"   node --check public/site.js
-step "lib modules parse"    node --check public/lib/data.js
-step "render module parses" node --check public/lib/render.js
+step "lib modules parse"    node --check src/lib/data.js
 step "page types"           page_types
 step "worker types"         worker_types
 step "generated art is current" tools/make-assets.py --check
-step "baked catalog is current" tools/make-catalog.mjs --check
+step "catalog snapshot has products" snapshot
+step "SITE_CSP matches _headers" csp
 step "pages are wired up"       pages
 step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
-step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs worker/test-worker.mjs
+step "unit tests"           node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
+step "astro check"          site_astro_types
+step "astro build"          site_build
 
 if [ "$failed" -ne 0 ]; then
   printf '\n  something above failed\n'

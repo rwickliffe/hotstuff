@@ -15,27 +15,25 @@
 //   BROADCAST_POSTAL_ADDRESS   CAN-SPAM footer; leave unset to keep /send off
 //
 // Generate the two random ones: openssl rand -base64 24
-// Accepted on Free, confirmed at first deploy 2026-09-08.
-//
-// These numbers are not enforced. Measured against the deployed Worker:
-// 10 sequential POSTs against the 5/60s limit below were all allowed, and
-// a 25-way parallel burst blocked only 2. The binding is live - a missing
-// one returns 502, and none was seen - it simply does not stop sequential
-// traffic, which is what a script makes. See ops.md for the real controls.
 //
 // Regenerate binding types after editing this file:
-//   cd worker && npx wrangler types --include-runtime false
-// Then drop the Cloudflare.GlobalProps block from worker-configuration.d.ts
-// unless the entry only exports `default` (named helpers live in mail-helpers.ts).
+//   npx wrangler types --include-runtime false
+// Then drop the Cloudflare.GlobalProps block from src/worker/worker-configuration.d.ts
+// unless the entry only exports `default`.
 {
   "name": "hotstuff",
-  "main": "src/worker.ts",
-  "compatibility_date": "2025-09-19",
+  // Custom entry: mail + /data + scheduled, then Astro's handle for HTML.
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-09-14",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "observability": {
     "enabled": true
   },
+  // Astro 7 puts copied public/ files in dist/client (server bundle is
+  // dist/server). Wrangler Static Assets must point at the client tree so
+  // _headers and CSS/images are served without invoking the Worker.
   "assets": {
-    "directory": "../public",
+    "directory": "./dist/client",
     "binding": "ASSETS"
   },
   "kv_namespaces": [
@@ -47,7 +45,6 @@
   ],
   // Custom event counts (asks, successful mail, …). Dataset is account-scoped
   // (SQL table name), so prefix with the project — same idea as hotstuff-catalog.
-  // Created on first write. Query with the Analytics Engine SQL API:
   //   SELECT blob1 AS event, blob2 AS detail, SUM(_sample_interval) AS n
   //   FROM "hotstuff-metrics" WHERE timestamp > NOW() - INTERVAL '30' DAY
   //   GROUP BY event, detail ORDER BY n DESC

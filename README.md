@@ -5,14 +5,14 @@
 Website for a small-batch salsa, hot sauce, cowboy candy, pickle and chow chow
 maker in Elgin, Texas, who sell at farmers markets and community events.
 
-A static site hosted on one Cloudflare Worker: two HTML pages, one stylesheet,
-three ES modules under `public/`, and a Google Sheet the owners edit themselves.
-No framework. Catalog freshness still waits on a deploy until a later phase.
+An Astro site on one Cloudflare Worker: `/` and `/products` render from KV on
+each request, plus a stylesheet, images, and `public/site.js` for the heat
+filter, theme, and forms. Paula edits a Google Sheet; a Worker cron stores it
+in KV. Catalog freshness does not wait on a deploy.
 
-`public/index.html` leads with a handful of featured jars per maker.
-`public/products.html` carries the full list, which runs to sixty-odd items and
-turns over with the season. Both render from the same sheet through the same
-`public/site.js`, so there is one copy of every rule about how a jar is drawn.
+`/` leads with a handful of featured jars per maker. `/products` carries the
+full list, which runs to sixty-odd items and turns over with the season. Cards
+are one Astro component; `site.js` does not draw them.
 
 ## Why it is built this way
 
@@ -35,10 +35,11 @@ that serves the site (`MAIL` in `public/site.js`) — not into this repo.
 
 One spreadsheet with two tabs still drives the catalog and schedule. Paula
 edits the sheet; the Worker fetches the published CSVs on a cron (and when
-`/data` is cold or stale) and stores them in KV. The browser only calls
-`GET /data` — it never talks to Google.
+`/data` is cold or stale) and stores them in KV. Pages render from KV. If KV
+is empty, they fall back to `data/catalog-snapshot.json`. The browser never
+talks to Google.
 
-The CSV publish URLs live in `worker/wrangler.jsonc` under `vars`
+The CSV publish URLs live in `wrangler.jsonc` under `vars`
 (`PRODUCTS_CSV_URL`, `EVENTS_CSV_URL`). Each must end in **`output=csv`**.
 
 ```js
@@ -50,15 +51,11 @@ EVENTS_CSV_URL    // events tab
 `MAIL` / `LIST_OPEN` stay in `public/site.js`:
 
 ```js
-const MAIL      = true;  // false = forms idle (static preview without wrangler)
+const MAIL      = true;  // false = forms idle, no POST
 const LIST_OPEN = false; // true only on their Resend Segment
 ```
 
-`data/products.csv` is an importable starting point for the products tab (and
-the source the catalog bake reads). There is no committed events seed — the
-schedule lives only in the sheet. In Google Sheets: File, Import, Upload, and
-choose "Insert new sheet". Rename the resulting tabs `products` and `events`.
-
+The sheet already exists. There is no CSV in this repo to import.
 Publish each tab with File, Share, Publish to web, picking that tab by name
 and CSV as the format, with "Automatically republish when changes are made"
 left ticked. Two tabs means two addresses. Each must end in **`output=csv`**, like this:
@@ -72,15 +69,15 @@ Two lookalikes that do not work, both returning HTML rather than CSV:
 - `.../pubhtml?gid=...` is the Web page format. Pick Comma-separated values instead.
 - `.../edit#gid=...` is the editor address from the browser bar. It needs a login.
 
-Neither errors. The page fetches them successfully, finds no rows it
-recognises, and keeps the catalog already written into the page, so the site
-looks stale rather than broken. There is a console warning for exactly this
-case.
+Neither errors. The Worker fetches them successfully, finds no rows it
+recognises, and keeps whatever was already in KV (or the committed snapshot),
+so the site looks stale rather than broken. `?debug` is how you see that.
 
 Google edge-caches published CSVs, so an edit can take a few minutes to reach
 the site. That is usually the explanation when a change does not show up.
 
-**Catalog.** The `products` tab. Replaces the baked-in catalog on page load.
+**Catalog.** The `products` tab. The Worker stores it in KV; both pages
+render from that on each request.
 
 Columns:
 
@@ -132,22 +129,19 @@ mean entering every market twice. The sheet is the only place dates live.
 ## Working on it
 
 ```bash
-cd worker && npx wrangler dev   # site + mail, same origin
-# or, HTML only:
-cd public && python3 -m http.server 8765
+npm run build && npx wrangler dev   # site + mail, same origin
 ```
 
-**The pages need a server. `file://` does not work at all any more.** A module
-script is fetched under CORS rules and a `file://` document has no origin to
-satisfy them, so `site.js` never loads: both product grids and the schedule
-come up empty, since all three render from it. Before the
-move to modules this failed more quietly - the script ran, the sheet fetches
-were blocked, and the page fell back to its built-in list while looking
-perfectly fine. The loud version is the better one: an empty page is obviously
-wrong, where a stale page is not.
+Wrangler reads `wrangler.jsonc` at the repo root and serves `dist/client`
+(the Astro build) plus `src/worker/index.ts`. There is no `worker/` directory
+and no static HTML floor to preview with a folder server: `public/` is CSS,
+images, `site.js`, and `flame.svg`. Rebuild after `.astro` changes, then
+re-run wrangler.
 
-Always view it over `http://localhost` or `wrangler dev`. The published site is served over
-https, where none of this applies.
+**The pages need that stack. Opening a file from disk does not run the Worker
+or Astro, so there are no product grids.** Always view it over
+`http://localhost` from `wrangler dev`. The published site is https, where
+none of this applies.
 
 Regenerate the served images from the originals in `source/`. That folder is
 gitignored and stays on the developer's machine: the originals are full-size
@@ -188,7 +182,7 @@ maker, and links on to the catalog with a live count: *See all 34 of Crazy
 John's*. The link hides itself when there is nothing more to see, so a maker
 with four jars does not get a link to a page showing the same four.
 
-The heat filter lives on `products.html` and not on the front page. Filtering
+The heat filter lives on `/products` and not on the front page. Filtering
 six hand-picked jars sorts nothing; filtering forty is the reason the control
 exists.
 
@@ -199,7 +193,7 @@ product into the contact form:
 > Is "Smoked Ghostly Salsa" coming back? I would like some when it is.
 
 From the front page it scrolls down to the form. From the catalog it travels,
-carrying the name in the address (`index.html?ask=...#write`) and clearing it
+carrying the name in the address (`/?ask=...#write`) and clearing it
 out of the address bar on arrival. Requests land in the same inbox as any
 other note, which is the whole mechanism: counting how many people asked for a
 thing needs no database, only a mail folder and a consistent sentence to
@@ -207,24 +201,19 @@ search for.
 
 ## Without JavaScript
 
-The catalog is written into both pages by `tools/make-catalog.mjs`, so a
-visitor whose browser never runs the script still gets every jar, its heat
-rating and its price:
+The catalog is rendered on the Worker from KV, so a visitor whose browser
+never runs the script still gets every jar, its heat rating and its price.
+If KV is empty, `data/catalog-snapshot.json` is the floor. Refresh it from
+live `/data` when the sheet has meaningfully changed (cron updates KV only,
+not this file). A throwing component is a 500 on both pages, not a fallback
+to static HTML — the snapshot protects against empty data, not a broken
+render.
 
 ```bash
-tools/make-catalog.mjs            # rewrite the blocks
-tools/make-catalog.mjs --check    # fail if they are out of date
+tools/pull-catalog.mjs            # data/catalog-snapshot.json
 ```
 
-It builds those cards with `productCard` out of `lib/render.js` - the same
-function the browser calls - against a DOM shim. Writing a second renderer here
-in string concatenation would work right up until the two drifted, and then it
-would be wrong quietly.
-
-**The schedule is deliberately not baked.** It drops dates before today, so its
-output depends on when it ran, and a generated file whose `--check` fails every
-morning is worse than no generated file. Without script it says where the dates
-go up, which is true and is where they go up anyway.
+**The schedule is rendered with the page**, dropping dates before today.
 
 Nothing else is left sitting there dead. The heat filter and the theme toggle
 need script, so they are hidden until one line in the `<head>` marks the page
@@ -244,46 +233,51 @@ non-zero, so it works as a habit before pushing:
 ./check
 ```
 
-It parses the three page modules, type-checks the page and the Worker,
-confirms the generated art
-block and the baked catalog are current and that the stylesheet reaches nothing
-outside itself, checks both pages are wired to the shared files, runs both test
-suites, and rewrites the sheet URLs to local fixtures. Nothing touches the network. GitHub Actions
-runs the same command on every push, so the badge above and a clean local run
-mean the same thing. The pieces run on their own too:
+`npm test` runs the same command.
+
+It parses the page modules, type-checks the page and the Worker,
+confirms the generated art block is current, the catalog snapshot has
+products, SITE_CSP matches `public/_headers`, the stylesheet reaches nothing
+outside itself, Base.astro is wired to the shared files, the favicon matches
+the flame sprite, runs the test suites, type-checks `.astro` files, and compiles with `astro build`.
+Nothing touches the network.
 
 ```bash
-node --test tools/test-parsing.mjs worker/test-worker.mjs   # both suites
-npm run types                                               # both projects
+node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
+npm run types                                               # wrangler Env types
+npm run check:types                                         # tsc + astro check
 tools/make-assets.py --check      # generated art is up to date
-tools/test-integrations.sh        # sheet plumbing
+npm run build                     # astro build
 ```
 
 The type check is the only step that needs anything installed. On a fresh
 clone it prints a note and skips, so `./check` still runs with nothing fetched;
 CI runs `npm ci` first, which is what makes it stricter than a bare clone
-rather than merely different. There are three dev dependencies: `typescript`,
-the Workers runtime types, and `linkedom`, a DOM shim that lets
-`tools/make-catalog.mjs` run the real card renderer in Node. Nothing is shipped
-from `node_modules`: the site is static files and wrangler bundles the Worker
+rather than merely different. Dev dependencies are `typescript`, the Workers
+runtime types, `wrangler`, `@astrojs/check`, and Playwright. Nothing is shipped
+from `node_modules`: Astro builds the site and wrangler bundles the Worker
 at deploy.
+
+Playwright is a second command. It builds, boots `wrangler dev`, and clicks
+through the heat filter, legend, ask buttons, and `?debug`. GitHub Actions
+runs `./check` then this on every push, so the badge above and a clean local
+`./check` plus `npx playwright test` mean the same thing:
+
+```bash
+npx playwright test
+```
+
+First time on a machine: `npx playwright install chromium`.
 
 `tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
 the date parser, the heat scale. Rather than keep a second copy of them, it
-imports them from `lib/data.js` and runs exactly what ships - there is no
+imports them from `src/lib/data.js` and runs exactly what ships - there is no
 second copy to drift, and renaming one breaks the import rather than quietly
 testing something that no longer exists.
 
-`worker/test-worker.mjs` covers token signing and expiry, email and HTML
+`src/worker/test-worker.mjs` covers token signing and expiry, email and HTML
 validation, password comparison, request-size limits, and the existing-contact
 Segment path. It stubs `fetch`, so no mail is ever sent.
-
-`tools/test-integrations.sh` writes `integration-test.html` wired to local
-stand-ins, and works whatever the constants currently hold. That part is
-manual: serve the folder and open it. You should see the three products from
-`data/fixtures/products.csv` in place of the real catalog, and three events
-from `data/fixtures/events.csv` in place of the sample dates. The 2020 row in
-that file must not appear: it is there to prove past dates get dropped.
 
 ## Checking that the sheets are actually being read
 
@@ -297,19 +291,16 @@ A small panel appears in the corner reporting where each dataset came from:
 
 ```
 data sources
-products   live sheet (18 rows)
-events     live sheet (6 rows)
+products   live KV (18 rows)
+events     live KV (6 rows)
 ```
 
-`live sheet` in green means the spreadsheet was read. Orange means it was not,
-and the page is showing the catalog baked into the HTML - or, for the
-schedule, nothing at all - with the reason underneath.
-
-This matters because the fallback is deliberately invisible to customers. A
-broken sheet produces a page that looks completely normal and is quietly out
-of date, so **after changing the spreadsheet, load the site with `?debug` and
-confirm the row count moved.** Without the flag no panel renders, and there is
-nothing for a visitor to stumble across.
+`live KV` in green means the Worker served rows from catalog storage.
+`snapshot` means KV was empty and the committed floor was used. Orange
+`empty` means neither had rows. After changing the spreadsheet, load the
+site with `?debug` and **confirm the row count and `fetchedAt` moved.**
+Without the flag no panel renders, and there is nothing for a visitor to
+stumble across.
 
 Errors are also written to the browser console, but that is only useful with
 devtools already open. Worker observability covers the mail routes; a bad
@@ -352,25 +343,21 @@ git show <sha>^:build-horror.py                # read the last version
 
 ## Hosting
 
-The site and the mail API are one Cloudflare Worker (`hotstuff`), with static
-files in `public/` via Workers Static Assets. Interim public URL:
+The site and the mail API are one Cloudflare Worker (`hotstuff`). Astro builds
+into `dist/`; Wrangler serves `dist/client` as Static Assets (CSS, images,
+`_headers`) and runs `src/worker/index.ts` for HTML, mail, `/data`, and cron.
+Interim public URL:
 
 `https://hotstuff.<account>.workers.dev`
 
 GitHub stays the repo and runs `./check` in Actions. GitHub Pages is not used.
-Only `public/` is served — `tools/`, `data/`, and the README are not on the open
-web.
+`tools/`, `src/`, `data/`, and the README are not served as source — only the
+build output and the Worker.
 
 Local preview of the full stack:
 
 ```bash
-cd worker && npx wrangler dev
-```
-
-Static HTML alone (forms idle unless you flip nothing — mail needs the Worker):
-
-```bash
-cd public && python3 -m http.server 8765
+npm run build && npx wrangler dev
 ```
 
 At launch the repo still moves to an organization Paula owns, and a custom
@@ -419,8 +406,7 @@ the registrar's email or website builder.
 Contact form and confirmed newsletter signup run through the same Worker that
 serves the site, plus Resend. The page POSTs JSON as `text/plain` to relative
 paths (`/contact`, `/subscribe`). `MAIL = false` in `public/site.js` leaves the
-forms on the page but idle — useful for a static folder preview without
-`wrangler`.
+forms on the page but idle — they do not POST.
 
 - **Contact** is transactional: Resend emails Paula, Reply-To is the
   visitor. Nothing is stored. Safe to point at your Worker while
@@ -447,7 +433,7 @@ Account ownership and handoff steps stay in local `ops.md` (gitignored).
 
 ### Why the script is split in two
 
-`lib/data.js` holds the functions with no DOM and no network in them: CSV
+`src/lib/data.js` holds the functions with no DOM and no network in them: CSV
 parsing, the date parser, the heat scale. `site.js` holds everything that
 touches the page. The seam is not arbitrary - it is exactly the line the tests
 already drew, so `tools/test-parsing.mjs` can import the real module instead of
@@ -466,12 +452,13 @@ The Worker already had a build step - `wrangler` bundles it with esbuild on
 every deploy and takes a `.ts` entry directly - so `.ts` costs it nothing
 structurally, and it is written in TypeScript.
 
-The page has no build step for now, so it stays JavaScript and is annotated
-with JSDoc, checked by `tsc --noEmit` under `checkJs`. The types are comments.
-**The file that ships is the file in the repo**, byte for byte: nothing
-compiles, nothing is generated, and what you read is what the browser runs.
+`public/site.js` is still a static asset — copied through the Astro build, not
+bundled — so it stays JavaScript and is annotated with JSDoc, checked by
+`tsc --noEmit` under `checkJs`. The types are comments. **The file that ships
+is the file in the repo**, byte for byte: nothing compiles it, and what you
+read is what the browser runs.
 
-The shapes themselves live in `types.d.ts` as ordinary TypeScript, because
+The shapes themselves live in `public/types.d.ts` as ordinary TypeScript, because
 `Sheet` written as a JSDoc `@typedef` is unpleasant to read. `site.js` pulls
 the names in with one line:
 
@@ -483,8 +470,8 @@ the names in with one line:
 scoped to the file rather than becoming ambient globals - delete that line and
 the type check fails rather than silently carrying on.
 
-If a later phase adds a real build step, `types.d.ts` is already TypeScript and
-would move across untouched.
+If `site.js` ever moves into the Astro bundle, `types.d.ts` is already
+TypeScript and would move across untouched.
 
 That check is not decoration. Turning it on found three places that were right
 only by accident: `isNaN(d)` passed a Date where a number was expected and
@@ -513,7 +500,7 @@ name.
 
 Two things worth knowing if you touch it. `node --check` cannot read a `.ts`
 file - it parses it as CommonJS and trips on the first `export` - which is why
-that check is the type checker instead. And `worker/test-worker.mjs` imports
+that check is the type checker instead. And `src/worker/test-worker.mjs` imports
 the `.ts` source directly, relying on Node stripping the types at run time,
 which needs Node 22.18 or newer.
 
@@ -555,15 +542,15 @@ Crazy John adds two or three jars a week and they already keep inventory
 in Square. The products tab would be a second copy. Square becomes the
 source of truth. The events tab stays: Square is not a calendar.
 
-A GitHub Action, on a daily cron, pulls Catalog and Inventory and writes
-`data/products.csv`. The page already knows how to fetch a CSV. A failed
-run must not overwrite the last good file. Same silent fallback as today,
-but stale means last successful sync, not the baked-in sample. They never
-log into GitHub.
+A GitHub Action on a daily cron was the static-site idea: pull Square
+Catalog into a committed file. That Action was never built, and it is the
+wrong shape now. Catalog refresh already lives on the Worker (sheet → KV).
+If Square becomes the source, that fetch belongs there too — not a
+commit-on-cron Action.
 
 Need from them, once: fifteen minutes with whoever signs into Square, to
 create a Developer app on *their* seller account and put the production
-token in GitHub secrets. Two fields on each item they already create:
+token on the Worker (`npx wrangler secret put`). Two fields on each item they already create:
 Maker (`Paula` or `John`; a category each is fine) and Heat (`1` to `6`).
 Name, description, price, and pint vs quart already live in Square. Stamp
 heat and maker on the current list from the sheet so they are not
@@ -572,13 +559,11 @@ it, or they archive it) and whether quarts are a second variation or a
 separate item.
 
 A daily CSV is fine for names, heat, and prices. It is not fine for stock
-during a market. Square can push `inventory.count.updated`; Pages has
-nowhere for that to land. Do not commit on every sale. That waits on an
-Action and a Pages deploy, and a busy booth would spam rebuilds.
+during a market. Square can push `inventory.count.updated`; the Worker can
+receive it. Do not commit on every sale — a busy booth would spam rebuilds.
 
-The Worker receives the webhook and writes a public `stock.json`. The
-page fetches it the same way it fetches the sheet. If the Worker is down,
-keep the last file or hide the sold-out badges. An open tab from the
+The Worker receives the webhook and updates KV. Pages already render from
+KV. If the Worker is down, keep the last snapshot. An open tab from the
 morning is still stale until they reload. Square checkout is the only
 place that cannot lie. Shop links stay on Square. This site still does
 not take money.

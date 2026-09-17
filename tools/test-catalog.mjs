@@ -19,19 +19,18 @@ import {
   refreshMode,
   validateEvents,
   validateProducts,
-} from "../worker/src/catalog.ts";
+} from "../src/worker/catalog.ts";
+import { catalogForPage, dataAge, debugSources, gridFor } from "../src/lib/page-catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const productsCsv = fs.readFileSync(path.join(root, "data/products.csv"), "utf8");
 const eventsCsv = fs.readFileSync(path.join(root, "data/fixtures/events.csv"), "utf8");
-const fixtureProducts = fs.readFileSync(
+const productsCsv = fs.readFileSync(
   path.join(root, "data/fixtures/products.csv"),
   "utf8"
 );
 
-test("products fixture and bake seed pass header validation", () => {
+test("products fixture passes header validation", () => {
   assert.ok(validateProducts(productsCsv)?.length);
-  assert.ok(validateProducts(fixtureProducts)?.length);
 });
 
 test("events fixture passes and drops undated junk", () => {
@@ -137,3 +136,67 @@ test("refreshData merges on partial failure", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("dataAge hides fresh fetches and names stale hours", () => {
+  const now = Date.parse("2026-09-15T18:00:00Z");
+  assert.equal(dataAge(null, now).hidden, true);
+  assert.equal(dataAge("2026-09-15T17:00:00Z", now).hidden, true);
+  const stale = dataAge("2026-09-15T10:00:00Z", now);
+  assert.equal(stale.hidden, false);
+  assert.match(stale.text, /8 hours/);
+});
+
+test("gridFor featured leads with flagged rows", () => {
+  const rows = [
+    { maker: "John", name: "A", featured: "" },
+    { maker: "John", name: "B", featured: "yes" },
+    { maker: "Paula", name: "C", featured: "yes" },
+  ];
+  assert.deepEqual(gridFor(rows, "john", true).map((p) => p.name), ["B"]);
+  assert.deepEqual(gridFor(rows, "John", false).map((p) => p.name), ["A", "B"]);
+});
+
+test("debugSources reports live KV row counts and lastError", () => {
+  const d = debugSources({
+    products: [{ name: "A" }, { name: "B" }],
+    events: [],
+    fetchedAt: "2026-09-15T12:00:00Z",
+    lastError: { events: "too large" },
+  });
+  assert.equal(d.products.state, "live KV");
+  assert.equal(d.products.rows, 2);
+  assert.equal(d.events.state, "empty");
+  assert.match(d.events.note, /lastError: too large/);
+  assert.match(d.products.note, /fetchedAt 2026-09-15T12:00:00Z/);
+});
+
+test("debugSources names snapshot when KV was empty", () => {
+  const d = debugSources(
+    { products: [{ name: "A" }], events: [{ name: "M" }], fetchedAt: null, lastError: null },
+    "snapshot"
+  );
+  assert.equal(d.products.state, "snapshot");
+  assert.equal(d.events.state, "snapshot");
+});
+
+test("catalogForPage uses KV when it has products and the snapshot otherwise", () => {
+  const floor = {
+    products: [{ name: "Snap" }],
+    events: [],
+    fetchedAt: "2026-01-01T00:00:00Z",
+    lastError: null,
+  };
+  const live = catalogForPage({
+    products: [{ name: "Live" }],
+    events: [],
+    fetchedAt: "2026-09-16T00:00:00Z",
+    lastError: null,
+  }, floor);
+  assert.equal(live.source, "kv");
+  assert.equal(live.catalog.products[0]?.name, "Live");
+
+  const cold = catalogForPage(emptyCatalog(), floor);
+  assert.equal(cold.source, "snapshot");
+  assert.equal(cold.catalog.products[0]?.name, "Snap");
+});
+

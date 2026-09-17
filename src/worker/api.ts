@@ -1,10 +1,8 @@
-// Site + mail Worker. Static files live in public/ (ASSETS). Secrets stay
-// in the dashboard, never in this file.
-//
-// Everything client-specific is in the SITE block below; the rest is generic.
-// Pure helpers live in mail-helpers.ts so this module only exports `default`
-// (workerd + Static Assets rejects non-handler named exports on the entry).
+// Mail, /data, and scheduled(). Imported by the Worker entry and by Node tests.
+// Must not import Astro — `@astrojs/cloudflare/handler` pulls in `cloudflare:`,
+// which Node's test runner cannot load.
 
+import { WORKER_HTML_CSP } from "../lib/csp.ts";
 import {
   CONFIRM_TTL_MS,
   MAX_BODY,
@@ -55,17 +53,8 @@ const SITE = {
   },
 };
 
-/** CSP for Worker HTML (/confirm, /compose). Static pages use public/_headers.
- *  Shared directives (default-src, base-uri, form-action, img-src, font-src)
- *  must stay aligned by hand until phase 4 — then a small shared module.
- *  Differences below are intentional: no same-origin CSS/JS files, no sheet. */
-const HTML_CSP =
-  "default-src 'none'; base-uri 'none'; form-action 'self'; " +
-  "img-src 'self' data:; " +
-  "style-src 'unsafe-inline' https://fonts.googleapis.com; " +
-  "font-src https://fonts.gstatic.com; " +
-  "script-src 'unsafe-inline' https://static.cloudflareinsights.com; " +
-  "connect-src 'self'";
+/** CSP for Worker HTML (/confirm, /compose). Site pages use SITE_CSP in fetch. */
+const HTML_CSP = WORKER_HTML_CSP;
 
 
 /** The limiters only, so `limited` cannot be handed the name of a secret. */
@@ -96,9 +85,9 @@ export default {
       return json({ ok: false, reason: "down" }, 502);
     }
 
-    // Static files (and 404s) live in public/ via Workers Static Assets.
-    return env.ASSETS.fetch(req);
+    return new Response("not found", { status: 404 });
   },
+
 
   async scheduled(_controller: ScheduledController, env: Env, _ctx: ExecutionContext) {
     // Await so Past Events records success/failure of the refresh itself.

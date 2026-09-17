@@ -1,6 +1,6 @@
-/* Checks on the pure data functions in lib/data.js.
+/* Checks on the pure data functions in src/lib/data.js.
  *
- *     node --test tools/test-parsing.mjs worker/test-worker.mjs
+ *     node --test tools/test-parsing.mjs src/worker/test-worker.mjs
  *
  * These are the real shipped functions, imported rather than copied, so there
  * is no second version to drift. Rename one and this file stops resolving.
@@ -17,7 +17,7 @@ import {
   heatWord,
   parseCSV,
   parseDay,
-} from "../public/lib/data.js";
+} from "../src/lib/data.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>
