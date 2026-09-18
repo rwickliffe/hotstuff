@@ -17,6 +17,8 @@
     "src/worker/env.d.ts",
     "src/worker/worker-configuration.d.ts",
     "src/lib/csv.js",
+    "src/lib/csv-guard.ts",
+    "src/lib/sheet-cache.ts",
     "src/domain/page-catalog.ts",
     "src/site-config.ts",
     "data/catalog-snapshot.json"

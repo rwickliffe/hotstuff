@@ -5,13 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_ROWS, headersOk } from "../../src/lib/csv-guard.ts";
 import {
-  MAX_SHEET_BYTES,
-  MAX_SHEET_ROWS,
-  acceptSheet,
   emptyCatalog,
-  headersOk,
   isStale,
+  productRows,
   refreshData,
   refreshMode,
   validateEvents,
@@ -47,21 +45,28 @@ test("missing required column fails", () => {
 
 test("oversized body is refused before parse", () => {
   const head = "maker,name,description,heat,price\n";
-  const huge = head + "x".repeat(MAX_SHEET_BYTES);
-  assert.ok(huge.length > MAX_SHEET_BYTES);
-  assert.equal(acceptSheet("products", huge).error, "too large");
+  const huge = head + "x".repeat(DEFAULT_MAX_BYTES);
+  assert.ok(huge.length > DEFAULT_MAX_BYTES);
+  assert.equal(productRows(huge).error, "too large");
   assert.equal(validateProducts(huge), null);
 });
 
 test("too many rows is refused", () => {
   const lines = ["maker,name,description,heat,price"];
-  for (let i = 0; i < MAX_SHEET_ROWS + 1; i++) {
+  for (let i = 0; i < DEFAULT_MAX_ROWS + 1; i++) {
     lines.push(`Paula,Jar ${i},desc,1,10`);
   }
   const text = lines.join("\n") + "\n";
-  assert.ok(text.length < MAX_SHEET_BYTES);
-  assert.equal(acceptSheet("products", text).error, "too many rows");
+  assert.ok(text.length < DEFAULT_MAX_BYTES);
+  assert.equal(productRows(text).error, "too many rows");
   assert.equal(validateProducts(text), null);
+});
+
+test("productRows drops nameless rows", () => {
+  const out = productRows(
+    "maker,name,description,heat,price\nPaula,,x,1,2\nPaula,Verde,x,1,2\n"
+  );
+  assert.deepEqual(out.rows?.map((r) => r.name), ["Verde"]);
 });
 
 test("isStale treats missing fetchedAt as stale", () => {
