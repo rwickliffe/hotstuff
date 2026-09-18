@@ -5,34 +5,35 @@
  * @typedef {{ ok: boolean, reason?: string }} MailResult
  */
 
-// Mail is same-origin (this Worker serves the site). false: forms show
-// “not connected” and do not POST.
-// LIST_OPEN: false until RESEND_SEGMENT_ID is *their* Resend account (see ops.md).
-const MAIL = true;
-const LIST_OPEN = false;
+// MAIL_ENABLED: false = forms show “not connected” and do not POST.
+// LIST_ENABLED: false until RESEND_SEGMENT_ID is *their* Resend account
+// (see ops.md).
+const MAIL_ENABLED = true;
+const LIST_ENABLED = false;
 
-// Surfaced only at ?debug. Products/events are server-rendered; this object
-// only updates the worker line after a failed POST.
-const DIAG = {
-  worker: { state: MAIL ? "same-origin" : "off", note: "" },
+// Surfaced only at ?debug. Products/events are server-rendered; this
+// object only updates the worker line after a failed POST.
+const DEBUG_WORKER = {
+  state: MAIL_ENABLED ? "same-origin" : "off",
+  note: "",
 };
 
-function showDiag() {
+function showDebug() {
   // Hardcoded: this file is served from public/ and cannot import
   // DEBUG_PARAM from src/site-config.ts.
   if (!/(^|[?&])debug(=|&|$)/.test(location.search)) return;
-  const el = document.getElementById("diag-worker");
+  const el = document.getElementById("debug-worker");
   if (!el) return;
-  const live = DIAG.worker.state === "same-origin";
+  const live = DEBUG_WORKER.state === "same-origin";
   el.innerHTML =
     '<span style="color:' +
     (live ? "#5CB84A" : "#E8A87C") +
     '">' +
-    DIAG.worker.state +
+    DEBUG_WORKER.state +
     "</span>" +
-    (DIAG.worker.note
+    (DEBUG_WORKER.note
       ? '<div style="color:#B0A296;margin-top:2px">' +
-        DIAG.worker.note +
+        DEBUG_WORKER.note +
         "</div>"
       : "");
 }
@@ -97,7 +98,7 @@ function wirePendingAsk() {
 }
 
 // Heat vocabulary lives on the buttons (data-band / data-range / data-label)
-// from BANDS on the server. This only toggles visibility.
+// from HEAT_BANDS on the server. This only toggles visibility.
 function wireFilter() {
   const buttons = /** @type {NodeListOf<HTMLButtonElement>} */ (
     document.querySelectorAll(".filters button")
@@ -175,7 +176,7 @@ function wireMailForms() {
   // The markup ships with the list closed, so the failure mode of this script
   // never running is a form nobody can see rather than one nobody can send.
   const listBox = document.getElementById("list-box");
-  if (listBox && LIST_OPEN) {
+  if (listBox && LIST_ENABLED) {
     listBox.hidden = false;
     const grid = /** @type {HTMLElement | null} */ (
       listBox.closest(".write-grid")
@@ -203,17 +204,17 @@ function wireMailForms() {
   }
 
   /** @param {string} reason */
-  function noteDiag(reason) {
-    if (reason === "quota") DIAG.worker.note = "Resend daily cap";
+  function noteDebug(reason) {
+    if (reason === "quota") DEBUG_WORKER.note = "Resend daily cap";
     else if (reason === "down" || reason === "network")
-      DIAG.worker.note = "could not reach";
-    else if (!reason) DIAG.worker.note = "";
-    showDiag();
+      DEBUG_WORKER.note = "could not reach";
+    else if (!reason) DEBUG_WORKER.note = "";
+    showDebug();
   }
 
   /** @param {string} path @param {unknown} payload @returns {Promise<MailResult>} */
   async function postMail(path, payload) {
-    if (!MAIL) return { ok: false, reason: "empty" };
+    if (!MAIL_ENABLED) return { ok: false, reason: "empty" };
     const r = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
@@ -242,7 +243,7 @@ function wireMailForms() {
     contact.addEventListener("submit", async function (e) {
       e.preventDefault();
       const status = document.getElementById("contact-status");
-      if (!MAIL) {
+      if (!MAIL_ENABLED) {
         setStatus(
           status,
           "Mail is not connected yet. " + contactFallback(),
@@ -264,7 +265,7 @@ function wireMailForms() {
           company: String(fd.get("company") || ""),
         });
         if (result.ok) {
-          noteDiag("");
+          noteDebug("");
           pendingAsk = "";
           contact.reset();
           setStatus(status, "Sent. We'll get back to you.", false);
@@ -275,7 +276,7 @@ function wireMailForms() {
             true,
           );
         } else if (result.reason === "quota") {
-          noteDiag("quota");
+          noteDebug("quota");
           setStatus(
             status,
             "Mail is capped for today. " + contactFallback(),
@@ -284,11 +285,11 @@ function wireMailForms() {
         } else if (result.reason === "bad" || result.reason === "size") {
           setStatus(status, "Check the fields and try again.", true);
         } else {
-          noteDiag("down");
+          noteDebug("down");
           setStatus(status, "Could not send. " + contactFallback(), true);
         }
       } catch (err) {
-        noteDiag("network");
+        noteDebug("network");
         setStatus(status, "Could not send. " + contactFallback(), true);
       }
     });
@@ -301,7 +302,7 @@ function wireMailForms() {
     subscribe.addEventListener("submit", async function (e) {
       e.preventDefault();
       const status = document.getElementById("subscribe-status");
-      if (!MAIL) {
+      if (!MAIL_ENABLED) {
         setStatus(status, "The list is not connected yet.", true);
         return;
       }
@@ -313,7 +314,7 @@ function wireMailForms() {
           company: String(fd.get("company") || ""),
         });
         if (result.ok) {
-          noteDiag("");
+          noteDebug("");
           subscribe.reset();
           setStatus(
             status,
@@ -323,16 +324,16 @@ function wireMailForms() {
         } else if (result.reason === "rate") {
           setStatus(status, "Slow down and try again in a minute.", true);
         } else if (result.reason === "quota") {
-          noteDiag("quota");
+          noteDebug("quota");
           setStatus(status, "Try again tomorrow.", true);
         } else if (result.reason === "bad" || result.reason === "size") {
           setStatus(status, "That email does not look right.", true);
         } else {
-          noteDiag("down");
+          noteDebug("down");
           setStatus(status, "Could not send. Try again later.", true);
         }
       } catch (err) {
-        noteDiag("network");
+        noteDebug("network");
         setStatus(status, "Could not send. Try again later.", true);
       }
     });
@@ -353,7 +354,7 @@ function init() {
   wireFilter();
   wireMailForms();
   wirePendingAsk();
-  showDiag();
+  showDebug();
   wireThemeToggle();
 }
 

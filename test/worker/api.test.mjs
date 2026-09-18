@@ -4,8 +4,8 @@ import test from "node:test";
 import worker from "../../src/worker/api.ts";
 import {
   CONFIRM_TTL_MS,
-  MAX_BODY,
-  MAX_SEND_BODY,
+  MAX_BODY_BYTES,
+  MAX_SEND_BODY_BYTES,
   emailOk,
   esc,
   makeToken,
@@ -84,7 +84,7 @@ test("contact and broadcast routes enforce their own body caps", async () => {
     const tooLargeContact = new Request("https://worker.test/contact", {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
-      body: "x".repeat(MAX_BODY + 1),
+      body: "x".repeat(MAX_BODY_BYTES + 1),
     });
     assert.equal((await worker.fetch(tooLargeContact, {})).status, 413);
     assert.equal(fetches, 0);
@@ -114,7 +114,7 @@ test("contact and broadcast routes enforce their own body caps", async () => {
     const tooLargeBroadcast = new Request("https://worker.test/send", {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
-      body: "x".repeat(MAX_SEND_BODY + 1),
+      body: "x".repeat(MAX_SEND_BODY_BYTES + 1),
     });
     assert.equal((await worker.fetch(tooLargeBroadcast, env)).status, 413);
     assert.equal(fetches, 1);

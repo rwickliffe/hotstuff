@@ -8,7 +8,7 @@ import HeatFilter from "../components/HeatFilter.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
 import {
-  dataAge,
+  dataAgeNotice,
   debugSources,
   isDebug,
   catalogForPage,
@@ -19,7 +19,7 @@ import { readCatalog } from "../worker/catalog.ts";
 const { catalog, source } = catalogForPage(await readCatalog(env));
 const paula = byMaker(catalog.products, "Paula");
 const john = byMaker(catalog.products, "John");
-const age = dataAge(catalog.fetchedAt);
+const notice = dataAgeNotice(catalog.fetchedAt);
 const debug = isDebug(Astro.url);
 ---
 
@@ -81,8 +81,8 @@ const debug = isDebug(Astro.url);
         <p class="grid-empty" id="grid-empty">
           Nothing in that range. It's quiet. Too quiet.
         </p>
-        <p class="data-age" id="data-age" hidden={age.hidden || undefined}>
-          {age.text}
+        <p class="data-age" id="data-age" hidden={notice.hidden || undefined}>
+          {notice.text}
         </p>
       </div>
     </section>

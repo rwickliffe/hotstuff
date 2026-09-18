@@ -1,9 +1,9 @@
 ---
-import { BANDS } from "../domain/heat-scale.js";
+import { HEAT_BANDS } from "../domain/heat-scale.js";
 ---
 
 <div class="filters" role="group" aria-label="Filter by heat">
-  {BANDS.map((band, i) => (
+  {HEAT_BANDS.map((band, i) => (
     <button
       type="button"
       data-band={band.key}

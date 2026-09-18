@@ -3,16 +3,16 @@ import test from "node:test";
 
 import {
   catalogForPage,
-  dataAge,
+  dataAgeNotice,
   debugSources,
 } from "../../src/domain/page-catalog.ts";
 import { emptyCatalog } from "../../src/worker/catalog.ts";
 
-test("dataAge hides fresh fetches and names stale hours", () => {
+test("dataAgeNotice hides fresh fetches and names stale hours", () => {
   const now = Date.parse("2026-09-15T18:00:00Z");
-  assert.equal(dataAge(null, now).hidden, true);
-  assert.equal(dataAge("2026-09-15T17:00:00Z", now).hidden, true);
-  const stale = dataAge("2026-09-15T10:00:00Z", now);
+  assert.equal(dataAgeNotice(null, now).hidden, true);
+  assert.equal(dataAgeNotice("2026-09-15T17:00:00Z", now).hidden, true);
+  const stale = dataAgeNotice("2026-09-15T10:00:00Z", now);
   assert.equal(stale.hidden, false);
   assert.match(stale.text, /8 hours/);
 });

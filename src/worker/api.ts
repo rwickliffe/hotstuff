@@ -2,12 +2,12 @@
 // Must not import Astro — `@astrojs/cloudflare/handler` pulls in `cloudflare:`,
 // which Node's test runner cannot load.
 
-import { WORKER_HTML_CSP } from "../lib/csp.ts";
+import { WORKER_CSP } from "../lib/csp.ts";
 import { SITE } from "../site-config.ts";
 import {
   CONFIRM_TTL_MS,
-  MAX_BODY,
-  MAX_SEND_BODY,
+  MAX_BODY_BYTES,
+  MAX_SEND_BODY_BYTES,
   emailOk,
   esc,
   makeToken,
@@ -16,9 +16,6 @@ import {
 } from "./mail-helpers.ts";
 import { readCatalog, refreshData, refreshMode } from "./catalog.ts";
 
-/** CSP for Worker HTML (/confirm, /compose). Site pages use SITE_CSP in fetch. */
-const HTML_CSP = WORKER_HTML_CSP;
-
 /** The limiters only, so `limited` cannot be handed the name of a secret. */
 type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
 
@@ -26,6 +23,7 @@ type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
 type Payload = Record<string, unknown>;
 
 const MAX_NAME = 100;
+const MAX_ASK = 100;
 const MAX_MSG = 2000;
 const MAX_SUBJECT = 200;
 const MAX_BROADCAST = 8000;
@@ -108,7 +106,7 @@ function html(body: string, status?: number): Response {
     status: status || 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": HTML_CSP,
+      "Content-Security-Policy": WORKER_CSP,
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
@@ -130,7 +128,7 @@ async function limited(
 
 async function readJson(
   req: Request,
-  maxBody: number = MAX_BODY,
+  maxBody: number = MAX_BODY_BYTES,
 ): Promise<{ err?: Response; data?: Payload }> {
   const len = Number(req.headers.get("Content-Length") || "0");
   if (len > maxBody) return { err: json({ ok: false, reason: "size" }, 413) };
@@ -188,7 +186,7 @@ async function contact(req: Request, env: Env): Promise<Response> {
   if (!emailOk(email)) return json({ ok: false, reason: "bad" }, 400);
   if (!message || message.length > MAX_MSG)
     return json({ ok: false, reason: "bad" }, 400);
-  if (ask.length > MAX_NAME) return json({ ok: false, reason: "bad" }, 400);
+  if (ask.length > MAX_ASK) return json({ ok: false, reason: "bad" }, 400);
 
   if (!(await limited(env, "MAIL_IP", "contact:" + ipOf(req)))) {
     return json({ ok: false, reason: "rate" }, 429);
@@ -289,7 +287,7 @@ async function confirmPost(req: Request, env: Env): Promise<Response> {
   const ct = req.headers.get("Content-Type") || "";
   if (ct.includes("application/x-www-form-urlencoded")) {
     const body = await req.text();
-    if (body.length > MAX_BODY) return html(thinPage("Too big", ""), 413);
+    if (body.length > MAX_BODY_BYTES) return html(thinPage("Too big", ""), 413);
     token = new URLSearchParams(body).get("t") || "";
   } else {
     const parsed = await readJson(req);
@@ -414,7 +412,7 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   const postal = String(env.BROADCAST_POSTAL_ADDRESS || "").trim();
   if (!postal) return json({ ok: false, reason: "postal" }, 403);
 
-  const parsed = await readJson(req, MAX_SEND_BODY);
+  const parsed = await readJson(req, MAX_SEND_BODY_BYTES);
   if (parsed.err) return parsed.err;
   const data = parsed.data || {};
   const password = String(data.password || "");

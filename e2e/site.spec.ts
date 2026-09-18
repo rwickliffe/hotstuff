@@ -37,14 +37,14 @@ test.describe("no JavaScript", () => {
 
   test("?debug reports a real catalog source", async ({ page }) => {
     await page.goto("/products?debug");
-    const diag = page.locator("#diag");
-    await expect(diag).toContainText("data sources");
-    await expect(diag).toContainText(
+    const debug = page.locator("#debug");
+    await expect(debug).toContainText("data sources");
+    await expect(debug).toContainText(
       /products\s+(live KV|snapshot) \(\d+ rows\)/,
     );
-    await expect(diag).toContainText(/events\s+(live KV|snapshot|empty)/);
-    await expect(diag).toContainText("fetchedAt");
-    const products = (await diag.innerText()).match(
+    await expect(debug).toContainText(/events\s+(live KV|snapshot|empty)/);
+    await expect(debug).toContainText("fetchedAt");
+    const products = (await debug.innerText()).match(
       /products\s+(?:live KV|snapshot) \((\d+) rows\)/,
     );
     expect(Number(products?.[1])).toBeGreaterThan(0);

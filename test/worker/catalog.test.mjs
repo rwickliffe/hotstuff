@@ -8,16 +8,14 @@ import { fileURLToPath } from "node:url";
 import {
   DEFAULT_MAX_BYTES,
   DEFAULT_MAX_ROWS,
-  headersOk,
+  sheetHeadersOk,
 } from "../../src/lib/csv-guard.ts";
 import {
   emptyCatalog,
-  isStale,
+  eventRows,
   productRows,
   refreshData,
   refreshMode,
-  validateEvents,
-  validateProducts,
 } from "../../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -31,23 +29,23 @@ const productsCsv = fs.readFileSync(
 );
 
 test("products fixture passes header validation", () => {
-  assert.ok(validateProducts(productsCsv)?.length);
+  assert.ok(productRows(productsCsv).rows?.length);
 });
 
 test("events fixture passes and drops undated junk", () => {
-  const rows = validateEvents(eventsCsv);
+  const rows = eventRows(eventsCsv).rows;
   assert.ok(rows && rows.length >= 3);
 });
 
 test("pubhtml-shaped body is refused (the dangerous 200)", () => {
   const html = "<!DOCTYPE html><html><body>maker,name\nx,y</body></html>";
-  assert.equal(headersOk(html, ["maker", "name"]), false);
-  assert.equal(validateProducts(html), null);
+  assert.equal(sheetHeadersOk(html, ["maker", "name"]), false);
+  assert.ok(productRows(html).error);
 });
 
 test("missing required column fails", () => {
-  assert.equal(validateProducts("name,heat\nSalsa,2\n"), null);
-  assert.equal(validateEvents("name,time\nMarket,noon\n"), null);
+  assert.ok(productRows("name,heat\nSalsa,2\n").error);
+  assert.ok(eventRows("name,time\nMarket,noon\n").error);
 });
 
 test("oversized body is refused before parse", () => {
@@ -55,7 +53,6 @@ test("oversized body is refused before parse", () => {
   const huge = head + "x".repeat(DEFAULT_MAX_BYTES);
   assert.ok(huge.length > DEFAULT_MAX_BYTES);
   assert.equal(productRows(huge).error, "too large");
-  assert.equal(validateProducts(huge), null);
 });
 
 test("too many rows is refused", () => {
@@ -66,7 +63,6 @@ test("too many rows is refused", () => {
   const text = lines.join("\n") + "\n";
   assert.ok(text.length < DEFAULT_MAX_BYTES);
   assert.equal(productRows(text).error, "too many rows");
-  assert.equal(validateProducts(text), null);
 });
 
 test("productRows drops nameless rows", () => {
@@ -76,14 +72,6 @@ test("productRows drops nameless rows", () => {
   assert.deepEqual(
     out.rows?.map((r) => r.name),
     ["Verde"],
-  );
-});
-
-test("isStale treats missing fetchedAt as stale", () => {
-  assert.equal(isStale(emptyCatalog()), true);
-  assert.equal(
-    isStale({ ...emptyCatalog(), fetchedAt: new Date().toISOString() }),
-    false,
   );
 });
 

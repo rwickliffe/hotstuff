@@ -1,7 +1,7 @@
 // One definition of the heat scale. The per-jar word, the filter button and
 // the legend all read from this, so they cannot drift apart.
 // prettier-ignore
-export const BANDS = [
+export const HEAT_BANDS = [
   { key: "all",    range: [0, 9], label: "Everything" },
   { key: "mild",   range: [1, 1], label: "Harmless" },
   { key: "medium", range: [2, 3], label: "Uneasy" },
@@ -11,12 +11,12 @@ export const BANDS = [
 
 /**
  * @param {string} key
- * @returns {typeof BANDS[number]} the matching band, or the catch-all one.
+ * @returns {typeof HEAT_BANDS[number]} the matching band, or the catch-all one.
  */
-export function bandByKey(key) {
-  for (let i = 0; i < BANDS.length; i++)
-    if (BANDS[i].key === key) return BANDS[i];
-  return BANDS[0];
+export function heatBandByKey(key) {
+  for (let i = 0; i < HEAT_BANDS.length; i++)
+    if (HEAT_BANDS[i].key === key) return HEAT_BANDS[i];
+  return HEAT_BANDS[0];
 }
 
 /**
@@ -25,8 +25,9 @@ export function bandByKey(key) {
  * @returns {string} empty when the rating is outside the scale.
  */
 export function heatWord(n) {
-  for (let i = 1; i < BANDS.length; i++) {
-    if (n >= BANDS[i].range[0] && n <= BANDS[i].range[1]) return BANDS[i].label;
+  for (let i = 1; i < HEAT_BANDS.length; i++) {
+    if (n >= HEAT_BANDS[i].range[0] && n <= HEAT_BANDS[i].range[1])
+      return HEAT_BANDS[i].label;
   }
   return "";
 }

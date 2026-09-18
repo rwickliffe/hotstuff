@@ -3,8 +3,8 @@
 // with Static Assets, workerd treats every named export as an entrypoint
 // candidate and rejects constants like CONFIRM_TTL_MS.
 
-export const MAX_BODY = 8192;
-export const MAX_SEND_BODY = 65536;
+export const MAX_BODY_BYTES = 8192;
+export const MAX_SEND_BODY_BYTES = 65536;
 export const CONFIRM_TTL_MS = 60 * 60 * 1000;
 
 const MAX_EMAIL = 254;

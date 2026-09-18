@@ -21,7 +21,7 @@ export function catalogForPage(
   return { catalog: floor, source: "snapshot" };
 }
 
-export function dataAge(
+export function dataAgeNotice(
   fetchedAt: string | null,
   now = Date.now(),
 ): { hidden: boolean; text: string } {

@@ -29,7 +29,7 @@ daily:
 
 Ordering and payment happen on Square, so this site never takes money.
 Contact notes and newsletter signups go to Resend through the same Worker
-that serves the site (`MAIL` in `public/site.js`) — not into this repo.
+that serves the site (`MAIL_ENABLED` in `public/site.js`) — not into this repo.
 
 ### What a similar project keeps
 
@@ -54,11 +54,11 @@ PRODUCTS_CSV_URL  // products tab
 EVENTS_CSV_URL    // events tab
 ```
 
-`MAIL` / `LIST_OPEN` stay in `public/site.js`:
+`MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 
 ```js
-const MAIL      = true;  // false = forms idle, no POST
-const LIST_OPEN = false; // true only on their Resend Segment
+const MAIL_ENABLED = true;  // false = forms idle, no POST
+const LIST_ENABLED = false; // true only on their Resend Segment
 ```
 
 The sheet already exists. There is no CSV in this repo to import.
@@ -122,7 +122,7 @@ mean entering every market twice. The sheet is the only place dates live.
       They currently read `hotstuff.rwickliffe.workers.dev` (interim)
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
-- [ ] Flip `LIST_OPEN` to `true` only after `RESEND_SEGMENT_ID` is *their*
+- [ ] Flip `LIST_ENABLED` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
 - [ ] Move the repo to their GitHub organization and the Worker to their
       Cloudflare, then re-point JSON-LD and the CI badge
@@ -413,7 +413,7 @@ the registrar's email or website builder.
 
 Contact form and confirmed newsletter signup run through the same Worker that
 serves the site, plus Resend. The page POSTs JSON as `text/plain` to relative
-paths (`/contact`, `/subscribe`). `MAIL = false` in `public/site.js` leaves the
+paths (`/contact`, `/subscribe`). `MAIL_ENABLED = false` in `public/site.js` leaves the
 forms on the page but idle — they do not POST.
 
 - **Contact** is transactional: Resend emails Paula, Reply-To is the
@@ -423,7 +423,7 @@ forms on the page but idle — they do not POST.
   mail; `GET /confirm` shows a button; `POST /confirm` adds them to the
   Segment. Contacts are global in Resend; a Segment is a named group of them,
   found under Audience in the dashboard, and a Broadcast targets one Segment.
-  Keep `LIST_OPEN = false` on the public site until that Segment is *theirs*.
+  Keep `LIST_ENABLED = false` on the public site until that Segment is *theirs*.
   A CSV export is not a consent record.
 - **Broadcasts** wait on `BROADCAST_POSTAL_ADDRESS` (a PO box they will print).
   `/send` refuses without it. Compose lives at the Worker `/compose` URL,

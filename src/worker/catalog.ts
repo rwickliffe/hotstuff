@@ -5,7 +5,6 @@
 import {
   readCache,
   refreshSources,
-  isStale as isStaleAt,
   refreshMode as refreshModeAt,
   type SheetCache,
 } from "../lib/sheet-cache.ts";
@@ -13,11 +12,11 @@ import { acceptSheet } from "../lib/csv-guard.ts";
 import { csvToObjects, normalizeDay } from "../lib/csv.js";
 
 export const CATALOG_KEY = "catalog";
-export const STALE_MS = 60 * 60 * 1000;
+export const CATALOG_STALE_MS = 60 * 60 * 1000;
 
 const PRODUCT_HEADERS = ["maker", "name", "description", "heat", "price"];
 const EVENT_HEADERS = ["date", "name"];
-const NAMES = ["products", "events"] as const;
+const SHEET_NAMES = ["products", "events"] as const;
 
 type CatalogData = {
   products: Record<string, string>[];
@@ -44,21 +43,11 @@ export function eventRows(text: string) {
   });
 }
 
-export function validateProducts(text: string) {
-  return productRows(text).rows ?? null;
-}
-
-export function validateEvents(text: string) {
-  return eventRows(text).rows ?? null;
-}
-
-export const isStale = (c: CatalogPayload, now?: number) =>
-  isStaleAt(c, STALE_MS, now);
 export const refreshMode = (c: CatalogPayload, now?: number) =>
-  refreshModeAt(c, STALE_MS, now);
+  refreshModeAt(c, CATALOG_STALE_MS, now);
 
 export function readCatalog(env: Env): Promise<CatalogPayload> {
-  return readCache<CatalogData>(env.CATALOG, CATALOG_KEY, [...NAMES]);
+  return readCache<CatalogData>(env.CATALOG, CATALOG_KEY, [...SHEET_NAMES]);
 }
 
 export function refreshData(env: Env): Promise<CatalogPayload> {
