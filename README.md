@@ -31,6 +31,12 @@ Ordering and payment happen on Square, so this site never takes money.
 Contact notes and newsletter signups go to Resend through the same Worker
 that serves the site (`MAIL` in `public/site.js`) — not into this repo.
 
+### What a similar project keeps
+
+`src/lib/` is generic: a similar project keeps it. `src/domain/` is this
+business's own: they replace it. Pages and the Worker call the domain names;
+the modules underneath take field names, predicates, and caps as arguments.
+
 ## Connecting the Google Sheet
 
 One spreadsheet with two tabs still drives the catalog and schedule. Paula
@@ -243,7 +249,7 @@ the flame sprite, runs the test suites, type-checks `.astro` files, and compiles
 Nothing touches the network.
 
 ```bash
-node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
+node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
 npm run types                                               # wrangler Env types
 npm run check:types                                         # tsc + astro check
 tools/make-assets.py --check      # generated art is up to date
@@ -269,13 +275,13 @@ npx playwright test
 
 First time on a machine: `npx playwright install chromium`.
 
-`tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing
-in `src/lib/csv.js`, the date parser, and the heat scale in
-`src/domain/heat-scale.js`. Rather than keep a second copy of them, it
-imports what ships - there is no second copy to drift, and renaming one
-breaks the import rather than quietly testing something that no longer exists.
+`test/lib/csv.test.mjs` covers CSV parsing and the date parser;
+`test/domain/heat-scale.test.mjs` covers the heat scale. Rather than keep a
+second copy of them, they import what ships - there is no second copy to
+drift, and renaming one breaks the import rather than quietly testing
+something that no longer exists.
 
-`src/worker/test-worker.mjs` covers token signing and expiry, email and HTML
+`test/worker/api.test.mjs` covers token signing and expiry, email and HTML
 validation, password comparison, request-size limits, and the existing-contact
 Segment path. It stubs `fetch`, so no mail is ever sent.
 
@@ -436,7 +442,7 @@ Account ownership and handoff steps stay in local `ops.md` (gitignored).
 `src/lib/csv.js` and `src/lib/grid.js` hold the generic functions with no DOM
 and no network in them. The heat scale lives in `src/domain/heat-scale.js`.
 `site.js` holds everything that touches the page. The seam is not arbitrary
-- it is exactly the line the tests already drew, so `tools/test-parsing.mjs`
+- it is exactly the line the tests already drew, so `test/lib/csv.test.mjs`
 can import the real modules instead of extracting functions from a file by
 counting brackets, which is what it used to do in forty-nine lines that no
 longer exist.
@@ -457,22 +463,12 @@ structurally, and it is written in TypeScript.
 bundled — so it stays JavaScript and is annotated with JSDoc, checked by
 `tsc --noEmit` under `checkJs`. The types are comments. **The file that ships
 is the file in the repo**, byte for byte: nothing compiles it, and what you
-read is what the browser runs.
+read is what the browser runs. Editors that pick the default `tsconfig.json`
+type-check the `.astro` files; `site.js` lives in `tsconfig.site.json`, which
+`./check` and `npm run check:types` run.
 
-The shapes themselves live in `public/types.d.ts` as ordinary TypeScript, because
-`Sheet` written as a JSDoc `@typedef` is unpleasant to read. `site.js` pulls
-the names in with one line:
-
-```js
-/** @import { MailResult, Product, Sheet, Source } from "./types.js" */
-```
-
-`@import` is a comment, so nothing is imported at run time, and the names stay
-scoped to the file rather than becoming ambient globals - delete that line and
-the type check fails rather than silently carrying on.
-
-If `site.js` ever moves into the Astro bundle, `types.d.ts` is already
-TypeScript and would move across untouched.
+`MailResult` is a JSDoc `@typedef` in `site.js` itself. Nothing in `public/`
+is there just for types — that directory is served verbatim.
 
 That check is not decoration. Turning it on found three places that were right
 only by accident: `isNaN(d)` passed a Date where a number was expected and
@@ -501,7 +497,7 @@ name.
 
 Two things worth knowing if you touch it. `node --check` cannot read a `.ts`
 file - it parses it as CommonJS and trips on the first `export` - which is why
-that check is the type checker instead. And `src/worker/test-worker.mjs` imports
+that check is the type checker instead. And `test/worker/api.test.mjs` imports
 the `.ts` source directly, relying on Node stripping the types at run time,
 which needs Node 22.18 or newer.
 

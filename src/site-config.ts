@@ -1,6 +1,6 @@
 // What a template consumer replaces, in one list:
 //   src/site-config.ts
-//   src/domain/           (after step 2)
+//   src/domain/
 //   src/pages/*.astro
 //   src/layouts/Base.astro
 //   public/site.js        (ask / filter / theme)
@@ -9,6 +9,11 @@
 //
 // Strings, timezone, and caps — no Worker bindings. Pages and the Worker
 // import from here; do not nest this under worker/.
+//
+// Everything that identifies this client: their names, the copy that mentions
+// them, the palette. The generic-looking strings — error titles, button
+// labels — would serve another business, but read them before reusing this:
+// they carry a voice.
 
 export const SITE = {
   name: "Hot Stuff",                            // page titles

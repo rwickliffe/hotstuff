@@ -1,6 +1,7 @@
 ---
-import { parseDay } from "../lib/csv.js";
-import { chicagoCalendarDay } from "../lib/cache-headers.ts";
+import { normalizeDay, parseDay } from "../lib/csv.js";
+import { calendarDay } from "../lib/timezone.ts";
+import { MARKET_TZ } from "../site-config.ts";
 
 interface Props {
   events: Record<string, string>[];
@@ -9,15 +10,16 @@ interface Props {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const today = parseDay(chicagoCalendarDay());
+const today = calendarDay(new Date(), MARKET_TZ);
 
 const upcoming = Astro.props.events
-  .map((row) => ({ row, when: parseDay(row.date) }))
-  .filter((e): e is { row: Record<string, string>; when: Date } =>
-    e.when instanceof Date && today instanceof Date && e.when >= today
+  .map((row) => ({ row, day: normalizeDay(row.date) }))
+  .filter((e): e is { row: Record<string, string>; day: string } =>
+    e.day !== null && e.day >= today
   )
-  .sort((a, b) => a.when.getTime() - b.when.getTime())
-  .slice(0, 30);
+  .sort((a, b) => a.day.localeCompare(b.day))
+  .slice(0, 30)
+  .map((e) => ({ row: e.row, when: parseDay(e.day)! }));
 ---
 <div id="cal-rows">
   {upcoming.length === 0 ? (

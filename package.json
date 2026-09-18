@@ -13,7 +13,7 @@
     "astro": "astro",
     "test": "./check",
     "types": "wrangler types --include-runtime false",
-    "check:types": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project src/worker/tsconfig.json && astro check --tsconfig tsconfig.astro.json"
+    "check:types": "tsc --noEmit --project tsconfig.site.json && tsc --noEmit --project tsconfig.worker.json && astro check"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.1",

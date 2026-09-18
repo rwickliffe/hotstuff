@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import worker from "./api.ts";
+import worker from "../../src/worker/api.ts";
 import {
   CONFIRM_TTL_MS,
   MAX_BODY,
@@ -11,7 +11,7 @@ import {
   makeToken,
   timingSafeEqual,
   verifyToken,
-} from "./mail-helpers.ts";
+} from "../../src/worker/mail-helpers.ts";
 
 const limiter = { limit: async () => ({ success: true }) };
 

@@ -1,7 +1,9 @@
 // Client chrome only: heat filter, theme, ask, mail.
 // Grids, legend, schedule, data-age, and ?debug come from the Worker.
 
-/** @import { MailResult } from "./types.js" */
+/**
+ * @typedef {{ ok: boolean, reason?: string }} MailResult
+ */
 
 // Mail is same-origin (this Worker serves the site). false: forms show
 // “not connected” and do not POST.

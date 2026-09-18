@@ -1,6 +1,4 @@
-/* Checks on the pure parse and heat-scale functions.
- *
- *     node --test tools/test-parsing.mjs src/worker/test-worker.mjs
+/* Checks on the pure CSV functions.
  *
  * These are the real shipped functions, imported rather than copied, so there
  * is no second version to drift. Rename one and this file stops resolving.
@@ -10,8 +8,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { csvToObjects, isYes, parseCSV, parseDay } from "../src/lib/csv.js";
-import { BANDS, bandByKey, heatWord } from "../src/domain/heat-scale.js";
+import { csvToObjects, isYes, normalizeDay, parseCSV, parseDay } from "../../src/lib/csv.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>
@@ -63,7 +60,7 @@ test("returns nothing for a header alone", () =>
 
 test("returns nothing for junk", () => assert.deepEqual(csvToObjects(""), []));
 
-// --- parseDay -------------------------------------------------------------
+// --- normalizeDay / parseDay ----------------------------------------------
 // The bug this guards: Date.parse("2026-03-01") is UTC midnight, which renders
 // as Feb 28 anywhere west of Greenwich. Everyone reading this page is.
 test("lands on the stated day, not the one before", () => {
@@ -73,6 +70,9 @@ test("lands on the stated day, not the one before", () => {
   assert.equal(d.getDate(), 1);
 });
 
+test("normalizeDay zero-pads and returns the same day", () =>
+  assert.equal(normalizeDay("2026-3-1"), "2026-03-01"));
+
 test("ignores surrounding whitespace", () =>
   assert.equal(parseDay("  2026-03-01 ").getDate(), 1));
 
@@ -80,6 +80,7 @@ test("rejects the wrong shape", () => {
   assert.equal(parseDay("03/01/2026"), null);
   assert.equal(parseDay("2026-03"), null);
   assert.equal(parseDay(""), null);
+  assert.equal(normalizeDay("03/01/2026"), null);
 });
 
 test("rejects a non-date", () => assert.equal(parseDay("no-such-day"), null));
@@ -92,35 +93,5 @@ test("rejects a day that does not exist", () => {
   assert.equal(parseDay("2026-00-10"), null);
   assert.equal(parseDay("2025-02-29"), null);      // 2025 is not a leap year
   assert.equal(parseDay("2024-02-29").getDate(), 29); // 2024 is
-});
-
-// --- the heat scale -------------------------------------------------------
-test("every level has a word, and 0 has none", () => {
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(heatWord),
-    ["Harmless", "Uneasy", "Uneasy", "Regrettable", "Regrettable", "No survivors"]);
-  assert.equal(heatWord(0), "");
-  assert.equal(heatWord(7), "");
-});
-
-test("jar words and filter labels come from one table", () => {
-  // the drift this prevents: a jar reading "Hot" under a button reading "Spicy"
-  for (const word of [1, 2, 3, 4, 5, 6].map(heatWord)) {
-    const band = BANDS.find((b) => b.label === word);
-    assert.ok(band, `jar word "${word}" matches no filter button`);
-    assert.equal(bandByKey(band.key).label, word);
-  }
-});
-
-test("every band except All covers a real heat level", () => {
-  for (const band of BANDS.filter((b) => b.key !== "all")) {
-    const covered = [1, 2, 3, 4, 5, 6].filter(
-      (n) => n >= band.range[0] && n <= band.range[1]);
-    assert.ok(covered.length, `${band.label} filters to an empty range`);
-    for (const n of covered) assert.equal(heatWord(n), band.label);
-  }
-});
-
-test("an unknown band key falls back to everything", () => {
-  assert.equal(bandByKey("nope").key, "all");
-  assert.deepEqual(bandByKey("all").range, [0, 9]);
+  assert.equal(normalizeDay("2026-02-31"), null);
 });

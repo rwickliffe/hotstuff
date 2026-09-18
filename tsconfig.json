@@ -1,14 +1,20 @@
 {
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": [],
-    "allowJs": true,
-    "checkJs": true,
-    "noEmit": true,
-    "strict": true
+    "types": ["@cloudflare/workers-types"]
   },
-  "include": ["public/site.js", "public/types.d.ts"]
+  "include": [
+    ".astro/types.d.ts",
+    "src/env.d.ts",
+    "src/site-config.ts",
+    "src/**/*.astro",
+    "src/lib/**/*.ts",
+    "src/lib/**/*.js",
+    "src/domain/**/*.ts",
+    "src/domain/**/*.js",
+    "src/worker/catalog.ts",
+    "src/worker/env.d.ts",
+    "src/worker/worker-configuration.d.ts",
+    "data/catalog-snapshot.json"
+  ]
 }
