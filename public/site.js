@@ -14,7 +14,7 @@ const LIST_OPEN = false;
 // Surfaced only at ?debug. Products/events are server-rendered; this object
 // only updates the worker line after a failed POST.
 const DIAG = {
-  worker: { state: MAIL ? "same-origin" : "off", note: "" }
+  worker: { state: MAIL ? "same-origin" : "off", note: "" },
 };
 
 function showDiag() {
@@ -25,10 +25,15 @@ function showDiag() {
   if (!el) return;
   const live = DIAG.worker.state === "same-origin";
   el.innerHTML =
-    '<span style="color:' + (live ? "#5CB84A" : "#E8A87C") + '">' +
-    DIAG.worker.state + "</span>" +
+    '<span style="color:' +
+    (live ? "#5CB84A" : "#E8A87C") +
+    '">' +
+    DIAG.worker.state +
+    "</span>" +
     (DIAG.worker.note
-      ? '<div style="color:#B0A296;margin-top:2px">' + DIAG.worker.note + "</div>"
+      ? '<div style="color:#B0A296;margin-top:2px">' +
+        DIAG.worker.note +
+        "</div>"
       : "");
 }
 
@@ -52,12 +57,14 @@ function askLine(name) {
 /** @param {string} name @param {boolean} travelled @returns {boolean} */
 function applyAsk(name, travelled) {
   const box = /** @type {HTMLTextAreaElement | null} */ (
-    document.getElementById("contact-message"));
+    document.getElementById("contact-message")
+  );
   if (!box) return false;
   if (!box.value.trim()) box.value = askLine(name);
   pendingAsk = name;
   const sec = document.getElementById("write");
-  if (sec && !travelled) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (sec && !travelled)
+    sec.scrollIntoView({ behavior: "smooth", block: "start" });
   box.focus({ preventScroll: true });
   return true;
 }
@@ -68,8 +75,7 @@ function applyAsk(name, travelled) {
 /** @param {string} name */
 function requestProduct(name) {
   if (applyAsk(name, false)) return;
-  location.href = "/?" + ASK_PARAM + "=" +
-                  encodeURIComponent(name) + "#write";
+  location.href = "/?" + ASK_PARAM + "=" + encodeURIComponent(name) + "#write";
 }
 
 function wirePendingAsk() {
@@ -81,17 +87,24 @@ function wirePendingAsk() {
   // The browser does its own jump to the #write fragment as the page
   // finishes loading. That lands after this script runs and would undo both
   // the scroll and the focus, so wait until it is done.
-  if (document.readyState === "complete") { applyAsk(name, true); return; }
-  window.addEventListener("load", function () { applyAsk(name, true); });
+  if (document.readyState === "complete") {
+    applyAsk(name, true);
+    return;
+  }
+  window.addEventListener("load", function () {
+    applyAsk(name, true);
+  });
 }
 
 // Heat vocabulary lives on the buttons (data-band / data-range / data-label)
 // from BANDS on the server. This only toggles visibility.
 function wireFilter() {
   const buttons = /** @type {NodeListOf<HTMLButtonElement>} */ (
-    document.querySelectorAll(".filters button"));
+    document.querySelectorAll(".filters button")
+  );
   const cards = /** @type {NodeListOf<HTMLElement>} */ (
-    document.querySelectorAll('[data-grid="John"] .prod'));
+    document.querySelectorAll('[data-grid="John"] .prod')
+  );
   const empty = document.getElementById("grid-empty");
   if (!buttons.length) return;
 
@@ -102,9 +115,11 @@ function wireFilter() {
       const hi = parseInt(parts[1], 10);
       const range = [
         Number.isFinite(lo) ? lo : 0,
-        Number.isFinite(hi) ? hi : 9
+        Number.isFinite(hi) ? hi : 9,
       ];
-      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+      buttons.forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
       let shown = 0;
       cards.forEach(function (c) {
         const h = parseInt(c.dataset.heat || "", 10) || 0;
@@ -121,7 +136,9 @@ function wireFilter() {
 const root = document.documentElement;
 const toggle = document.getElementById("theme-toggle");
 
-function isDark() { return root.getAttribute("data-theme") === "dark"; }
+function isDark() {
+  return root.getAttribute("data-theme") === "dark";
+}
 
 function syncToggleLabel() {
   if (!toggle) return;
@@ -136,14 +153,20 @@ function wireThemeToggle() {
     if (saved === "dark" || saved === "light") {
       root.setAttribute("data-theme", saved);
     }
-  } catch (e) { /* storage blocked, ship the default */ }
+  } catch (e) {
+    /* storage blocked, ship the default */
+  }
 
   syncToggleLabel();
 
   toggle.addEventListener("click", function () {
     const next = isDark() ? "light" : "dark";
     root.setAttribute("data-theme", next);
-    try { localStorage.setItem("pcj-theme", next); } catch (e) { /* fine */ }
+    try {
+      localStorage.setItem("pcj-theme", next);
+    } catch (e) {
+      /* fine */
+    }
     syncToggleLabel();
   });
 }
@@ -154,7 +177,9 @@ function wireMailForms() {
   const listBox = document.getElementById("list-box");
   if (listBox && LIST_OPEN) {
     listBox.hidden = false;
-    const grid = /** @type {HTMLElement | null} */ (listBox.closest(".write-grid"));
+    const grid = /** @type {HTMLElement | null} */ (
+      listBox.closest(".write-grid")
+    );
     if (grid) grid.removeAttribute("data-list-closed");
   } else {
     const sub = document.getElementById("subscribe-form");
@@ -170,15 +195,18 @@ function wireMailForms() {
   }
 
   function contactFallback() {
-    return "Call " +
+    return (
+      "Call " +
       '<a href="tel:+15126619723">(512) 661-9723</a> or find us on ' +
-      '<a href="https://www.facebook.com/paulassalsa">Facebook</a>.';
+      '<a href="https://www.facebook.com/paulassalsa">Facebook</a>.'
+    );
   }
 
   /** @param {string} reason */
   function noteDiag(reason) {
     if (reason === "quota") DIAG.worker.note = "Resend daily cap";
-    else if (reason === "down" || reason === "network") DIAG.worker.note = "could not reach";
+    else if (reason === "down" || reason === "network")
+      DIAG.worker.note = "could not reach";
     else if (!reason) DIAG.worker.note = "";
     showDiag();
   }
@@ -189,32 +217,43 @@ function wireMailForms() {
     const r = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
     /** @type {{ reason?: string }} */
     let body = {};
-    try { body = await r.json(); } catch (e) { body = {}; }
+    try {
+      body = await r.json();
+    } catch (e) {
+      body = {};
+    }
     if (!r.ok) {
-      return { ok: false, reason: body.reason || (r.status === 429 ? "rate" : "down") };
+      return {
+        ok: false,
+        reason: body.reason || (r.status === 429 ? "rate" : "down"),
+      };
     }
     return { ok: true };
   }
 
   const contact = /** @type {HTMLFormElement | null} */ (
-    document.getElementById("contact-form"));
+    document.getElementById("contact-form")
+  );
   if (contact) {
     contact.addEventListener("submit", async function (e) {
       e.preventDefault();
       const status = document.getElementById("contact-status");
       if (!MAIL) {
-        setStatus(status, "Mail is not connected yet. " + contactFallback(), true);
+        setStatus(
+          status,
+          "Mail is not connected yet. " + contactFallback(),
+          true,
+        );
         return;
       }
       const fd = new FormData(contact);
       const message = String(fd.get("message") || "").trim();
       // Only count when the note still names the jar they asked for.
-      const ask =
-        pendingAsk && message.includes(pendingAsk) ? pendingAsk : "";
+      const ask = pendingAsk && message.includes(pendingAsk) ? pendingAsk : "";
       setStatus(status, "Sending…", false);
       try {
         const result = await postMail("/contact", {
@@ -222,7 +261,7 @@ function wireMailForms() {
           email: String(fd.get("email") || "").trim(),
           message,
           ask,
-          company: String(fd.get("company") || "")
+          company: String(fd.get("company") || ""),
         });
         if (result.ok) {
           noteDiag("");
@@ -230,10 +269,18 @@ function wireMailForms() {
           contact.reset();
           setStatus(status, "Sent. We'll get back to you.", false);
         } else if (result.reason === "rate") {
-          setStatus(status, "Too many notes from here. Wait a minute. " + contactFallback(), true);
+          setStatus(
+            status,
+            "Too many notes from here. Wait a minute. " + contactFallback(),
+            true,
+          );
         } else if (result.reason === "quota") {
           noteDiag("quota");
-          setStatus(status, "Mail is capped for today. " + contactFallback(), true);
+          setStatus(
+            status,
+            "Mail is capped for today. " + contactFallback(),
+            true,
+          );
         } else if (result.reason === "bad" || result.reason === "size") {
           setStatus(status, "Check the fields and try again.", true);
         } else {
@@ -248,7 +295,8 @@ function wireMailForms() {
   }
 
   const subscribe = /** @type {HTMLFormElement | null} */ (
-    document.getElementById("subscribe-form"));
+    document.getElementById("subscribe-form")
+  );
   if (subscribe) {
     subscribe.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -262,12 +310,16 @@ function wireMailForms() {
       try {
         const result = await postMail("/subscribe", {
           email: String(fd.get("email") || "").trim(),
-          company: String(fd.get("company") || "")
+          company: String(fd.get("company") || ""),
         });
         if (result.ok) {
           noteDiag("");
           subscribe.reset();
-          setStatus(status, "Check your inbox and confirm. It may be a while before we write.", false);
+          setStatus(
+            status,
+            "Check your inbox and confirm. It may be a while before we write.",
+            false,
+          );
         } else if (result.reason === "rate") {
           setStatus(status, "Slow down and try again in a minute.", true);
         } else if (result.reason === "quota") {
@@ -291,7 +343,8 @@ function wireAsking() {
   document.addEventListener("click", function (e) {
     const target = /** @type {Element | null} */ (e.target);
     const btn = target && target.closest(".ask[data-ask]");
-    if (btn instanceof HTMLElement && btn.dataset.ask) requestProduct(btn.dataset.ask);
+    if (btn instanceof HTMLElement && btn.dataset.ask)
+      requestProduct(btn.dataset.ask);
   });
 }
 

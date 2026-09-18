@@ -9,7 +9,8 @@ function partsInZone(now: Date, timeZone: string) {
     second: "2-digit",
     hourCycle: "h23",
   }).formatToParts(now);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value || "0";
+  const get = (type: string) =>
+    parts.find((p) => p.type === type)?.value || "0";
   return {
     year: get("year"),
     month: get("month"),

@@ -22,7 +22,9 @@ test.describe("no JavaScript", () => {
     const card = cards.first();
     await expect(card.locator("h3")).not.toBeEmpty();
     await expect(card).toHaveAttribute("data-heat", /\d+/);
-    await expect(card.locator(".heat-word, .price, button.ask").first()).toBeVisible();
+    await expect(
+      card.locator(".heat-word, .price, button.ask").first(),
+    ).toBeVisible();
   });
 
   test("heat legend captions are in the page", async ({ page }) => {
@@ -37,7 +39,9 @@ test.describe("no JavaScript", () => {
     await page.goto("/products?debug");
     const diag = page.locator("#diag");
     await expect(diag).toContainText("data sources");
-    await expect(diag).toContainText(/products\s+(live KV|snapshot) \(\d+ rows\)/);
+    await expect(diag).toContainText(
+      /products\s+(live KV|snapshot) \(\d+ rows\)/,
+    );
     await expect(diag).toContainText(/events\s+(live KV|snapshot|empty)/);
     await expect(diag).toContainText("fetchedAt");
     const products = (await diag.innerText()).match(
@@ -84,7 +88,9 @@ test("ask from the catalog fills the home contact form", async ({ page }) => {
   );
 });
 
-test("ask query on home fills the form and drops the param", async ({ page }) => {
+test("ask query on home fills the form and drops the param", async ({
+  page,
+}) => {
   const name = "Chow Chow";
   await page.goto(`/?ask=${encodeURIComponent(name)}#write`);
   await expect(page.locator("#contact-message")).toHaveValue(
@@ -113,5 +119,7 @@ test("mail and /data still answer under the Worker", async ({ request }) => {
 test("stylesheet keeps the shared CSP", async ({ request }) => {
   const css = await request.get("/styles.css");
   expect(css.ok()).toBeTruthy();
-  expect(css.headers()["content-security-policy"]).toMatch(/default-src 'none'/);
+  expect(css.headers()["content-security-policy"]).toMatch(
+    /default-src 'none'/,
+  );
 });

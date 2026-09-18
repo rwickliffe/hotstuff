@@ -20,7 +20,8 @@ test("emailOk accepts normal addresses and rejects unsafe or invalid ones", () =
     "o'brien@example.ie",
     "x+tag@sub.example.co",
     "first.last@example.com",
-  ]) assert.equal(emailOk(email), true, email);
+  ])
+    assert.equal(emailOk(email), true, email);
 
   for (const email of [
     "a,b@c.co",
@@ -32,14 +33,12 @@ test("emailOk accepts normal addresses and rejects unsafe or invalid ones", () =
     "a@b-.co",
     "a@b",
     "a@@b.co",
-  ]) assert.equal(emailOk(email), false, email);
+  ])
+    assert.equal(emailOk(email), false, email);
 });
 
 test("esc covers all HTML-sensitive characters", () => {
-  assert.equal(
-    esc(`<a title="'">&`),
-    "&lt;a title=&quot;&#39;&quot;&gt;&amp;"
-  );
+  assert.equal(esc(`<a title="'">&`), "&lt;a title=&quot;&#39;&quot;&gt;&amp;");
 });
 
 test("timingSafeEqual compares content without leaking length", async () => {
@@ -67,7 +66,7 @@ test("confirmation tokens verify, expire, and reject tampering", async () => {
   assert.equal(await verifyToken(body + "." + flipped, secret), null);
   assert.equal(
     await verifyToken(await makeToken(email, Date.now() - 1, secret), secret),
-    null
+    null,
   );
   assert.equal(await verifyToken("not-a-token", secret), null);
   assert.equal(await verifyToken("bm90LWFuLWVtYWls.*", secret), null);
@@ -274,7 +273,7 @@ test("existing contacts are added to the Segment without an update", async () =>
     assert.equal(calls[1].method, "POST");
     assert.equal(
       calls[1].url,
-      "https://api.resend.com/contacts/person%40example.com/segments/segment"
+      "https://api.resend.com/contacts/person%40example.com/segments/segment",
     );
   } finally {
     globalThis.fetch = originalFetch;

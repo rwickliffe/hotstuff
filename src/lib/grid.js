@@ -6,9 +6,15 @@
  * @returns {T[]}
  */
 export function byField(items, field, value) {
-  const want = String(value ?? "").trim().toLowerCase();
+  const want = String(value ?? "")
+    .trim()
+    .toLowerCase();
   return items.filter(function (item) {
-    return String(item[field] ?? "").trim().toLowerCase() === want;
+    return (
+      String(item[field] ?? "")
+        .trim()
+        .toLowerCase() === want
+    );
   });
 }
 

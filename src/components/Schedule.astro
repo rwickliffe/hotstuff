@@ -7,25 +7,41 @@ interface Props {
   events: Record<string, string>[];
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const today = calendarDay(new Date(), MARKET_TZ);
 
 const upcoming = Astro.props.events
   .map((row) => ({ row, day: normalizeDay(row.date) }))
-  .filter((e): e is { row: Record<string, string>; day: string } =>
-    e.day !== null && e.day >= today
+  .filter(
+    (e): e is { row: Record<string, string>; day: string } =>
+      e.day !== null && e.day >= today,
   )
   .sort((a, b) => a.day.localeCompare(b.day))
   .slice(0, 30)
   .map((e) => ({ row: e.row, when: parseDay(e.day)! }));
 ---
+
 <div id="cal-rows">
   {upcoming.length === 0 ? (
     <p class="cal-empty">
       Nothing on the books right now.{" "}
-      <a href="https://www.facebook.com/paulassalsa">Facebook</a> has the latest.
+      <a href="https://www.facebook.com/paulassalsa">Facebook</a> has the
+      latest.
     </p>
   ) : (
     upcoming.map((e) => (

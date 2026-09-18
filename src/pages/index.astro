@@ -7,7 +7,12 @@ import DebugPanel from "../components/DebugPanel.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
 import Schedule from "../components/Schedule.astro";
-import { dataAge, debugSources, isDebug, catalogForPage } from "../domain/page-catalog.ts";
+import {
+  dataAge,
+  debugSources,
+  isDebug,
+  catalogForPage,
+} from "../domain/page-catalog.ts";
 import { featuredByMaker } from "../domain/products.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
@@ -17,6 +22,7 @@ const john = featuredByMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);
 const debug = isDebug(Astro.url);
 ---
+
 <Base>
   {debug && <DebugPanel {...debugSources(catalog, source)} />}
 
@@ -42,27 +48,51 @@ const debug = isDebug(Astro.url);
           alt="Paula and Crazy John's Hot Stuff logo"
         />
         <p class="hero-place">Homemade in Elgin, Texas</p>
-        <h1>Home grown. <em>Hand jarred. No survivors.</em></h1>
+        <h1>
+          Home grown. <em>Hand jarred. No survivors.</em>
+        </h1>
         <p class="hero-sub">
           Small-batch salsa, hot sauce, cowboy candy, pickles and chow chow.
           Everything grown out back, everything put up by hand, in a kitchen you
           would not want to walk into unannounced.
         </p>
         <div class="cta-row">
-          <a class="btn btn-primary" href="#order">Order Online</a>
-          <a class="btn btn-ghost" href="#find">Find The Booth</a>
+          <a class="btn btn-primary" href="#order">
+            Order Online
+          </a>
+          <a class="btn btn-ghost" href="#find">
+            Find The Booth
+          </a>
         </div>
       </div>
     </header>
 
     <div class="strip">
       <ul>
-        <li><b>Salsa</b><span>Mild to unholy</span></li>
-        <li><b>Hot Sauce</b><span>More than is wise</span></li>
-        <li><b>Cowboy Candy</b><span>Candied jalapeños</span></li>
-        <li><b>Pickles</b><span>Dill &amp; bread'n'butter</span></li>
-        <li><b>Chow Chow</b><span>The old way</span></li>
-        <li><b>More!</b><span>Ask, if you're brave</span></li>
+        <li>
+          <b>Salsa</b>
+          <span>Mild to unholy</span>
+        </li>
+        <li>
+          <b>Hot Sauce</b>
+          <span>More than is wise</span>
+        </li>
+        <li>
+          <b>Cowboy Candy</b>
+          <span>Candied jalapeños</span>
+        </li>
+        <li>
+          <b>Pickles</b>
+          <span>Dill &amp; bread'n'butter</span>
+        </li>
+        <li>
+          <b>Chow Chow</b>
+          <span>The old way</span>
+        </li>
+        <li>
+          <b>More!</b>
+          <span>Ask, if you're brave</span>
+        </li>
       </ul>
     </div>
 
@@ -73,7 +103,8 @@ const debug = isDebug(Astro.url);
           <h2>Salsas, pickles, cowboy candy &amp; more</h2>
           <div class="lede-row">
             <p class="lede">
-              Paula's side of the table. Same garden, gentler intentions. Mostly.
+              Paula's side of the table. Same garden, gentler intentions.
+              Mostly.
             </p>
             <svg
               class="flourish flourish-blade"
@@ -100,10 +131,14 @@ const debug = isDebug(Astro.url);
           </span>
         </div>
         <div class="grid" data-grid="Paula" data-featured>
-          {paula.map((p) => <ProductCard product={p} />)}
+          {paula.map((p) => (
+            <ProductCard product={p} />
+          ))}
         </div>
         <p class="see-all-row">
-          <a class="see-all" href="/products#paula">See all of Paula's</a>
+          <a class="see-all" href="/products#paula">
+            See all of Paula's
+          </a>
         </p>
       </div>
     </section>
@@ -115,10 +150,10 @@ const debug = isDebug(Astro.url);
           <h2>The hot sauces</h2>
           <div class="lede-row">
             <p class="lede">
-              Crazy John builds these one small batch at a time, out in the shed,
-              and they climb from friendly to genuinely reckless. The rating is
-              his own, it goes well past the reaper, and he does not grade on a
-              curve.
+              Crazy John builds these one small batch at a time, out in the
+              shed, and they climb from friendly to genuinely reckless. The
+              rating is his own, it goes well past the reaper, and he does not
+              grade on a curve.
             </p>
             <svg
               class="flourish flourish-blade"
@@ -126,7 +161,10 @@ const debug = isDebug(Astro.url);
               aria-hidden="true"
               focusable="false"
             >
-              <path class="edge" d="M53 8 C38 6 18 12 6 26 C20 18 38 16 52 18 Z"></path>
+              <path
+                class="edge"
+                d="M53 8 C38 6 18 12 6 26 C20 18 38 16 52 18 Z"
+              ></path>
               <path class="haft" d="M52 12 L60 52"></path>
               <path class="haft" d="M56 34 L68 29"></path>
             </svg>
@@ -148,12 +186,18 @@ const debug = isDebug(Astro.url);
         <HeatLegend />
 
         <div class="grid" data-grid="John" data-featured>
-          {john.map((p) => <ProductCard product={p} />)}
+          {john.map((p) => (
+            <ProductCard product={p} />
+          ))}
         </div>
         <p class="see-all-row">
-          <a class="see-all" href="/products#john">See all of Crazy John's</a>
+          <a class="see-all" href="/products#john">
+            See all of Crazy John's
+          </a>
         </p>
-        <p class="data-age" id="data-age" hidden={age.hidden || undefined}>{age.text}</p>
+        <p class="data-age" id="data-age" hidden={age.hidden || undefined}>
+          {age.text}
+        </p>
       </div>
     </section>
 
@@ -161,7 +205,8 @@ const debug = isDebug(Astro.url);
       <div class="shell">
         <div class="sec-head">
           <p class="eyebrow">
-            What it costs<svg
+            What it costs
+            <svg
               class="flourish flourish-spatter"
               viewBox="0 0 58 24"
               aria-hidden="true"
@@ -191,7 +236,8 @@ const debug = isDebug(Astro.url);
             <span class="deal-single">$10</span>
             <span class="deal-bulk">3 for $25</span>
             <span class="deal-note">
-              Salsas, cowboy candy, pickles and every one of Crazy John's sauces.
+              Salsas, cowboy candy, pickles and every one of Crazy John's
+              sauces.
             </span>
           </div>
           <div class="deal">
@@ -285,11 +331,11 @@ const debug = isDebug(Astro.url);
               </span>
             </p>
             <p>
-              Paula and Crazy John have been putting up salsa, hot sauce, pickles
-              and cowboy candy out of a home kitchen in Elgin, Texas, growing
-              most of the peppers and produce themselves. What started as too
-              much of a garden harvest turned into a booth, and the booth turned
-              into a following.
+              Paula and Crazy John have been putting up salsa, hot sauce,
+              pickles and cowboy candy out of a home kitchen in Elgin, Texas,
+              growing most of the peppers and produce themselves. What started
+              as too much of a garden harvest turned into a booth, and the booth
+              turned into a following.
             </p>
             <p>
               Everything is made in small batches under the Texas Cottage Food
@@ -316,8 +362,8 @@ const debug = isDebug(Astro.url);
           <p class="lede">
             <b>This form needs JavaScript.</b> Call
             <a href="tel:+15126619723">(512) 661-9723</a> or message them on
-            <a href="https://www.facebook.com/paulassalsa">Facebook</a> instead -
-            that is also where the market dates go up.
+            <a href="https://www.facebook.com/paulassalsa">Facebook</a> instead
+            - that is also where the market dates go up.
           </p>
         </noscript>
 
@@ -347,14 +393,32 @@ const debug = isDebug(Astro.url);
             </label>
             <label for="contact-message">
               Message
-              <textarea id="contact-message" name="message" required maxlength="2000"></textarea>
+              <textarea
+                id="contact-message"
+                name="message"
+                required
+                maxlength="2000"
+              ></textarea>
             </label>
             <label class="write-honeypot" aria-hidden="true">
               Company
-              <input type="text" name="company" tabindex="-1" autocomplete="off" />
+              <input
+                type="text"
+                name="company"
+                tabindex="-1"
+                autocomplete="off"
+              />
             </label>
-            <button class="btn btn-primary" type="submit">Send it</button>
-            <p class="write-status" id="contact-status" role="status" aria-live="polite" tabindex="-1"></p>
+            <button class="btn btn-primary" type="submit">
+              Send it
+            </button>
+            <p
+              class="write-status"
+              id="contact-status"
+              role="status"
+              aria-live="polite"
+              tabindex="-1"
+            ></p>
           </form>
 
           <div id="list-box" hidden>
@@ -364,7 +428,11 @@ const debug = isDebug(Astro.url);
               We write when there is something to say. It may be a while. You
               will get a confirm email first.
             </p>
-            <form class="write-form" id="subscribe-form" style="margin-top:18px">
+            <form
+              class="write-form"
+              id="subscribe-form"
+              style="margin-top:18px"
+            >
               <label for="subscribe-email">
                 Email
                 <input
@@ -378,17 +446,23 @@ const debug = isDebug(Astro.url);
               </label>
               <label class="write-honeypot" aria-hidden="true">
                 Company
-                <input type="text" name="company" tabindex="-1" autocomplete="off" />
+                <input
+                  type="text"
+                  name="company"
+                  tabindex="-1"
+                  autocomplete="off"
+                />
               </label>
-              <button class="btn btn-primary" type="submit">Put me on it</button>
+              <button class="btn btn-primary" type="submit">
+                Put me on it
+              </button>
               <p
                 class="write-status"
                 id="subscribe-status"
                 role="status"
                 aria-live="polite"
                 tabindex="-1"
-              >
-              </p>
+              ></p>
             </form>
           </div>
         </div>
@@ -415,11 +489,21 @@ const debug = isDebug(Astro.url);
       },
       "areaServed": {
         "@type": "GeoCircle",
-        "geoMidpoint": { "@type": "GeoCoordinates", "latitude": 30.3494, "longitude": -97.3703 },
+        "geoMidpoint": {
+          "@type": "GeoCoordinates",
+          "latitude": 30.3494,
+          "longitude": -97.3703
+        },
         "geoRadius": "60000"
       },
       "sameAs": ["https://www.facebook.com/paulassalsa"],
-      "knowsAbout": ["salsa", "hot sauce", "cowboy candy", "pickles", "chow chow"]
+      "knowsAbout": [
+        "salsa",
+        "hot sauce",
+        "cowboy candy",
+        "pickles",
+        "chow chow"
+      ]
     }
   </script>
 </Base>

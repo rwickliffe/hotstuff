@@ -5,7 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_ROWS, headersOk } from "../../src/lib/csv-guard.ts";
+import {
+  DEFAULT_MAX_BYTES,
+  DEFAULT_MAX_ROWS,
+  headersOk,
+} from "../../src/lib/csv-guard.ts";
 import {
   emptyCatalog,
   isStale,
@@ -17,10 +21,13 @@ import {
 } from "../../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const eventsCsv = fs.readFileSync(path.join(root, "data/fixtures/events.csv"), "utf8");
+const eventsCsv = fs.readFileSync(
+  path.join(root, "data/fixtures/events.csv"),
+  "utf8",
+);
 const productsCsv = fs.readFileSync(
   path.join(root, "data/fixtures/products.csv"),
-  "utf8"
+  "utf8",
 );
 
 test("products fixture passes header validation", () => {
@@ -64,16 +71,19 @@ test("too many rows is refused", () => {
 
 test("productRows drops nameless rows", () => {
   const out = productRows(
-    "maker,name,description,heat,price\nPaula,,x,1,2\nPaula,Verde,x,1,2\n"
+    "maker,name,description,heat,price\nPaula,,x,1,2\nPaula,Verde,x,1,2\n",
   );
-  assert.deepEqual(out.rows?.map((r) => r.name), ["Verde"]);
+  assert.deepEqual(
+    out.rows?.map((r) => r.name),
+    ["Verde"],
+  );
 });
 
 test("isStale treats missing fetchedAt as stale", () => {
   assert.equal(isStale(emptyCatalog()), true);
   assert.equal(
     isStale({ ...emptyCatalog(), fetchedAt: new Date().toISOString() }),
-    false
+    false,
   );
 });
 
@@ -84,11 +94,11 @@ test("refreshMode: cold vs stale vs fresh (no double path)", () => {
       ...emptyCatalog(),
       fetchedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     }),
-    "stale"
+    "stale",
   );
   assert.equal(
     refreshMode({ ...emptyCatalog(), fetchedAt: new Date().toISOString() }),
-    "fresh"
+    "fresh",
   );
 });
 
@@ -101,7 +111,7 @@ test("refreshData merges on partial failure", async () => {
       events: [{ date: "2099-01-01", name: "Old Fair" }],
       fetchedAt: "2020-01-01T00:00:00.000Z",
       lastError: null,
-    })
+    }),
   );
 
   const env = {

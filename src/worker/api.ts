@@ -19,7 +19,6 @@ import { readCatalog, refreshData, refreshMode } from "./catalog.ts";
 /** CSP for Worker HTML (/confirm, /compose). Site pages use SITE_CSP in fetch. */
 const HTML_CSP = WORKER_HTML_CSP;
 
-
 /** The limiters only, so `limited` cannot be handed the name of a secret. */
 type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
 
@@ -32,18 +31,27 @@ const MAX_SUBJECT = 200;
 const MAX_BROADCAST = 8000;
 
 export default {
-  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(
+    req: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname.replace(/\/+$/, "") || "/";
 
     try {
       if (path === "/data" && req.method === "GET") return dataGet(env, ctx);
-      if (path === "/contact" && req.method === "POST") return contact(req, env);
-      if (path === "/subscribe" && req.method === "POST") return subscribe(req, env);
-      if (path === "/confirm" && req.method === "GET") return confirmGet(url, env);
-      if (path === "/confirm" && req.method === "POST") return confirmPost(req, env);
+      if (path === "/contact" && req.method === "POST")
+        return contact(req, env);
+      if (path === "/subscribe" && req.method === "POST")
+        return subscribe(req, env);
+      if (path === "/confirm" && req.method === "GET")
+        return confirmGet(url, env);
+      if (path === "/confirm" && req.method === "POST")
+        return confirmPost(req, env);
       if (path === "/compose" && req.method === "GET") return composePage(env);
-      if (path === "/send" && req.method === "POST") return sendBroadcast(req, env);
+      if (path === "/send" && req.method === "POST")
+        return sendBroadcast(req, env);
     } catch (e) {
       return json({ ok: false, reason: "down" }, 502);
     }
@@ -51,8 +59,11 @@ export default {
     return new Response("not found", { status: 404 });
   },
 
-
-  async scheduled(_controller: ScheduledController, env: Env, _ctx: ExecutionContext) {
+  async scheduled(
+    _controller: ScheduledController,
+    env: Env,
+    _ctx: ExecutionContext,
+  ) {
     // Await so Past Events records success/failure of the refresh itself.
     await refreshData(env);
   },
@@ -108,16 +119,24 @@ function ipOf(req: Request): string {
   return req.headers.get("CF-Connecting-IP") || "unknown";
 }
 
-async function limited(env: Env, binding: Limiter, key: string): Promise<boolean> {
+async function limited(
+  env: Env,
+  binding: Limiter,
+  key: string,
+): Promise<boolean> {
   const { success } = await env[binding].limit({ key });
   return success;
 }
 
-async function readJson(req: Request, maxBody: number = MAX_BODY): Promise<{ err?: Response; data?: Payload }> {
+async function readJson(
+  req: Request,
+  maxBody: number = MAX_BODY,
+): Promise<{ err?: Response; data?: Payload }> {
   const len = Number(req.headers.get("Content-Length") || "0");
   if (len > maxBody) return { err: json({ ok: false, reason: "size" }, 413) };
   const text = await req.text();
-  if (text.length > maxBody) return { err: json({ ok: false, reason: "size" }, 413) };
+  if (text.length > maxBody)
+    return { err: json({ ok: false, reason: "size" }, 413) };
   try {
     return { data: JSON.parse(text) };
   } catch {
@@ -129,7 +148,10 @@ function honeypot(data: Payload): boolean {
   return !!(data && (data.company || data.website));
 }
 
-async function resendSend(env: Env, payload: unknown): Promise<{ ok?: true; reason?: string }> {
+async function resendSend(
+  env: Env,
+  payload: unknown,
+): Promise<{ ok?: true; reason?: string }> {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -155,13 +177,17 @@ async function contact(req: Request, env: Env): Promise<Response> {
   if (honeypot(data)) return json({ ok: true }, 200);
 
   const name = String(data.name || "").trim();
-  const email = String(data.email || "").trim().toLowerCase();
+  const email = String(data.email || "")
+    .trim()
+    .toLowerCase();
   const message = String(data.message || "").trim();
   // Optional product name from the ask button — never email or IP.
   const ask = String(data.ask || "").trim();
-  if (!name || name.length > MAX_NAME) return json({ ok: false, reason: "bad" }, 400);
+  if (!name || name.length > MAX_NAME)
+    return json({ ok: false, reason: "bad" }, 400);
   if (!emailOk(email)) return json({ ok: false, reason: "bad" }, 400);
-  if (!message || message.length > MAX_MSG) return json({ ok: false, reason: "bad" }, 400);
+  if (!message || message.length > MAX_MSG)
+    return json({ ok: false, reason: "bad" }, 400);
   if (ask.length > MAX_NAME) return json({ ok: false, reason: "bad" }, 400);
 
   if (!(await limited(env, "MAIL_IP", "contact:" + ipOf(req)))) {
@@ -193,7 +219,9 @@ async function subscribe(req: Request, env: Env): Promise<Response> {
   const data = parsed.data || {};
   if (honeypot(data)) return json({ ok: true }, 200);
 
-  const email = String(data.email || "").trim().toLowerCase();
+  const email = String(data.email || "")
+    .trim()
+    .toLowerCase();
   if (!emailOk(email)) return json({ ok: false, reason: "bad" }, 400);
 
   if (!(await limited(env, "MAIL_IP", "sub:" + ipOf(req)))) {
@@ -214,9 +242,12 @@ async function subscribe(req: Request, env: Env): Promise<Response> {
     to: [email],
     subject: SITE.copy.confirmSubject,
     text:
-      SITE.copy.confirmLead + "\n\n" +
-      link.toString() + "\n\n" +
-      SITE.copy.confirmWait + "\n\n" +
+      SITE.copy.confirmLead +
+      "\n\n" +
+      link.toString() +
+      "\n\n" +
+      SITE.copy.confirmWait +
+      "\n\n" +
       SITE.copy.confirmIgnore,
   });
   if (!result.ok) return resendFail(result.reason);
@@ -228,17 +259,29 @@ async function confirmGet(url: URL, env: Env): Promise<Response> {
   const token = url.searchParams.get("t") || "";
   const email = await verifyToken(token, env.SUBSCRIBE_SIGNING_KEY);
   if (!email) {
-    return html(thinPage("That link is dead", "<p>Ask again from the site if you still want on the list.</p>"), 400);
+    return html(
+      thinPage(
+        "That link is dead",
+        "<p>Ask again from the site if you still want on the list.</p>",
+      ),
+      400,
+    );
   }
-  return html(thinPage(
-    "One more click",
-    "<p>Confirm you want on " + esc(SITE.list) + ". Prefetchers stop here.</p>" +
-      "<form method=\"POST\" action=\"/confirm\">" +
-      "<input type=\"hidden\" name=\"t\" value=\"" + esc(token) + "\">" +
-      "<button type=\"submit\">Put me on the list</button>" +
-      "</form>" +
-      "<p class=\"muted\">It may be a while before you hear from us.</p>"
-  ));
+  return html(
+    thinPage(
+      "One more click",
+      "<p>Confirm you want on " +
+        esc(SITE.list) +
+        ". Prefetchers stop here.</p>" +
+        '<form method="POST" action="/confirm">' +
+        '<input type="hidden" name="t" value="' +
+        esc(token) +
+        '">' +
+        '<button type="submit">Put me on the list</button>' +
+        "</form>" +
+        '<p class="muted">It may be a while before you hear from us.</p>',
+    ),
+  );
 }
 
 async function confirmPost(req: Request, env: Env): Promise<Response> {
@@ -256,7 +299,13 @@ async function confirmPost(req: Request, env: Env): Promise<Response> {
 
   const email = await verifyToken(token, env.SUBSCRIBE_SIGNING_KEY);
   if (!email) {
-    return html(thinPage("That link is dead", "<p>Ask again from the site if you still want on the list.</p>"), 400);
+    return html(
+      thinPage(
+        "That link is dead",
+        "<p>Ask again from the site if you still want on the list.</p>",
+      ),
+      400,
+    );
   }
 
   if (!(await limited(env, "MAIL_IP", "confirm:" + ipOf(req)))) {
@@ -278,19 +327,29 @@ async function confirmPost(req: Request, env: Env): Promise<Response> {
     }),
   });
 
-  if (r.status === 429) return html(thinPage("Mail is capped today", "<p>Try again tomorrow.</p>"), 429);
+  if (r.status === 429)
+    return html(
+      thinPage("Mail is capped today", "<p>Try again tomorrow.</p>"),
+      429,
+    );
   if (r.status === 409) {
     // Existing global contacts still need adding to this Segment. This does
     // not change their global unsubscribe state if an old link is replayed.
     const add = await fetch(
-      "https://api.resend.com/contacts/" + encodeURIComponent(email) +
-        "/segments/" + encodeURIComponent(env.RESEND_SEGMENT_ID),
+      "https://api.resend.com/contacts/" +
+        encodeURIComponent(email) +
+        "/segments/" +
+        encodeURIComponent(env.RESEND_SEGMENT_ID),
       {
         method: "POST",
         headers: { Authorization: "Bearer " + env.RESEND_API_KEY },
-      }
+      },
     );
-    if (add.status === 429) return html(thinPage("Mail is capped today", "<p>Try again tomorrow.</p>"), 429);
+    if (add.status === 429)
+      return html(
+        thinPage("Mail is capped today", "<p>Try again tomorrow.</p>"),
+        429,
+      );
     if (!add.ok && add.status !== 409) {
       return html(thinPage("Could not join", "<p>Try again later.</p>"), 502);
     }
@@ -298,44 +357,53 @@ async function confirmPost(req: Request, env: Env): Promise<Response> {
     return html(thinPage("Could not join", "<p>Try again later.</p>"), 502);
   }
 
-  return html(thinPage(
-    SITE.copy.joinedTitle,
-    "<p>" + esc(SITE.copy.joinedBody) + "</p>"
-  ));
+  return html(
+    thinPage(SITE.copy.joinedTitle, "<p>" + esc(SITE.copy.joinedBody) + "</p>"),
+  );
 }
 
 function composePage(env: Env): Response {
-  const ready = !!(env.BROADCAST_POSTAL_ADDRESS && String(env.BROADCAST_POSTAL_ADDRESS).trim());
+  const ready = !!(
+    env.BROADCAST_POSTAL_ADDRESS && String(env.BROADCAST_POSTAL_ADDRESS).trim()
+  );
   const gate = ready
-    ? "<p class=\"muted\">Broadcasts go to the whole list. Preview only until you hit send.</p>"
-    : "<p class=\"warn\">Broadcasts are off until BROADCAST_POSTAL_ADDRESS is set (a PO box you will print).</p>";
-  return html(thinPage(
-    "Compose",
-    gate +
-      "<form id=\"f\">" +
-      "<label>Password <input type=\"password\" name=\"password\" required autocomplete=\"current-password\"></label>" +
-      "<label>Subject <input name=\"subject\" required maxlength=\"" + MAX_SUBJECT + "\"></label>" +
-      "<label>Body <textarea name=\"body\" rows=\"12\" required maxlength=\"" + MAX_BROADCAST + "\"></textarea></label>" +
-      "<button type=\"submit\"" + (ready ? "" : " disabled") + ">Send</button>" +
-      "<p id=\"status\" role=\"status\" aria-live=\"polite\"></p>" +
-      "</form>" +
-      "<script>" +
-      "document.getElementById('f').addEventListener('submit', async function (e) {" +
-      "e.preventDefault();" +
-      "var s = document.getElementById('status');" +
-      "s.textContent = 'Sending…';" +
-      "var fd = new FormData(e.target);" +
-      "var body = JSON.stringify({ password: fd.get('password'), subject: fd.get('subject'), body: fd.get('body') });" +
-      "try {" +
-      "var r = await fetch('/send', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: body });" +
-      "var j = await r.json().catch(function () { return {}; });" +
-      "s.textContent = j.ok ? 'Sent.' : (j.reason === 'postal' ? 'Need a postal address first.' :" +
-      "j.reason === 'auth' ? 'Wrong password.' : j.reason === 'rate' ? 'Slow down.' :" +
-      "j.reason === 'quota' ? 'Resend daily cap.' : j.reason === 'size' ? 'Message is too long.' : 'Could not send.');" +
-      "} catch (err) { s.textContent = 'Could not reach the Worker.'; }" +
-      "});" +
-      "</script>"
-  ));
+    ? '<p class="muted">Broadcasts go to the whole list. Preview only until you hit send.</p>'
+    : '<p class="warn">Broadcasts are off until BROADCAST_POSTAL_ADDRESS is set (a PO box you will print).</p>';
+  return html(
+    thinPage(
+      "Compose",
+      gate +
+        '<form id="f">' +
+        '<label>Password <input type="password" name="password" required autocomplete="current-password"></label>' +
+        '<label>Subject <input name="subject" required maxlength="' +
+        MAX_SUBJECT +
+        '"></label>' +
+        '<label>Body <textarea name="body" rows="12" required maxlength="' +
+        MAX_BROADCAST +
+        '"></textarea></label>' +
+        '<button type="submit"' +
+        (ready ? "" : " disabled") +
+        ">Send</button>" +
+        '<p id="status" role="status" aria-live="polite"></p>' +
+        "</form>" +
+        "<script>" +
+        "document.getElementById('f').addEventListener('submit', async function (e) {" +
+        "e.preventDefault();" +
+        "var s = document.getElementById('status');" +
+        "s.textContent = 'Sending…';" +
+        "var fd = new FormData(e.target);" +
+        "var body = JSON.stringify({ password: fd.get('password'), subject: fd.get('subject'), body: fd.get('body') });" +
+        "try {" +
+        "var r = await fetch('/send', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: body });" +
+        "var j = await r.json().catch(function () { return {}; });" +
+        "s.textContent = j.ok ? 'Sent.' : (j.reason === 'postal' ? 'Need a postal address first.' :" +
+        "j.reason === 'auth' ? 'Wrong password.' : j.reason === 'rate' ? 'Slow down.' :" +
+        "j.reason === 'quota' ? 'Resend daily cap.' : j.reason === 'size' ? 'Message is too long.' : 'Could not send.');" +
+        "} catch (err) { s.textContent = 'Could not reach the Worker.'; }" +
+        "});" +
+        "</script>",
+    ),
+  );
 }
 
 async function sendBroadcast(req: Request, env: Env): Promise<Response> {
@@ -359,18 +427,33 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   if (!expected || !(await timingSafeEqual(password, expected))) {
     return json({ ok: false, reason: "auth" }, 401);
   }
-  if (!subject || subject.length > MAX_SUBJECT) return json({ ok: false, reason: "bad" }, 400);
-  if (!body || body.length > MAX_BROADCAST) return json({ ok: false, reason: "bad" }, 400);
+  if (!subject || subject.length > MAX_SUBJECT)
+    return json({ ok: false, reason: "bad" }, 400);
+  if (!body || body.length > MAX_BROADCAST)
+    return json({ ok: false, reason: "bad" }, 400);
 
   const htmlBody =
     '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:' +
-    SITE.theme.ink + ";background:" + SITE.theme.paper + ';padding:28px">' +
-    '<p style="font-family:' + SITE.theme.display + ";letter-spacing:.05em;" +
-    "text-transform:uppercase;color:" + SITE.theme.chile + ';font-size:13px">' +
-    esc(SITE.masthead) + "</p>" +
-    "<div style=\"white-space:pre-wrap;line-height:1.55\">" + esc(body) + "</div>" +
-    '<p style="margin-top:28px;font-size:13px;color:' + SITE.theme.quiet + '">' +
-    esc(postal) + "</p>" +
+    SITE.theme.ink +
+    ";background:" +
+    SITE.theme.paper +
+    ';padding:28px">' +
+    '<p style="font-family:' +
+    SITE.theme.display +
+    ";letter-spacing:.05em;" +
+    "text-transform:uppercase;color:" +
+    SITE.theme.chile +
+    ';font-size:13px">' +
+    esc(SITE.masthead) +
+    "</p>" +
+    '<div style="white-space:pre-wrap;line-height:1.55">' +
+    esc(body) +
+    "</div>" +
+    '<p style="margin-top:28px;font-size:13px;color:' +
+    SITE.theme.quiet +
+    '">' +
+    esc(postal) +
+    "</p>" +
     '<p style="font-size:13px"><a href="{{{RESEND_UNSUBSCRIBE_URL}}}">Unsubscribe</a></p>' +
     "</div>";
 
@@ -395,27 +478,55 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
 }
 
 function thinPage(title: string, inner: string): string {
-  return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
-    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
-    "<title>" + esc(title) + " · " + esc(SITE.name) + "</title>" +
-    '<link rel="stylesheet" href="' + SITE.theme.fonts + '">' +
+  return (
+    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    "<title>" +
+    esc(title) +
+    " · " +
+    esc(SITE.name) +
+    "</title>" +
+    '<link rel="stylesheet" href="' +
+    SITE.theme.fonts +
+    '">' +
     "<style>" +
-    ":root{--paper:" + SITE.theme.paper + ";--ink:" + SITE.theme.ink +
-    ";--ink-faint:" + SITE.theme.inkFaint + ";--chile:" + SITE.theme.chile +
-    ";--flame:" + SITE.theme.flame + ";--card:" + SITE.theme.card +
-    ";--quiet:" + SITE.theme.quiet + "}" +
+    ":root{--paper:" +
+    SITE.theme.paper +
+    ";--ink:" +
+    SITE.theme.ink +
+    ";--ink-faint:" +
+    SITE.theme.inkFaint +
+    ";--chile:" +
+    SITE.theme.chile +
+    ";--flame:" +
+    SITE.theme.flame +
+    ";--card:" +
+    SITE.theme.card +
+    ";--quiet:" +
+    SITE.theme.quiet +
+    "}" +
     "body{margin:0;background:var(--paper);color:var(--ink);font:16.5px/1.6 " +
-    SITE.theme.body + ";padding:48px 20px}" +
+    SITE.theme.body +
+    ";padding:48px 20px}" +
     "main{max-width:420px;margin:0 auto}" +
-    "h1{font-family:" + SITE.theme.display + ";font-weight:400;font-size:28px;margin:0 0 16px;" +
+    "h1{font-family:" +
+    SITE.theme.display +
+    ";font-weight:400;font-size:28px;margin:0 0 16px;" +
     "text-shadow:1.4px 1px 0 color-mix(in srgb,var(--chile) 30%,transparent)}" +
     "label{display:block;margin:14px 0 6px;font-size:14px}" +
     "input,textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--ink-faint);" +
     "background:var(--card);color:var(--ink);font:inherit;border-radius:2px}" +
     "input:focus-visible,textarea:focus-visible{outline:2px solid var(--flame);outline-offset:2px}" +
     "button{margin-top:18px;background:var(--chile);color:#FFF6F2;border:1px solid var(--chile);" +
-    "padding:12px 20px;font:600 15px " + SITE.theme.body + ";cursor:pointer;border-radius:2px}" +
+    "padding:12px 20px;font:600 15px " +
+    SITE.theme.body +
+    ";cursor:pointer;border-radius:2px}" +
     "button:disabled{opacity:.45;cursor:not-allowed}" +
     ".muted{color:var(--quiet);font-size:14.5px}.warn{color:var(--chile)}" +
-    "</style></head><body><main><h1>" + esc(title) + "</h1>" + inner + "</main></body></html>";
+    "</style></head><body><main><h1>" +
+    esc(title) +
+    "</h1>" +
+    inner +
+    "</main></body></html>"
+  );
 }

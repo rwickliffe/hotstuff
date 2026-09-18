@@ -16,24 +16,24 @@ test("calendar day is still the 16th at 23:59", () => {
 test("midnight is a new calendar day", () => {
   assert.equal(
     calendarDay(new Date("2026-09-17T05:00:00.000Z"), MARKET_TZ),
-    "2026-09-17"
+    "2026-09-17",
   );
 });
 
 test("seconds until midnight at noon is twelve hours", () => {
   assert.equal(
     secondsUntilMidnight(new Date("2026-09-16T17:00:00.000Z"), MARKET_TZ),
-    12 * 3600
+    12 * 3600,
   );
 });
 
 test("seconds until midnight in the last minute", () => {
   assert.equal(
     secondsUntilMidnight(new Date("2026-09-17T04:59:01.000Z"), MARKET_TZ),
-    59
+    59,
   );
   assert.equal(
     secondsUntilMidnight(new Date("2026-09-17T04:59:59.000Z"), MARKET_TZ),
-    1
+    1,
   );
 });

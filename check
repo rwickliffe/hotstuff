@@ -108,6 +108,12 @@ site_build () {
   "$astro" build
 }
 
+# JS/TS/Astro/JSON only. Python and this script are out of scope.
+prettier_check () {
+  [ -x node_modules/.bin/prettier ] || return 0
+  node_modules/.bin/prettier --check "**/*.{js,ts,mjs,astro,json}"
+}
+
 lib_parses () {
   for f in src/lib/csv.js src/lib/grid.js src/domain/heat-scale.js; do
     node --check "$f" || return 1
@@ -129,6 +135,7 @@ step "favicon matches the sprite" flame
 step "unit tests"           node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
 step "astro check"          site_astro_types
 step "astro build"          site_build
+step "prettier"             prettier_check
 
 if [ "$failed" -ne 0 ]; then
   printf '\n  something above failed\n'

@@ -17,7 +17,11 @@ const API = new Set([
 ]);
 
 export default {
-  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(
+    req: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const path = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
     if (API.has(path)) return api.fetch(req, env, ctx);
 
@@ -34,7 +38,11 @@ export default {
     return astroResponse;
   },
 
-  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+  async scheduled(
+    controller: ScheduledController,
+    env: Env,
+    ctx: ExecutionContext,
+  ) {
     return api.scheduled(controller, env, ctx);
   },
 };
@@ -46,7 +54,10 @@ function withSiteHtmlHeaders(astroResponse: Response): Response {
 
   const apply = (target: Response) => {
     target.headers.set("Content-Security-Policy", SITE_CSP);
-    target.headers.set("Cache-Control", dailyCacheControl(new Date(), MARKET_TZ));
+    target.headers.set(
+      "Cache-Control",
+      dailyCacheControl(new Date(), MARKET_TZ),
+    );
     target.headers.set("X-Content-Type-Options", "nosniff");
     target.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   };

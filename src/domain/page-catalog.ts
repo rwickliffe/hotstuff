@@ -12,7 +12,7 @@ const DATA_AGE_MS = 6 * 60 * 60 * 1000;
 /** Empty KV uses the committed snapshot so both pages still have jars. */
 export function catalogForPage(
   kv: CatalogPayload,
-  floor: CatalogPayload = SNAPSHOT
+  floor: CatalogPayload = SNAPSHOT,
 ): {
   catalog: CatalogPayload;
   source: CatalogSource;
@@ -23,7 +23,7 @@ export function catalogForPage(
 
 export function dataAge(
   fetchedAt: string | null,
-  now = Date.now()
+  now = Date.now(),
 ): { hidden: boolean; text: string } {
   if (!fetchedAt) return { hidden: true, text: "" };
   const t = Date.parse(fetchedAt);
@@ -41,10 +41,15 @@ export function isDebug(url: URL): boolean {
   return url.searchParams.has(DEBUG_PARAM);
 }
 
-export function debugSources(catalog: CatalogPayload, source: CatalogSource = "kv") {
+export function debugSources(
+  catalog: CatalogPayload,
+  source: CatalogSource = "kv",
+) {
   const fetched = catalog.fetchedAt ? "fetchedAt " + catalog.fetchedAt : "";
   const productNote = [
-    catalog.lastError?.products ? "lastError: " + catalog.lastError.products : "",
+    catalog.lastError?.products
+      ? "lastError: " + catalog.lastError.products
+      : "",
     fetched,
   ]
     .filter(Boolean)

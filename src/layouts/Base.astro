@@ -4,12 +4,14 @@ interface Props {
   description?: string;
 }
 
-const title = Astro.props.title ?? "Paula and Crazy John's Hot Stuff, Elgin Texas";
+const title =
+  Astro.props.title ?? "Paula and Crazy John's Hot Stuff, Elgin Texas";
 const description =
   Astro.props.description ??
   "Small-batch salsa, hot sauce, cowboy candy, pickles and chow chow. Home grown ingredients, made in Elgin, Texas.";
 ---
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -26,7 +28,9 @@ const description =
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Comic+Neue:ital,wght@1,700&family=Barlow:ital,wght@0,400;0,600;1,400&family=Barlow+Condensed:wght@500;600&display=swap"
     />
-    <script is:inline>document.documentElement.classList.add("js")</script>
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
     <link rel="stylesheet" href="/styles.css" />
     <slot name="head" />
   </head>
@@ -44,7 +48,8 @@ const description =
       <div class="shell">
         <div class="foot-top">
           <h2>
-            Come get some.<svg
+            Come get some.
+            <svg
               class="flourish flourish-holes"
               viewBox="0 0 118 52"
               aria-hidden="true"
@@ -73,9 +78,14 @@ const description =
           <div class="cta-row">
             <a class="btn btn-primary" href="#">
               Shop Online{" "}
-              <span class="stub" style="color:#FFF6F2;border-color:#FFF6F2">Square</span>
+              <span class="stub" style="color:#FFF6F2;border-color:#FFF6F2">
+                Square
+              </span>
             </a>
-            <a class="btn btn-ghost" href="https://www.facebook.com/paulassalsa">
+            <a
+              class="btn btn-ghost"
+              href="https://www.facebook.com/paulassalsa"
+            >
               Facebook
             </a>
           </div>
@@ -83,19 +93,25 @@ const description =
 
         <div class="foot-meta">
           <span>Elgin, Texas</span>
-          <span>Orders: <a href="tel:+15126619723">(512) 661-9723</a></span>
           <span>
-            <a href="https://www.facebook.com/paulassalsa">facebook.com/paulassalsa</a>
+            Orders: <a href="tel:+15126619723">(512) 661-9723</a>
+          </span>
+          <span>
+            <a href="https://www.facebook.com/paulassalsa">
+              facebook.com/paulassalsa
+            </a>
           </span>
         </div>
 
         <p class="foot-legal">
-          Made in a home kitchen that is not inspected by the Texas Department of
-          State Health Services or a local health department, under the Texas
+          Made in a home kitchen that is not inspected by the Texas Department
+          of State Health Services or a local health department, under the Texas
           Cottage Food Law. Refrigerate after opening.
         </p>
 
-        <button class="theme-toggle" id="theme-toggle" type="button">Lights on</button>
+        <button class="theme-toggle" id="theme-toggle" type="button">
+          Lights on
+        </button>
       </div>
     </footer>
 

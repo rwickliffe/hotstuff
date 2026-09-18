@@ -6,7 +6,9 @@ export function headersOk(text: string, required: string[]): boolean {
   const first = text.split(/\r?\n/, 1)[0] || "";
   // HTML publish URLs answer 200 with a document — refuse before parse.
   if (/^\s*</.test(first) || /<html/i.test(text.slice(0, 200))) return false;
-  const head = first.split(",").map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+  const head = first
+    .split(",")
+    .map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ""));
   return required.every((r) => head.includes(r));
 }
 
@@ -22,7 +24,7 @@ export function acceptSheet<T>(
     parse: (text: string) => T[];
     maxBytes?: number;
     maxRows?: number;
-  }
+  },
 ): { rows?: T[]; error?: string } {
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const maxRows = opts.maxRows ?? DEFAULT_MAX_ROWS;

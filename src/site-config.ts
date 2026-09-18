@@ -16,9 +16,9 @@
 // they carry a voice.
 
 export const SITE = {
-  name: "Hot Stuff",                            // page titles
+  name: "Hot Stuff", // page titles
   masthead: "Paula and Crazy John's Hot Stuff", // top of the newsletter
-  list: "The list",                             // what a subscriber joined
+  list: "The list", // what a subscriber joined
 
   copy: {
     contactSubject: "Hot Stuff note from {name}",
@@ -39,12 +39,18 @@ export const SITE = {
   // newsletter wrapper. They cannot share the site's stylesheet, so the few
   // values that keep them recognisable are repeated here.
   theme: {
-    paper: "#E5DCC9", ink: "#14100C", inkFaint: "#8A7C68",
-    chile: "#8E1409", flame: "#B4551D", card: "#F1EADB", quiet: "#574C3E",
+    paper: "#E5DCC9",
+    ink: "#14100C",
+    inkFaint: "#8A7C68",
+    chile: "#8E1409",
+    flame: "#B4551D",
+    card: "#F1EADB",
+    quiet: "#574C3E",
     display: "'Special Elite',Courier New,monospace",
     body: "Barlow,system-ui,sans-serif",
-    fonts: "https://fonts.googleapis.com/css2?family=Special+Elite" +
-           "&family=Barlow:wght@400;600&display=swap",
+    fonts:
+      "https://fonts.googleapis.com/css2?family=Special+Elite" +
+      "&family=Barlow:wght@400;600&display=swap",
   },
 };
 

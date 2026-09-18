@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { catalogForPage, dataAge, debugSources } from "../../src/domain/page-catalog.ts";
+import {
+  catalogForPage,
+  dataAge,
+  debugSources,
+} from "../../src/domain/page-catalog.ts";
 import { emptyCatalog } from "../../src/worker/catalog.ts";
 
 test("dataAge hides fresh fetches and names stale hours", () => {
@@ -29,8 +33,13 @@ test("debugSources reports live KV row counts and lastError", () => {
 
 test("debugSources names snapshot when KV was empty", () => {
   const d = debugSources(
-    { products: [{ name: "A" }], events: [{ name: "M" }], fetchedAt: null, lastError: null },
-    "snapshot"
+    {
+      products: [{ name: "A" }],
+      events: [{ name: "M" }],
+      fetchedAt: null,
+      lastError: null,
+    },
+    "snapshot",
   );
   assert.equal(d.products.state, "snapshot");
   assert.equal(d.events.state, "snapshot");
@@ -43,12 +52,15 @@ test("catalogForPage uses KV when it has products and the snapshot otherwise", (
     fetchedAt: "2026-01-01T00:00:00Z",
     lastError: null,
   };
-  const live = catalogForPage({
-    products: [{ name: "Live" }],
-    events: [],
-    fetchedAt: "2026-09-16T00:00:00Z",
-    lastError: null,
-  }, floor);
+  const live = catalogForPage(
+    {
+      products: [{ name: "Live" }],
+      events: [],
+      fetchedAt: "2026-09-16T00:00:00Z",
+      lastError: null,
+    },
+    floor,
+  );
   assert.equal(live.source, "kv");
   assert.equal(live.catalog.products[0]?.name, "Live");
 

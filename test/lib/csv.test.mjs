@@ -8,52 +8,80 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { csvToObjects, isYes, normalizeDay, parseCSV, parseDay } from "../../src/lib/csv.js";
+import {
+  csvToObjects,
+  isYes,
+  normalizeDay,
+  parseCSV,
+  parseDay,
+} from "../../src/lib/csv.js";
 
 // --- parseCSV -------------------------------------------------------------
 test("splits plain rows", () =>
-  assert.deepEqual(parseCSV("a,b\n1,2\n"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\n1,2\n"), [
+    ["a", "b"],
+    ["1", "2"],
+  ]));
 
 test("keeps commas inside quotes", () =>
-  assert.deepEqual(parseCSV('name,note\nSalsa,"hot, very"\n'),
-    [["name", "note"], ["Salsa", "hot, very"]]));
+  assert.deepEqual(parseCSV('name,note\nSalsa,"hot, very"\n'), [
+    ["name", "note"],
+    ["Salsa", "hot, very"],
+  ]));
 
 test("keeps newlines inside quotes", () =>
-  assert.deepEqual(parseCSV('a\n"line one\nline two"\n'),
-    [["a"], ["line one\nline two"]]));
+  assert.deepEqual(parseCSV('a\n"line one\nline two"\n'), [
+    ["a"],
+    ["line one\nline two"],
+  ]));
 
 test("unescapes doubled quotes", () =>
-  assert.deepEqual(parseCSV('a\n"she said ""hi"""\n'),
-    [["a"], ['she said "hi"']]));
+  assert.deepEqual(parseCSV('a\n"she said ""hi"""\n'), [
+    ["a"],
+    ['she said "hi"'],
+  ]));
 
 test("tolerates CRLF", () =>
-  assert.deepEqual(parseCSV("a,b\r\n1,2\r\n"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\r\n1,2\r\n"), [
+    ["a", "b"],
+    ["1", "2"],
+  ]));
 
 test("keeps a last row with no trailing newline", () =>
-  assert.deepEqual(parseCSV("a,b\n1,2"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\n1,2"), [
+    ["a", "b"],
+    ["1", "2"],
+  ]));
 
 test("drops blank rows", () =>
-  assert.deepEqual(parseCSV("a,b\n\n , \n1,2\n"), [["a", "b"], ["1", "2"]]));
+  assert.deepEqual(parseCSV("a,b\n\n , \n1,2\n"), [
+    ["a", "b"],
+    ["1", "2"],
+  ]));
 
 // --- csvToObjects ---------------------------------------------------------
 test("maps headers onto rows", () =>
-  assert.deepEqual(csvToObjects("name,heat\nVerde,3\n"),
-    [{ name: "Verde", heat: "3" }]));
+  assert.deepEqual(csvToObjects("name,heat\nVerde,3\n"), [
+    { name: "Verde", heat: "3" },
+  ]));
 
 test("normalises header case and padding", () =>
-  assert.deepEqual(csvToObjects("  Name , HEAT \nVerde,3\n"),
-    [{ name: "Verde", heat: "3" }]));
+  assert.deepEqual(csvToObjects("  Name , HEAT \nVerde,3\n"), [
+    { name: "Verde", heat: "3" },
+  ]));
 
 test("fills missing trailing cells", () =>
-  assert.deepEqual(csvToObjects("name,heat,price\nVerde,3\n"),
-    [{ name: "Verde", heat: "3", price: "" }]));
+  assert.deepEqual(csvToObjects("name,heat,price\nVerde,3\n"), [
+    { name: "Verde", heat: "3", price: "" },
+  ]));
 
 test("keeps rows with no name", () =>
-  assert.deepEqual(csvToObjects("name,heat\n,4\nVerde,3\n"),
-    [{ name: "", heat: "4" }, { name: "Verde", heat: "3" }]));
+  assert.deepEqual(csvToObjects("name,heat\n,4\nVerde,3\n"), [
+    { name: "", heat: "4" },
+    { name: "Verde", heat: "3" },
+  ]));
 
-test("sold out is not a yes", () =>
-  assert.equal(isYes("sold out"), false));
+test("sold out is not a yes", () => assert.equal(isYes("sold out"), false));
 
 test("returns nothing for a header alone", () =>
   assert.deepEqual(csvToObjects("name,heat\n"), []));
@@ -91,7 +119,7 @@ test("rejects a day that does not exist", () => {
   assert.equal(parseDay("2026-02-31"), null);
   assert.equal(parseDay("2026-13-01"), null);
   assert.equal(parseDay("2026-00-10"), null);
-  assert.equal(parseDay("2025-02-29"), null);      // 2025 is not a leap year
+  assert.equal(parseDay("2025-02-29"), null); // 2025 is not a leap year
   assert.equal(parseDay("2024-02-29").getDate(), 29); // 2024 is
   assert.equal(normalizeDay("2026-02-31"), null);
 });

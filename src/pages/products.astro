@@ -7,7 +7,12 @@ import DebugPanel from "../components/DebugPanel.astro";
 import HeatFilter from "../components/HeatFilter.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
-import { dataAge, debugSources, isDebug, catalogForPage } from "../domain/page-catalog.ts";
+import {
+  dataAge,
+  debugSources,
+  isDebug,
+  catalogForPage,
+} from "../domain/page-catalog.ts";
 import { byMaker } from "../domain/products.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
@@ -17,6 +22,7 @@ const john = byMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);
 const debug = isDebug(Astro.url);
 ---
+
 <Base
   title="Everything they make, Paula and Crazy John's Hot Stuff"
   description="The full list of Paula and Crazy John's salsas, hot sauces, cowboy candy, pickles and chow chow, with heat ratings and what is in stock."
@@ -26,13 +32,15 @@ const debug = isDebug(Astro.url);
   <main>
     <header class="page-head">
       <div class="shell">
-        <a class="page-back" href="/">Paula and Crazy John's Hot Stuff</a>
+        <a class="page-back" href="/">
+          Paula and Crazy John's Hot Stuff
+        </a>
         <h1>Everything they make</h1>
         <p class="lede">
           The whole list, both sides of the table. Stock turns over with the
-          garden and the season, so a gap here is ordinary rather than a mistake.
-          If something you want is out, ask for it: that is how they decide what
-          to put up next.
+          garden and the season, so a gap here is ordinary rather than a
+          mistake. If something you want is out, ask for it: that is how they
+          decide what to put up next.
         </p>
         <nav class="maker-jump" aria-label="Jump to a maker">
           <a href="#paula">Paula's</a>
@@ -48,7 +56,9 @@ const debug = isDebug(Astro.url);
           <h2>Salsas, pickles, cowboy candy &amp; more</h2>
         </div>
         <div class="grid" data-grid="Paula">
-          {paula.map((p) => <ProductCard product={p} />)}
+          {paula.map((p) => (
+            <ProductCard product={p} />
+          ))}
         </div>
       </div>
     </section>
@@ -64,12 +74,16 @@ const debug = isDebug(Astro.url);
         <HeatFilter />
 
         <div class="grid" data-grid="John">
-          {john.map((p) => <ProductCard product={p} />)}
+          {john.map((p) => (
+            <ProductCard product={p} />
+          ))}
         </div>
         <p class="grid-empty" id="grid-empty">
           Nothing in that range. It's quiet. Too quiet.
         </p>
-        <p class="data-age" id="data-age" hidden={age.hidden || undefined}>{age.text}</p>
+        <p class="data-age" id="data-age" hidden={age.hidden || undefined}>
+          {age.text}
+        </p>
       </div>
     </section>
   </main>

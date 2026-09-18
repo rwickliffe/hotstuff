@@ -245,13 +245,15 @@ It parses the page modules, type-checks the page and the Worker,
 confirms the generated art block is current, the catalog snapshot has
 products, SITE_CSP matches `public/_headers`, the stylesheet reaches nothing
 outside itself, Base.astro is wired to the shared files, the favicon matches
-the flame sprite, runs the test suites, type-checks `.astro` files, and compiles with `astro build`.
-Nothing touches the network.
+the flame sprite, runs the test suites, type-checks `.astro` files, compiles
+with `astro build`, and runs `prettier --check` on JS/TS/Astro/JSON. It does
+not format Python or this `check` script. Nothing touches the network.
 
 ```bash
 node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
 npm run types                                               # wrangler Env types
 npm run check:types                                         # tsc + astro check
+npx prettier --check "**/*.{js,ts,mjs,astro,json}"          # JS/TS/Astro/JSON
 tools/make-assets.py --check      # generated art is up to date
 npm run build                     # astro build
 ```
@@ -260,9 +262,9 @@ The type check is the only step that needs anything installed. On a fresh
 clone it prints a note and skips, so `./check` still runs with nothing fetched;
 CI runs `npm ci` first, which is what makes it stricter than a bare clone
 rather than merely different. Dev dependencies are `typescript`, the Workers
-runtime types, `wrangler`, `@astrojs/check`, and Playwright. Nothing is shipped
-from `node_modules`: Astro builds the site and wrangler bundles the Worker
-at deploy.
+runtime types, `wrangler`, `@astrojs/check`, Playwright, and Prettier. Nothing
+is shipped from `node_modules`: Astro builds the site and wrangler bundles the
+Worker at deploy.
 
 Playwright is a second command. It builds, boots `wrangler dev`, and clicks
 through the heat filter, legend, ask buttons, and `?debug`. GitHub Actions

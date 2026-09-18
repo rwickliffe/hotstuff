@@ -52,8 +52,10 @@ export function validateEvents(text: string) {
   return eventRows(text).rows ?? null;
 }
 
-export const isStale = (c: CatalogPayload, now?: number) => isStaleAt(c, STALE_MS, now);
-export const refreshMode = (c: CatalogPayload, now?: number) => refreshModeAt(c, STALE_MS, now);
+export const isStale = (c: CatalogPayload, now?: number) =>
+  isStaleAt(c, STALE_MS, now);
+export const refreshMode = (c: CatalogPayload, now?: number) =>
+  refreshModeAt(c, STALE_MS, now);
 
 export function readCatalog(env: Env): Promise<CatalogPayload> {
   return readCache<CatalogData>(env.CATALOG, CATALOG_KEY, [...NAMES]);
