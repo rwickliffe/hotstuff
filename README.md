@@ -29,7 +29,13 @@ daily:
 
 Ordering and payment happen on Square, so this site never takes money.
 Contact notes and newsletter signups go to Resend through the same Worker
-that serves the site (`MAIL` in `public/site.js`) — not into this repo.
+that serves the site (`MAIL_ENABLED` in `public/site.js`) — not into this repo.
+
+### What a similar project keeps
+
+`src/lib/` is generic: a similar project keeps it. `src/domain/` is this
+business's own: they replace it. Pages and the Worker call the domain names;
+the modules underneath take field names, predicates, and caps as arguments.
 
 ## Connecting the Google Sheet
 
@@ -48,11 +54,11 @@ PRODUCTS_CSV_URL  // products tab
 EVENTS_CSV_URL    // events tab
 ```
 
-`MAIL` / `LIST_OPEN` stay in `public/site.js`:
+`MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 
 ```js
-const MAIL      = true;  // false = forms idle, no POST
-const LIST_OPEN = false; // true only on their Resend Segment
+const MAIL_ENABLED = true;  // false = forms idle, no POST
+const LIST_ENABLED = false; // true only on their Resend Segment
 ```
 
 The sheet already exists. There is no CSV in this repo to import.
@@ -116,7 +122,7 @@ mean entering every market twice. The sheet is the only place dates live.
       They currently read `hotstuff.rwickliffe.workers.dev` (interim)
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
-- [ ] Flip `LIST_OPEN` to `true` only after `RESEND_SEGMENT_ID` is *their*
+- [ ] Flip `LIST_ENABLED` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
 - [ ] Move the repo to their GitHub organization and the Worker to their
       Cloudflare, then re-point JSON-LD and the CI badge
@@ -239,13 +245,15 @@ It parses the page modules, type-checks the page and the Worker,
 confirms the generated art block is current, the catalog snapshot has
 products, SITE_CSP matches `public/_headers`, the stylesheet reaches nothing
 outside itself, Base.astro is wired to the shared files, the favicon matches
-the flame sprite, runs the test suites, type-checks `.astro` files, and compiles with `astro build`.
-Nothing touches the network.
+the flame sprite, runs the test suites, type-checks `.astro` files, compiles
+with `astro build`, and runs `prettier --check` on JS/TS/Astro/JSON. It does
+not format Python or this `check` script. Nothing touches the network.
 
 ```bash
-node --test tools/test-parsing.mjs tools/test-catalog.mjs tools/test-cache-headers.mjs src/worker/test-worker.mjs
+node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
 npm run types                                               # wrangler Env types
 npm run check:types                                         # tsc + astro check
+npx prettier --check "**/*.{js,ts,mjs,astro,json}"          # JS/TS/Astro/JSON
 tools/make-assets.py --check      # generated art is up to date
 npm run build                     # astro build
 ```
@@ -254,9 +262,9 @@ The type check is the only step that needs anything installed. On a fresh
 clone it prints a note and skips, so `./check` still runs with nothing fetched;
 CI runs `npm ci` first, which is what makes it stricter than a bare clone
 rather than merely different. Dev dependencies are `typescript`, the Workers
-runtime types, `wrangler`, `@astrojs/check`, and Playwright. Nothing is shipped
-from `node_modules`: Astro builds the site and wrangler bundles the Worker
-at deploy.
+runtime types, `wrangler`, `@astrojs/check`, Playwright, and Prettier. Nothing
+is shipped from `node_modules`: Astro builds the site and wrangler bundles the
+Worker at deploy.
 
 Playwright is a second command. It builds, boots `wrangler dev`, and clicks
 through the heat filter, legend, ask buttons, and `?debug`. GitHub Actions
@@ -269,13 +277,13 @@ npx playwright test
 
 First time on a machine: `npx playwright install chromium`.
 
-`tools/test-parsing.mjs` covers the page's pure data functions - CSV parsing,
-the date parser, the heat scale. Rather than keep a second copy of them, it
-imports them from `src/lib/data.js` and runs exactly what ships - there is no
-second copy to drift, and renaming one breaks the import rather than quietly
-testing something that no longer exists.
+`test/lib/csv.test.mjs` covers CSV parsing and the date parser;
+`test/domain/heat-scale.test.mjs` covers the heat scale. Rather than keep a
+second copy of them, they import what ships - there is no second copy to
+drift, and renaming one breaks the import rather than quietly testing
+something that no longer exists.
 
-`src/worker/test-worker.mjs` covers token signing and expiry, email and HTML
+`test/worker/api.test.mjs` covers token signing and expiry, email and HTML
 validation, password comparison, request-size limits, and the existing-contact
 Segment path. It stubs `fetch`, so no mail is ever sent.
 
@@ -405,7 +413,7 @@ the registrar's email or website builder.
 
 Contact form and confirmed newsletter signup run through the same Worker that
 serves the site, plus Resend. The page POSTs JSON as `text/plain` to relative
-paths (`/contact`, `/subscribe`). `MAIL = false` in `public/site.js` leaves the
+paths (`/contact`, `/subscribe`). `MAIL_ENABLED = false` in `public/site.js` leaves the
 forms on the page but idle — they do not POST.
 
 - **Contact** is transactional: Resend emails Paula, Reply-To is the
@@ -415,7 +423,7 @@ forms on the page but idle — they do not POST.
   mail; `GET /confirm` shows a button; `POST /confirm` adds them to the
   Segment. Contacts are global in Resend; a Segment is a named group of them,
   found under Audience in the dashboard, and a Broadcast targets one Segment.
-  Keep `LIST_OPEN = false` on the public site until that Segment is *theirs*.
+  Keep `LIST_ENABLED = false` on the public site until that Segment is *theirs*.
   A CSV export is not a consent record.
 - **Broadcasts** wait on `BROADCAST_POSTAL_ADDRESS` (a PO box they will print).
   `/send` refuses without it. Compose lives at the Worker `/compose` URL,
@@ -433,12 +441,13 @@ Account ownership and handoff steps stay in local `ops.md` (gitignored).
 
 ### Why the script is split in two
 
-`src/lib/data.js` holds the functions with no DOM and no network in them: CSV
-parsing, the date parser, the heat scale. `site.js` holds everything that
-touches the page. The seam is not arbitrary - it is exactly the line the tests
-already drew, so `tools/test-parsing.mjs` can import the real module instead of
-extracting functions from a file by counting brackets, which is what it used to
-do in forty-nine lines that no longer exist.
+`src/lib/csv.js` and `src/lib/grid.js` hold the generic functions with no DOM
+and no network in them. The heat scale lives in `src/domain/heat-scale.js`.
+`site.js` holds everything that touches the page. The seam is not arbitrary
+- it is exactly the line the tests already drew, so `test/lib/csv.test.mjs`
+can import the real modules instead of extracting functions from a file by
+counting brackets, which is what it used to do in forty-nine lines that no
+longer exist.
 
 Both pages load `site.js` as `type="module"`, which means it is deferred and
 runs after parsing rather than partway through it.
@@ -456,22 +465,12 @@ structurally, and it is written in TypeScript.
 bundled — so it stays JavaScript and is annotated with JSDoc, checked by
 `tsc --noEmit` under `checkJs`. The types are comments. **The file that ships
 is the file in the repo**, byte for byte: nothing compiles it, and what you
-read is what the browser runs.
+read is what the browser runs. Editors that pick the default `tsconfig.json`
+type-check the `.astro` files; `site.js` lives in `tsconfig.site.json`, which
+`./check` and `npm run check:types` run.
 
-The shapes themselves live in `public/types.d.ts` as ordinary TypeScript, because
-`Sheet` written as a JSDoc `@typedef` is unpleasant to read. `site.js` pulls
-the names in with one line:
-
-```js
-/** @import { MailResult, Product, Sheet, Source } from "./types.js" */
-```
-
-`@import` is a comment, so nothing is imported at run time, and the names stay
-scoped to the file rather than becoming ambient globals - delete that line and
-the type check fails rather than silently carrying on.
-
-If `site.js` ever moves into the Astro bundle, `types.d.ts` is already
-TypeScript and would move across untouched.
+`MailResult` is a JSDoc `@typedef` in `site.js` itself. Nothing in `public/`
+is there just for types — that directory is served verbatim.
 
 That check is not decoration. Turning it on found three places that were right
 only by accident: `isNaN(d)` passed a Date where a number was expected and
@@ -500,7 +499,7 @@ name.
 
 Two things worth knowing if you touch it. `node --check` cannot read a `.ts`
 file - it parses it as CommonJS and trips on the first `export` - which is why
-that check is the type checker instead. And `src/worker/test-worker.mjs` imports
+that check is the type checker instead. And `test/worker/api.test.mjs` imports
 the `.ts` source directly, relying on Node stripping the types at run time,
 which needs Node 22.18 or newer.
 

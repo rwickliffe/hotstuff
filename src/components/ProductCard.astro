@@ -1,5 +1,6 @@
 ---
-import { heatWord, isYes } from "../lib/data.js";
+import { heatWord } from "../domain/heat-scale.js";
+import { isSoldOut } from "../domain/products.ts";
 import HeatPips from "./HeatPips.astro";
 
 interface Props {
@@ -8,8 +9,9 @@ interface Props {
 
 const p = Astro.props.product;
 const heat = parseInt(p.heat, 10) || 0;
-const soldOut = isYes(p.sold_out);
+const soldOut = isSoldOut(p);
 ---
+
 <article
   data-heat={String(heat)}
   class:list={["prod", heat && `heat-${heat}`, soldOut && "sold-out"]}
@@ -33,7 +35,9 @@ const soldOut = isYes(p.sold_out);
     ) : (
       <span class="price">
         {p.price ? `$${p.price}` : ""}
-        {p.price_quart ? <small class="price-qt">${p.price_quart} qt</small> : null}
+        {p.price_quart ? (
+          <small class="price-qt">${p.price_quart} qt</small>
+        ) : null}
       </span>
     )}
   </div>

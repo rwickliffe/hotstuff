@@ -2,8 +2,9 @@
 // This module only exports `default` (Static Assets rejects named exports).
 
 import { handle } from "@astrojs/cloudflare/handler";
-import { cacheControlForChicago, htmlCacheKey } from "../lib/cache-headers.ts";
+import { dailyCacheControl, htmlCacheKey } from "../lib/html-cache.ts";
 import { SITE_CSP } from "../lib/csp.ts";
+import { CACHEABLE_PATHS, DEBUG_PARAM, MARKET_TZ } from "../site-config.ts";
 import api from "./api.ts";
 
 const API = new Set([
@@ -16,11 +17,15 @@ const API = new Set([
 ]);
 
 export default {
-  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(
+    req: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const path = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
     if (API.has(path)) return api.fetch(req, env, ctx);
 
-    const cacheKey = htmlCacheKey(req);
+    const cacheKey = htmlCacheKey(req, CACHEABLE_PATHS, DEBUG_PARAM);
     if (cacheKey) {
       const hit = await caches.default.match(cacheKey);
       if (hit) return hit;
@@ -33,7 +38,11 @@ export default {
     return astroResponse;
   },
 
-  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+  async scheduled(
+    controller: ScheduledController,
+    env: Env,
+    ctx: ExecutionContext,
+  ) {
     return api.scheduled(controller, env, ctx);
   },
 };
@@ -45,7 +54,10 @@ function withSiteHtmlHeaders(astroResponse: Response): Response {
 
   const apply = (target: Response) => {
     target.headers.set("Content-Security-Policy", SITE_CSP);
-    target.headers.set("Cache-Control", cacheControlForChicago());
+    target.headers.set(
+      "Cache-Control",
+      dailyCacheControl(new Date(), MARKET_TZ),
+    );
     target.headers.set("X-Content-Type-Options", "nosniff");
     target.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   };

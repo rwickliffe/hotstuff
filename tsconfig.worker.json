@@ -13,11 +13,14 @@
     "noEmit": true
   },
   "include": [
-    "./**/*.ts",
-    "env.d.ts",
-    "worker-configuration.d.ts",
-    "../lib/data.js",
-    "../lib/page-catalog.ts",
-    "../../data/catalog-snapshot.json"
+    "src/worker/**/*.ts",
+    "src/worker/env.d.ts",
+    "src/worker/worker-configuration.d.ts",
+    "src/lib/csv.js",
+    "src/lib/csv-guard.ts",
+    "src/lib/sheet-cache.ts",
+    "src/domain/page-catalog.ts",
+    "src/site-config.ts",
+    "data/catalog-snapshot.json"
   ]
 }

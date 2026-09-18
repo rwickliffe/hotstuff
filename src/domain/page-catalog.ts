@@ -1,4 +1,4 @@
-import { featuredFrom, forMaker } from "./data.js";
+import { DEBUG_PARAM } from "../site-config.ts";
 import type { CatalogPayload } from "../worker/catalog.ts";
 import snapshot from "../../data/catalog-snapshot.json" with { type: "json" };
 
@@ -12,7 +12,7 @@ const DATA_AGE_MS = 6 * 60 * 60 * 1000;
 /** Empty KV uses the committed snapshot so both pages still have jars. */
 export function catalogForPage(
   kv: CatalogPayload,
-  floor: CatalogPayload = SNAPSHOT
+  floor: CatalogPayload = SNAPSHOT,
 ): {
   catalog: CatalogPayload;
   source: CatalogSource;
@@ -21,18 +21,9 @@ export function catalogForPage(
   return { catalog: floor, source: "snapshot" };
 }
 
-export function gridFor(
-  products: Product[],
-  maker: string,
-  featured: boolean
-): Product[] {
-  const mine = forMaker(products, maker.trim().toLowerCase());
-  return featured ? featuredFrom(mine) : mine;
-}
-
-export function dataAge(
+export function dataAgeNotice(
   fetchedAt: string | null,
-  now = Date.now()
+  now = Date.now(),
 ): { hidden: boolean; text: string } {
   if (!fetchedAt) return { hidden: true, text: "" };
   const t = Date.parse(fetchedAt);
@@ -47,13 +38,18 @@ export function dataAge(
 }
 
 export function isDebug(url: URL): boolean {
-  return url.searchParams.has("debug");
+  return url.searchParams.has(DEBUG_PARAM);
 }
 
-export function debugSources(catalog: CatalogPayload, source: CatalogSource = "kv") {
+export function debugSources(
+  catalog: CatalogPayload,
+  source: CatalogSource = "kv",
+) {
   const fetched = catalog.fetchedAt ? "fetchedAt " + catalog.fetchedAt : "";
   const productNote = [
-    catalog.lastError?.products ? "lastError: " + catalog.lastError.products : "",
+    catalog.lastError?.products
+      ? "lastError: " + catalog.lastError.products
+      : "",
     fetched,
   ]
     .filter(Boolean)

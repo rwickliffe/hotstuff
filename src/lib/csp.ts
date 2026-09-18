@@ -1,8 +1,8 @@
-/** Shared Content-Security-Policy strings for Worker HTML and Astro pages.
+/** Shared Content-Security-Policy strings.
  *  Keep public/_headers CSP in sync (./check compares them). */
 
 /** /confirm and /compose — no same-origin CSS/JS files. */
-export const WORKER_HTML_CSP =
+export const WORKER_CSP =
   "default-src 'none'; base-uri 'none'; form-action 'self'; " +
   "img-src 'self' data:; " +
   "style-src 'unsafe-inline' https://fonts.googleapis.com; " +

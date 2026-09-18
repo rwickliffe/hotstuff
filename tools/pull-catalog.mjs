@@ -41,9 +41,12 @@ const snapshot = {
   products,
   events,
   fetchedAt: typeof data.fetchedAt === "string" ? data.fetchedAt : null,
-  lastError: data.lastError && typeof data.lastError === "object" ? data.lastError : null,
+  lastError:
+    data.lastError && typeof data.lastError === "object"
+      ? data.lastError
+      : null,
 };
 fs.writeFileSync(snapOut, JSON.stringify(snapshot, null, 2) + "\n");
 console.log(
-  `wrote ${products.length} products, ${events.length} events to data/catalog-snapshot.json from ${dataUrl}`
+  `wrote ${products.length} products, ${events.length} events to data/catalog-snapshot.json from ${dataUrl}`,
 );

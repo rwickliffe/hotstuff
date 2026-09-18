@@ -3,8 +3,8 @@
 // with Static Assets, workerd treats every named export as an entrypoint
 // candidate and rejects constants like CONFIRM_TTL_MS.
 
-export const MAX_BODY = 8192;
-export const MAX_SEND_BODY = 65536;
+export const MAX_BODY_BYTES = 8192;
+export const MAX_SEND_BODY_BYTES = 65536;
 export const CONFIRM_TTL_MS = 60 * 60 * 1000;
 
 const MAX_EMAIL = 254;
@@ -14,8 +14,11 @@ export function emailOk(s: unknown): boolean {
   const e = s.trim().toLowerCase();
   if (e.length < 5 || e.length > MAX_EMAIL) return false;
   if (e.includes("..")) return false;
-  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(e)) return false;
-  return e.slice(e.lastIndexOf("@") + 1).split(".")
+  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(e))
+    return false;
+  return e
+    .slice(e.lastIndexOf("@") + 1)
+    .split(".")
     .every((label) => !label.startsWith("-") && !label.endsWith("-"));
 }
 
@@ -70,18 +73,29 @@ async function hmacKey(secret: string): Promise<CryptoKey> {
     new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign", "verify"]
+    ["sign", "verify"],
   );
 }
 
-export async function makeToken(email: string, exp: number, secret: string): Promise<string> {
+export async function makeToken(
+  email: string,
+  exp: number,
+  secret: string,
+): Promise<string> {
   const payload = email + "|" + exp;
   const key = await hmacKey(secret);
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(payload),
+  );
   return b64url(new TextEncoder().encode(payload)) + "." + b64url(sig);
 }
 
-export async function verifyToken(token: string, secret: string): Promise<string | null> {
+export async function verifyToken(
+  token: string,
+  secret: string,
+): Promise<string | null> {
   if (!token || typeof token !== "string") return null;
   const parts = token.split(".");
   // Exactly two, so a token carrying extra dots is refused rather than having
@@ -97,7 +111,7 @@ export async function verifyToken(token: string, secret: string): Promise<string
       "HMAC",
       key,
       fromB64url(sig),
-      new TextEncoder().encode(payload)
+      new TextEncoder().encode(payload),
     );
   } catch {
     return null;
