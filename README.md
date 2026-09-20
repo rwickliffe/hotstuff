@@ -250,7 +250,7 @@ with `astro build`, and runs `prettier --check` on JS/TS/Astro/JSON. It does
 not format Python or this `check` script. Nothing touches the network.
 
 ```bash
-node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
+node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/domain/debug.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
 npm run types                                               # wrangler Env types
 npm run check:types                                         # tsc + astro check
 npx prettier --check "**/*.{js,ts,mjs,astro,json}"          # JS/TS/Astro/JSON

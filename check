@@ -132,7 +132,7 @@ step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
 # and CI runs an older one than this machine.
-step "unit tests"           node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
+step "unit tests"           node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/domain/debug.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
 step "astro check"          site_astro_types
 step "astro build"          site_build
 step "prettier"             prettier_check

@@ -8,18 +8,17 @@ import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
 import Schedule from "../components/Schedule.astro";
 import {
-  dataAgeNotice,
-  debugSources,
-  isDebug,
+  catalogDataAgeNotice,
   catalogForPage,
 } from "../domain/page-catalog.ts";
+import { debugSources, isDebug } from "../domain/debug.ts";
 import { featuredByMaker } from "../domain/products.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
 const { catalog, source } = catalogForPage(await readCatalog(env));
 const paula = featuredByMaker(catalog.products, "Paula");
 const john = featuredByMaker(catalog.products, "John");
-const notice = dataAgeNotice(catalog.fetchedAt);
+const notice = catalogDataAgeNotice(catalog.fetchedAt);
 const debug = isDebug(Astro.url);
 ---
 

@@ -2,47 +2,18 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  catalogDataAgeNotice,
   catalogForPage,
-  dataAgeNotice,
-  debugSources,
 } from "../../src/domain/page-catalog.ts";
 import { emptyCatalog } from "../../src/worker/catalog.ts";
 
-test("dataAgeNotice hides fresh fetches and names stale hours", () => {
+test("catalogDataAgeNotice hides fresh fetches and names stale hours", () => {
   const now = Date.parse("2026-09-15T18:00:00Z");
-  assert.equal(dataAgeNotice(null, now).hidden, true);
-  assert.equal(dataAgeNotice("2026-09-15T17:00:00Z", now).hidden, true);
-  const stale = dataAgeNotice("2026-09-15T10:00:00Z", now);
+  assert.equal(catalogDataAgeNotice(null, now).hidden, true);
+  assert.equal(catalogDataAgeNotice("2026-09-15T17:00:00Z", now).hidden, true);
+  const stale = catalogDataAgeNotice("2026-09-15T10:00:00Z", now);
   assert.equal(stale.hidden, false);
   assert.match(stale.text, /8 hours/);
-});
-
-test("debugSources reports live KV row counts and lastError", () => {
-  const d = debugSources({
-    products: [{ name: "A" }, { name: "B" }],
-    events: [],
-    fetchedAt: "2026-09-15T12:00:00Z",
-    lastError: { events: "too large" },
-  });
-  assert.equal(d.products.state, "live KV");
-  assert.equal(d.products.rows, 2);
-  assert.equal(d.events.state, "empty");
-  assert.match(d.events.note, /lastError: too large/);
-  assert.match(d.products.note, /fetchedAt 2026-09-15T12:00:00Z/);
-});
-
-test("debugSources names snapshot when KV was empty", () => {
-  const d = debugSources(
-    {
-      products: [{ name: "A" }],
-      events: [{ name: "M" }],
-      fetchedAt: null,
-      lastError: null,
-    },
-    "snapshot",
-  );
-  assert.equal(d.products.state, "snapshot");
-  assert.equal(d.events.state, "snapshot");
 });
 
 test("catalogForPage uses KV when it has products and the snapshot otherwise", () => {
