@@ -6,7 +6,7 @@
 // No interface type: there is one implementation, and a port with a single
 // plug is ceremony. Introduce one when a second provider exists to shape it.
 
-import { esc } from "./mail-helpers.ts";
+import { esc } from "../lib/html.ts";
 import { SITE } from "../site-config.ts";
 
 /** Why a call failed, in the site's vocabulary rather than the provider's. */

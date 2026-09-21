@@ -4,7 +4,7 @@
 
 import { WORKER_CSP } from "../lib/csp.ts";
 import { SITE } from "../site-config.ts";
-import { esc } from "./mail-helpers.ts";
+import { esc } from "../lib/html.ts";
 
 function html(body: string, status?: number): Response {
   return new Response(body, {

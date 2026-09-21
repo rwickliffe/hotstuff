@@ -10,16 +10,9 @@ import {
   sendMessage,
   type MailFailure,
 } from "./mail.ts";
-import {
-  CONFIRM_TTL_MS,
-  MAX_BODY_BYTES,
-  MAX_SEND_BODY_BYTES,
-  emailOk,
-  esc,
-  makeToken,
-  timingSafeEqual,
-  verifyToken,
-} from "./mail-helpers.ts";
+import { emailOk } from "../lib/email-address.ts";
+import { timingSafeEqual } from "./crypto.ts";
+import { CONFIRM_TTL_MS, makeToken, verifyToken } from "./tokens.ts";
 import { readCatalog, refreshData, refreshMode } from "./catalog.ts";
 import {
   cappedTodayPage,
@@ -37,6 +30,10 @@ type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
 
 /** A decoded JSON body. Off the wire, so every field is still unproven. */
 type Payload = Record<string, unknown>;
+
+/** Request bodies, in bytes. Exported so the tests can push past them. */
+export const MAX_BODY_BYTES = 8192;
+export const MAX_SEND_BODY_BYTES = 65536;
 
 const MAX_NAME = 100;
 const MAX_ASK = 100;
@@ -151,8 +148,8 @@ function honeypot(data: Payload): boolean {
   return !!(data && (data.company || data.website));
 }
 
-/** One mapping from mail failure to HTTP, used by every endpoint that sends. */
-function mailFail(reason: MailFailure): Response {
+/** The JSON reply when a send fails. /confirm answers with a page instead. */
+function sendFail(reason: MailFailure): Response {
   return reason === "quota"
     ? json({ ok: false, reason: "quota" }, 429)
     : json({ ok: false, reason: "down" }, 502);
@@ -193,7 +190,7 @@ async function contact(req: Request, env: Env): Promise<Response> {
     subject: SITE.copy.contactSubject.replace("{name}", () => name),
     text: "From: " + name + " <" + email + ">\n\n" + message,
   });
-  if (!result.ok) return mailFail(result.reason);
+  if (!result.ok) return sendFail(result.reason);
   track(env, "contact");
   // Demand signal: product name only — never email or IP.
   if (ask) track(env, "ask", ask);
@@ -236,7 +233,7 @@ async function subscribe(req: Request, env: Env): Promise<Response> {
       "\n\n" +
       SITE.copy.confirmIgnore,
   });
-  if (!result.ok) return mailFail(result.reason);
+  if (!result.ok) return sendFail(result.reason);
   track(env, "subscribe");
   return json({ ok: true }, 200);
 }
@@ -310,6 +307,6 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
     subject,
     html: broadcastHtml(body, postal),
   });
-  if (!sent.ok) return mailFail(sent.reason);
+  if (!sent.ok) return sendFail(sent.reason);
   return json({ ok: true }, 200);
 }

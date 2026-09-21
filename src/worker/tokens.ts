@@ -1,55 +1,10 @@
-// Pure helpers shared by the Worker entry and unit tests.
-// Kept out of worker.ts so the entry module only exports `default` —
-// with Static Assets, workerd treats every named export as an entrypoint
-// candidate and rejects constants like CONFIRM_TTL_MS.
+// Signed confirmation links: an HMAC over "email|expiry", so /confirm can
+// trust an address without storing anything between the two requests.
 
-export const MAX_BODY_BYTES = 8192;
-export const MAX_SEND_BODY_BYTES = 65536;
+import { emailOk } from "../lib/email-address.ts";
+
+/** How long a confirmation link stays good. */
 export const CONFIRM_TTL_MS = 60 * 60 * 1000;
-
-const MAX_EMAIL = 254;
-
-export function emailOk(s: unknown): boolean {
-  if (typeof s !== "string") return false;
-  const e = s.trim().toLowerCase();
-  if (e.length < 5 || e.length > MAX_EMAIL) return false;
-  if (e.includes("..")) return false;
-  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(e))
-    return false;
-  return e
-    .slice(e.lastIndexOf("@") + 1)
-    .split(".")
-    .every((label) => !label.startsWith("-") && !label.endsWith("-"));
-}
-
-export function esc(s: unknown): string {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-/** Compare secrets without leaking length. Hash both sides first so unequal
- *  lengths still take the same path; digests are always 32 bytes. Prefer
- *  SubtleCrypto.timingSafeEqual (Workers); fall back to a XOR fold for Node
- *  tests, which do not expose that method on `crypto.subtle`. */
-export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
-  const enc = new TextEncoder();
-  const [aa, bb] = await Promise.all([
-    crypto.subtle.digest("SHA-256", enc.encode(a)),
-    crypto.subtle.digest("SHA-256", enc.encode(b)),
-  ]);
-  const aBytes = new Uint8Array(aa);
-  const bBytes = new Uint8Array(bb);
-  if (typeof crypto.subtle.timingSafeEqual === "function") {
-    return crypto.subtle.timingSafeEqual(aBytes, bBytes);
-  }
-  let out = 0;
-  for (let i = 0; i < aBytes.length; i++) out |= aBytes[i]! ^ bBytes[i]!;
-  return out === 0;
-}
 
 // base64url, padding stripped. Buffer is global here — workers-types declares
 // it and nodejs_compat provides it — and does the alphabet swap natively in

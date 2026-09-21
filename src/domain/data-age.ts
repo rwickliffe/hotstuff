@@ -1,5 +1,6 @@
-// How old the catalog is, and whether that is old enough to say so on the
-// page. The wording lives in components/DataAge.astro; this only decides.
+// How old a timestamp is, and whether that is old enough to say so on the
+// page. The catalog's fetchedAt is the only caller today; the wording lives
+// in components/DataAge.astro, which is where "List last refreshed" belongs.
 
 /** Old enough to admit it. Well past the hourly cron, so a late run is quiet. */
 export const DATA_AGE_STALE_MS = 6 * 60 * 60 * 1000;
