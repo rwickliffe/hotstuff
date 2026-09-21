@@ -51,20 +51,16 @@ export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   return out === 0;
 }
 
+// base64url, padding stripped. Buffer is global here — workers-types declares
+// it and nodejs_compat provides it — and does the alphabet swap natively in
+// both workerd and Node, so there is no hand-rolled loop to get wrong.
 function b64url(bytes: Uint8Array | ArrayBuffer): string {
-  let s = "";
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]!);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return Buffer.from(arr).toString("base64url");
 }
 
 function fromB64url(s: string): Uint8Array {
-  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
-  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
+  return new Uint8Array(Buffer.from(s, "base64url"));
 }
 
 async function hmacKey(secret: string): Promise<CryptoKey> {
