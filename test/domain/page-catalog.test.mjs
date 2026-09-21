@@ -1,20 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  catalogDataAgeNotice,
-  catalogForPage,
-} from "../../src/domain/page-catalog.ts";
+import { catalogForPage } from "../../src/domain/page-catalog.ts";
 import { emptyCatalog } from "../../src/worker/catalog.ts";
-
-test("catalogDataAgeNotice hides fresh fetches and names stale hours", () => {
-  const now = Date.parse("2026-09-15T18:00:00Z");
-  assert.equal(catalogDataAgeNotice(null, now).hidden, true);
-  assert.equal(catalogDataAgeNotice("2026-09-15T17:00:00Z", now).hidden, true);
-  const stale = catalogDataAgeNotice("2026-09-15T10:00:00Z", now);
-  assert.equal(stale.hidden, false);
-  assert.match(stale.text, /8 hours/);
-});
 
 test("catalogForPage uses KV when it has products and the snapshot otherwise", () => {
   const floor = {

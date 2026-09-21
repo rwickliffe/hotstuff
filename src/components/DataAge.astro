@@ -1,0 +1,12 @@
+---
+interface Props {
+  stale: boolean;
+  hours: number;
+}
+
+const { stale, hours } = Astro.props;
+---
+
+<p class="data-age" id="data-age" hidden={!stale || undefined}>
+  List last refreshed about {hours} hours ago.
+</p>
