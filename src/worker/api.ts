@@ -4,6 +4,13 @@
 
 import { SITE } from "../site-config.ts";
 import {
+  addToList,
+  broadcastHtml,
+  sendBroadcastToList,
+  sendMessage,
+  type MailFailure,
+} from "./mail.ts";
+import {
   CONFIRM_TTL_MS,
   MAX_BODY_BYTES,
   MAX_SEND_BODY_BYTES,
@@ -144,26 +151,11 @@ function honeypot(data: Payload): boolean {
   return !!(data && (data.company || data.website));
 }
 
-async function resendSend(
-  env: Env,
-  payload: unknown,
-): Promise<{ ok?: true; reason?: string }> {
-  const r = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + env.RESEND_API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  if (r.status === 429) return { reason: "quota" };
-  if (!r.ok) return { reason: "down" };
-  return { ok: true };
-}
-
-function resendFail(reason: string | undefined): Response {
-  if (reason === "quota") return json({ ok: false, reason: "quota" }, 429);
-  return json({ ok: false, reason: "down" }, 502);
+/** One mapping from mail failure to HTTP, used by every endpoint that sends. */
+function mailFail(reason: MailFailure): Response {
+  return reason === "quota"
+    ? json({ ok: false, reason: "quota" }, 429)
+    : json({ ok: false, reason: "down" }, 502);
 }
 
 async function contact(req: Request, env: Env): Promise<Response> {
@@ -193,16 +185,15 @@ async function contact(req: Request, env: Env): Promise<Response> {
     return json({ ok: false, reason: "rate" }, 429);
   }
 
-  const result = await resendSend(env, {
-    from: env.RESEND_FROM,
-    to: [env.CONTACT_TO],
-    reply_to: email,
+  const result = await sendMessage(env, {
+    to: env.CONTACT_TO,
+    replyTo: email,
     // Replacer function, not a string: a plain replacement would treat a
     // visitor typing $& or $` in their name as a substitution pattern.
     subject: SITE.copy.contactSubject.replace("{name}", () => name),
     text: "From: " + name + " <" + email + ">\n\n" + message,
   });
-  if (!result.ok) return resendFail(result.reason);
+  if (!result.ok) return mailFail(result.reason);
   track(env, "contact");
   // Demand signal: product name only — never email or IP.
   if (ask) track(env, "ask", ask);
@@ -233,9 +224,8 @@ async function subscribe(req: Request, env: Env): Promise<Response> {
   link.pathname = "/confirm";
   link.search = "t=" + encodeURIComponent(token);
 
-  const result = await resendSend(env, {
-    from: env.RESEND_FROM,
-    to: [email],
+  const result = await sendMessage(env, {
+    to: email,
     subject: SITE.copy.confirmSubject,
     text:
       SITE.copy.confirmLead +
@@ -246,7 +236,7 @@ async function subscribe(req: Request, env: Env): Promise<Response> {
       "\n\n" +
       SITE.copy.confirmIgnore,
   });
-  if (!result.ok) return resendFail(result.reason);
+  if (!result.ok) return mailFail(result.reason);
   track(env, "subscribe");
   return json({ ok: true }, 200);
 }
@@ -282,41 +272,9 @@ async function confirmPost(req: Request, env: Env): Promise<Response> {
     return slowDownPage();
   }
 
-  // Contacts are global in Resend; a Segment is a named group of them, listed
-  // under Audience in the dashboard. A Broadcast targets a Segment, so that is
-  // the id this needs.
-  const r = await fetch("https://api.resend.com/contacts", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + env.RESEND_API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      segments: [{ id: env.RESEND_SEGMENT_ID }],
-    }),
-  });
-
-  if (r.status === 429) return cappedTodayPage();
-  if (r.status === 409) {
-    // Existing global contacts still need adding to this Segment. This does
-    // not change their global unsubscribe state if an old link is replayed.
-    const add = await fetch(
-      "https://api.resend.com/contacts/" +
-        encodeURIComponent(email) +
-        "/segments/" +
-        encodeURIComponent(env.RESEND_SEGMENT_ID),
-      {
-        method: "POST",
-        headers: { Authorization: "Bearer " + env.RESEND_API_KEY },
-      },
-    );
-    if (add.status === 429) return cappedTodayPage();
-    if (!add.ok && add.status !== 409) {
-      return couldNotJoinPage();
-    }
-  } else if (!r.ok) {
-    return couldNotJoinPage();
+  const joined = await addToList(env, email);
+  if (!joined.ok) {
+    return joined.reason === "quota" ? cappedTodayPage() : couldNotJoinPage();
   }
 
   return joinedPage();
@@ -348,47 +306,10 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   if (!body || body.length > MAX_BROADCAST)
     return json({ ok: false, reason: "bad" }, 400);
 
-  const htmlBody =
-    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:' +
-    SITE.theme.ink +
-    ";background:" +
-    SITE.theme.paper +
-    ';padding:28px">' +
-    '<p style="font-family:' +
-    SITE.theme.display +
-    ";letter-spacing:.05em;" +
-    "text-transform:uppercase;color:" +
-    SITE.theme.chile +
-    ';font-size:13px">' +
-    esc(SITE.masthead) +
-    "</p>" +
-    '<div style="white-space:pre-wrap;line-height:1.55">' +
-    esc(body) +
-    "</div>" +
-    '<p style="margin-top:28px;font-size:13px;color:' +
-    SITE.theme.quiet +
-    '">' +
-    esc(postal) +
-    "</p>" +
-    '<p style="font-size:13px"><a href="{{{RESEND_UNSUBSCRIBE_URL}}}">Unsubscribe</a></p>' +
-    "</div>";
-
-  const r = await fetch("https://api.resend.com/broadcasts", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + env.RESEND_API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      segment_id: env.RESEND_SEGMENT_ID,
-      from: env.RESEND_FROM,
-      subject,
-      html: htmlBody,
-      send: true,
-    }),
+  const sent = await sendBroadcastToList(env, {
+    subject,
+    html: broadcastHtml(body, postal),
   });
-
-  if (r.status === 429) return json({ ok: false, reason: "quota" }, 429);
-  if (!r.ok) return json({ ok: false, reason: "down" }, 502);
+  if (!sent.ok) return mailFail(sent.reason);
   return json({ ok: true }, 200);
 }
