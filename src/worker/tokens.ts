@@ -1,0 +1,77 @@
+// Signed confirmation links: an HMAC over "email|expiry", so /confirm can
+// trust an address without storing anything between the two requests.
+
+import { emailOk } from "../lib/email-address.ts";
+
+/** How long a confirmation link stays good. */
+export const CONFIRM_TTL_MS = 60 * 60 * 1000;
+
+// base64url, padding stripped. Buffer is global here — workers-types declares
+// it and nodejs_compat provides it — and does the alphabet swap natively in
+// both workerd and Node, so there is no hand-rolled loop to get wrong.
+function b64url(bytes: Uint8Array | ArrayBuffer): string {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  return Buffer.from(arr).toString("base64url");
+}
+
+function fromB64url(s: string): Uint8Array {
+  return new Uint8Array(Buffer.from(s, "base64url"));
+}
+
+async function hmacKey(secret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"],
+  );
+}
+
+export async function makeToken(
+  email: string,
+  exp: number,
+  secret: string,
+): Promise<string> {
+  const payload = email + "|" + exp;
+  const key = await hmacKey(secret);
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(payload),
+  );
+  return b64url(new TextEncoder().encode(payload)) + "." + b64url(sig);
+}
+
+export async function verifyToken(
+  token: string,
+  secret: string,
+): Promise<string | null> {
+  if (!token || typeof token !== "string") return null;
+  const parts = token.split(".");
+  // Exactly two, so a token carrying extra dots is refused rather than having
+  // the tail quietly ignored. The pair is pulled out after that check so the
+  // reads below are provably present rather than asserted to be.
+  if (parts.length !== 2) return null;
+  const [body, sig] = parts as [string, string];
+  let payload, ok;
+  try {
+    payload = new TextDecoder().decode(fromB64url(body));
+    const key = await hmacKey(secret);
+    ok = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      fromB64url(sig),
+      new TextEncoder().encode(payload),
+    );
+  } catch {
+    return null;
+  }
+  if (!ok) return null;
+  const bar = payload.lastIndexOf("|");
+  if (bar < 1) return null;
+  const email = payload.slice(0, bar);
+  const exp = Number(payload.slice(bar + 1));
+  if (!emailOk(email) || !Number.isFinite(exp) || Date.now() > exp) return null;
+  return email;
+}
