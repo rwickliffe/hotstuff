@@ -11,6 +11,12 @@ import {
   type MailFailure,
 } from "./mail.ts";
 import { emailOk } from "../lib/email-address.ts";
+import {
+  json,
+  readJson,
+  type JsonBody,
+  type JsonBodyFailure,
+} from "../lib/json.ts";
 import { timingSafeEqual } from "./crypto.ts";
 import { CONFIRM_TTL_MS, makeToken, verifyToken } from "./tokens.ts";
 import { readCatalog, refreshData, refreshMode } from "./catalog.ts";
@@ -25,11 +31,13 @@ import {
   tooBigPage,
 } from "./pages.ts";
 
+/** Cloudflare sets this; it is absent when a request did not arrive through it. */
+function ipOf(req: Request): string {
+  return req.headers.get("CF-Connecting-IP") || "unknown";
+}
+
 /** The limiters only, so `limited` cannot be handed the name of a secret. */
 type Limiter = "MAIL_IP" | "MAIL_EMAIL" | "SEND_IP";
-
-/** A decoded JSON body. Off the wire, so every field is still unproven. */
-type Payload = Record<string, unknown>;
 
 /** Request bodies, in bytes. Exported so the tests can push past them. */
 export const MAX_BODY_BYTES = 8192;
@@ -90,33 +98,19 @@ async function dataGet(env: Env, ctx: ExecutionContext): Promise<Response> {
   } else if (mode === "stale") {
     ctx.waitUntil(refreshData(env));
   }
-  return new Response(JSON.stringify(catalog), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "public, max-age=60",
-    },
-  });
+  const res = json(catalog, 200);
+  // A minute is short enough that /data is never the stale one, and long
+  // enough to absorb a burst.
+  res.headers.set("Cache-Control", "public, max-age=60");
+  return res;
 }
 
-function json(obj: unknown, status: number): Response {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
-}
-
-/** Custom events → Analytics Engine. blob1 = event, blob2 = optional detail. */
 function track(env: Env, event: string, detail = "", n = 1): void {
   env.METRICS.writeDataPoint({
     blobs: [event, detail],
     doubles: [n],
     indexes: [event],
   });
-}
-
-function ipOf(req: Request): string {
-  return req.headers.get("CF-Connecting-IP") || "unknown";
 }
 
 async function limited(
@@ -128,24 +122,13 @@ async function limited(
   return success;
 }
 
-async function readJson(
-  req: Request,
-  maxBody: number = MAX_BODY_BYTES,
-): Promise<{ err?: Response; data?: Payload }> {
-  const len = Number(req.headers.get("Content-Length") || "0");
-  if (len > maxBody) return { err: json({ ok: false, reason: "size" }, 413) };
-  const text = await req.text();
-  if (text.length > maxBody)
-    return { err: json({ ok: false, reason: "size" }, 413) };
-  try {
-    return { data: JSON.parse(text) };
-  } catch {
-    return { err: json({ ok: false, reason: "bad" }, 400) };
-  }
+function honeypot(data: JsonBody): boolean {
+  return !!(data && (data.company || data.website));
 }
 
-function honeypot(data: Payload): boolean {
-  return !!(data && (data.company || data.website));
+/** The JSON reply when a body is refused: too big, or not JSON. */
+function badBody(reason: JsonBodyFailure): Response {
+  return json({ ok: false, reason }, reason === "size" ? 413 : 400);
 }
 
 /** The JSON reply when a send fails. /confirm answers with a page instead. */
@@ -156,9 +139,9 @@ function sendFail(reason: MailFailure): Response {
 }
 
 async function contact(req: Request, env: Env): Promise<Response> {
-  const parsed = await readJson(req);
-  if (parsed.err) return parsed.err;
-  const data = parsed.data || {};
+  const parsed = await readJson(req, MAX_BODY_BYTES);
+  if (!parsed.ok) return badBody(parsed.reason);
+  const data = parsed.data;
   if (honeypot(data)) return json({ ok: true }, 200);
 
   const name = String(data.name || "").trim();
@@ -198,9 +181,9 @@ async function contact(req: Request, env: Env): Promise<Response> {
 }
 
 async function subscribe(req: Request, env: Env): Promise<Response> {
-  const parsed = await readJson(req);
-  if (parsed.err) return parsed.err;
-  const data = parsed.data || {};
+  const parsed = await readJson(req, MAX_BODY_BYTES);
+  if (!parsed.ok) return badBody(parsed.reason);
+  const data = parsed.data;
   if (honeypot(data)) return json({ ok: true }, 200);
 
   const email = String(data.email || "")
@@ -255,9 +238,9 @@ async function confirmPost(req: Request, env: Env): Promise<Response> {
     if (body.length > MAX_BODY_BYTES) return tooBigPage();
     token = new URLSearchParams(body).get("t") || "";
   } else {
-    const parsed = await readJson(req);
-    if (parsed.err) return parsed.err;
-    token = String((parsed.data && parsed.data.t) || "");
+    const parsed = await readJson(req, MAX_BODY_BYTES);
+    if (!parsed.ok) return badBody(parsed.reason);
+    token = String(parsed.data.t || "");
   }
 
   const email = await verifyToken(token, env.SUBSCRIBE_SIGNING_KEY);
@@ -286,8 +269,8 @@ async function sendBroadcast(req: Request, env: Env): Promise<Response> {
   if (!postal) return json({ ok: false, reason: "postal" }, 403);
 
   const parsed = await readJson(req, MAX_SEND_BODY_BYTES);
-  if (parsed.err) return parsed.err;
-  const data = parsed.data || {};
+  if (!parsed.ok) return badBody(parsed.reason);
+  const data = parsed.data;
   const password = String(data.password || "");
   const subject = String(data.subject || "").trim();
   const body = String(data.body || "").trim();
