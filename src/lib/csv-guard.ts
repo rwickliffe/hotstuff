@@ -16,6 +16,10 @@ export function sheetHeadersOk(text: string, required: string[]): boolean {
  * Size → headers → parse → empty check → row cap. A parse that yields no
  * rows is an error, not an empty success. The error string is the protocol:
  * callers store it and show it.
+ *
+ * `allowEmpty` is for a sheet whose resting state is empty — nothing to say
+ * today is not a fault, and reporting it as one would park an error in
+ * lastError for weeks at a time.
  */
 export function acceptSheet<T>(
   text: string,
@@ -24,6 +28,7 @@ export function acceptSheet<T>(
     parse: (text: string) => T[];
     maxBytes?: number;
     maxRows?: number;
+    allowEmpty?: boolean;
   },
 ): { rows?: T[]; error?: string } {
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
@@ -33,7 +38,9 @@ export function acceptSheet<T>(
     return { error: "bad headers or no usable rows" };
   }
   const rows = opts.parse(text);
-  if (!rows.length) return { error: "bad headers or no usable rows" };
+  if (!rows.length && !opts.allowEmpty) {
+    return { error: "bad headers or no usable rows" };
+  }
   if (rows.length > maxRows) return { error: "too many rows" };
   return { rows };
 }

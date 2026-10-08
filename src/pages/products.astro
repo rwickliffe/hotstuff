@@ -2,12 +2,14 @@
 export const prerender = false;
 
 import { env } from "cloudflare:workers";
+import Announcement from "../components/Announcement.astro";
 import Base from "../layouts/Base.astro";
 import DataAge from "../components/DataAge.astro";
 import DebugPanel from "../components/DebugPanel.astro";
 import HeatFilter from "../components/HeatFilter.astro";
 import HeatLegend from "../components/HeatLegend.astro";
 import ProductCard from "../components/ProductCard.astro";
+import { announcementFor } from "../domain/announcements.ts";
 import { catalogForPage } from "../domain/page-catalog.ts";
 import { debugSources, isDebug } from "../domain/debug.ts";
 import { dataAge } from "../domain/data-age.ts";
@@ -18,6 +20,7 @@ const { catalog, source } = catalogForPage(await readCatalog(env));
 const paula = byMaker(catalog.products, "Paula");
 const john = byMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);
+const announcement = announcementFor(catalog.announcements, "other");
 const debug = isDebug(Astro.url);
 ---
 
@@ -26,6 +29,8 @@ const debug = isDebug(Astro.url);
   description="The full list of Paula and Crazy John's salsas, hot sauces, cowboy candy, pickles and chow chow, with heat ratings and what is in stock."
 >
   {debug && <DebugPanel {...debugSources(catalog, source)} />}
+
+  <Announcement announcement={announcement} />
 
   <main>
     <header class="page-head">

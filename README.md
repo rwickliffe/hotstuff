@@ -39,7 +39,8 @@ the modules underneath take field names, predicates, and caps as arguments.
 
 ## Connecting the Google Sheet
 
-One spreadsheet with two tabs still drives the catalog and schedule. Paula
+One spreadsheet drives the catalog, the schedule and the announcement band.
+Paula
 edits the sheet; the Worker fetches the published CSVs on a cron (and when
 `/data` is cold or stale) and stores them in KV. Pages render from KV. If KV
 is empty, they fall back to `data/catalog-snapshot.json`. The browser never
@@ -50,9 +51,14 @@ The CSV publish URLs live in `wrangler.jsonc` under `vars`
 
 ```js
 // wrangler.jsonc → vars (not secrets)
-PRODUCTS_CSV_URL  // products tab
-EVENTS_CSV_URL    // events tab
+PRODUCTS_CSV_URL       // products tab
+EVENTS_CSV_URL         // events tab
+ANNOUNCEMENTS_CSV_URL  // announcements tab, empty until the tab exists
 ```
+
+`ANNOUNCEMENTS_CSV_URL` ships empty on purpose. An empty URL is fetched as
+"no rows", so the band never renders until the tab is published and the URL
+filled in — the feature can land before the sheet is ready for it.
 
 `MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 
@@ -111,6 +117,32 @@ their own and the next thirty show, earliest first.
 | `name` | Market or event name. |
 | `time` | Free text, for example `8:00am to 1:00pm`. Optional. |
 | `address` | Becomes a link that opens Maps. Optional, the row is fine without one. |
+
+**Announcements.** A third tab, published the same way. One row shows at a
+time, at the very top of the page; most of the time the tab is empty and
+nothing renders at all.
+
+| Column | Notes |
+|---|---|
+| `posted` | `YYYY-MM-DD`. Shown as a small date chip, and breaks ties when two rows are equally loud. |
+| `headline` | The sentence itself. A row without one is ignored. |
+| `expires` | `YYYY-MM-DD`, optional. The row shows through the end of that day in Texas, then stops on its own. Blank never expires. |
+| `link` | Optional. `#find`, `#watch`, or a full address. |
+| `link_text` | Optional wording for that link. Defaults to `More`. |
+| `priority` | Optional: `quiet`, blank, or `urgent`. See below. |
+
+`priority` is the only lever on how visible a row is, and it moves two things
+at once:
+
+| Value | Looks like | Appears on |
+|---|---|---|
+| `quiet` | Paper strip, ink text, no red | The front page |
+| blank or anything unrecognised | The chile red band | The front page |
+| `urgent` | The red band, larger type | **Every page** |
+
+Anything the sheet does not recognise is treated as an ordinary
+announcement, so a typo is quiet rather than loud. Nothing has to be deleted
+to take a notice down: set `expires`, or post a louder row.
 
 The schedule deliberately does not use Google Calendar. Its embed cannot be
 styled to match the page, and keeping a calendar alongside the sheet would
