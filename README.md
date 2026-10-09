@@ -46,8 +46,8 @@ edits the sheet; the Worker fetches the published CSVs on a cron (and when
 is empty, they fall back to `data/catalog-snapshot.json`. The browser never
 talks to Google.
 
-The CSV publish URLs live in `wrangler.jsonc` under `vars`
-(`PRODUCTS_CSV_URL`, `EVENTS_CSV_URL`). Each must end in **`output=csv`**.
+The CSV publish URLs live in `wrangler.jsonc` under `vars`, one per tab.
+Each must end in **`output=csv`**.
 
 ```js
 // wrangler.jsonc → vars (not secrets)
