@@ -217,6 +217,43 @@ def band_tear_svg(seed=611909):
             % (BAND_W, BAND_H, BAND_W, BAND_H, " ".join(d)))
 
 
+def tape_clip(seed, pitch=4.0, depth=2.2, span=56.0, jitter=0.3):
+    """The cut end of a strip of tape, as a clip-path polygon.
+
+    Tape comes off a dispenser, not out of a tear: a serrated blade leaves an
+    even zigzag at the blade's pitch. So this is a sawtooth, not the wander
+    the paper edges use, with only a hair of jitter on the points so it does
+    not read as a drawing of a triangle wave.
+
+    One profile serves every strip, because it is the same blade every time,
+    and the right end is a tooth out of phase with the left: the blade that
+    finished one piece started the next, so the two ends interlock.
+
+    Measured in px down a fixed span rather than in percentages. The blade
+    does not change pitch for a longer piece, and a strip shorter than the
+    span simply uses fewer teeth.
+    """
+    rnd = random.Random(seed)
+    count = int(span / pitch) + 1
+
+    def end(place, phase):
+        pts = []
+        for i in range(count + 1):
+            tooth = (i + phase) % 2
+            off = round(max(0.0, (depth + rnd.uniform(-jitter, jitter)) * tooth), 2)
+            pts.append((place(off), "%spx" % round(i * pitch, 1)))
+        return pts
+
+    pts = (end(lambda o: "%spx" % o, 0)
+           + list(reversed(end(lambda o: "calc(100%% - %spx)" % o, 1))))
+    return "polygon(%s)" % ", ".join("%s %s" % xy for xy in pts)
+
+
+def tape_length(seed, span):
+    """How much tape got torn off. Nobody measures it twice the same."""
+    return random.Random(seed).randint(*span)
+
+
 def _stains(seed, blotches=(5, 8), scuffs=(0, 2)):
     """A random scatter of blotches and scuffs, as a CSS background stack."""
     rnd = random.Random(seed)
@@ -265,6 +302,21 @@ def build():
              "  --tear-band: %s;" % _uri(band_tear_svg())]
     lines += ["  --tear-%s: %s;" % (n, _uri(torn_edge_svg(**kw)))
               for n, kw in tears]
+    lines.append("")
+    # One torn end for all of them, and a length per strip: a full-width
+    # print takes a longer piece than one of the small ones, and no two
+    # pieces off the roll are quite the same.
+    BIG, SMALL = (112, 164), (86, 128)
+    tapes = [
+        ("booth-a", 2201, BIG), ("jars-a", 9140, SMALL),
+        ("jars-b", 4417, SMALL), ("sauces-a", 7705, SMALL),
+        ("sauces-b", 1338, SMALL), ("story-a", 6052, BIG),
+        ("story-b", 8864, BIG),
+    ]
+    lines.append("  --tape-end: %s;" % tape_clip(4821))
+    lines += ["  --tape-%s-len: %dpx;" % (n, tape_length(sd, sp))
+              for n, sd, sp in tapes]
+
     lines.append("")
     lines += ["  --stain-%s:\n%s%s;" % (n, VALUE_INDENT, _stains(s)) for n, s in
               [("booth", 4102), ("jars", 7734), ("sauces", 2915), ("story", 6608)]]
