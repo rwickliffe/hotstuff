@@ -60,7 +60,7 @@ export function videoList(rows: Record<string, string>[] | undefined): Video[] {
 }
 
 /** What the front page shows: whatever is marked featured, else the newest. */
-export function recentVideos(
+export function featuredVideos(
   rows: Record<string, string>[] | undefined,
 ): Video[] {
   return selectOrFallback(videoList(rows), (v) => v.featured, VIDEOS_MAX);

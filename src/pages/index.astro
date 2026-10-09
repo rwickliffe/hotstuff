@@ -15,7 +15,7 @@ import { catalogForPage } from "../domain/page-catalog.ts";
 import { debugSources, isDebug } from "../domain/debug.ts";
 import { dataAge } from "../domain/data-age.ts";
 import { featuredByMaker } from "../domain/products.ts";
-import { recentVideos } from "../domain/videos.ts";
+import { featuredVideos } from "../domain/videos.ts";
 import { readCatalog } from "../worker/catalog.ts";
 
 const { catalog, source } = catalogForPage(await readCatalog(env));
@@ -23,7 +23,7 @@ const paula = featuredByMaker(catalog.products, "Paula");
 const john = featuredByMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);
 const announcement = announcementFor(catalog.announcements, "home");
-const videos = recentVideos(catalog.videos);
+const videos = featuredVideos(catalog.videos);
 const debug = isDebug(Astro.url);
 ---
 

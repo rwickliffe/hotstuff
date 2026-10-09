@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  recentVideos,
+  featuredVideos,
   thumbnailUrl,
   videoList,
   watchUrl,
@@ -55,7 +55,7 @@ test("newest first, undated rows last", () => {
 });
 
 test("the front page takes the featured ones when there are any", () => {
-  const titles = recentVideos([
+  const titles = featuredVideos([
     row({ title: "Plain", posted: "2026-10-05" }),
     row({ title: "Picked", posted: "2026-08-01", featured: "yes" }),
   ]).map((v) => v.title);
@@ -66,7 +66,7 @@ test("with nothing featured it falls back to the newest, capped", () => {
   const rows = Array.from({ length: 8 }, (_, i) =>
     row({ title: `Video ${i}`, posted: `2026-10-0${i + 1}` }),
   );
-  const picked = recentVideos(rows);
+  const picked = featuredVideos(rows);
   assert.equal(picked.length, 3);
   assert.equal(picked[0].title, "Video 7");
 });
