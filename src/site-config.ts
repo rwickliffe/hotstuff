@@ -56,5 +56,6 @@ export const SITE = {
 
 export const MARKET_TZ = "America/Chicago";
 export const FEATURED_MAX = 6;
-export const CACHEABLE_PATHS = ["/", "/products"];
+export const VIDEOS_MAX = 3;
+export const CACHEABLE_PATHS = ["/", "/products", "/videos"];
 export const DEBUG_PARAM = "debug";
