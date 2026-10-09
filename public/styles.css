@@ -303,11 +303,16 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
    heading made its top edge depend on how many lines the lede wrapped to, so
    at some widths it rose above the section and `overflow: hidden` sliced the
    camera in half. Anchored at the section's top edge it is flush with the
-   barbed wire at every width, and only ever runs on behind the cards. */
+   barbed wire at every width, and only ever runs on behind the cards.
+
+   The right offset lands its edge on the shell's content edge, so it lines up
+   with the cards and the text rather than bleeding off the viewport: past
+   1180px that is the centring margin plus the gutter, and below it the max()
+   falls back to the gutter alone. */
 .watch-lens {
   position: absolute;
   top: 0;
-  right: -46px;
+  right: max(var(--pad), calc((100% - 1180px) / 2 + var(--pad)));
   width: 352px;
   height: auto;
   opacity: 0.46;
@@ -323,7 +328,7 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 }
 
 @media (max-width: 760px) {
-  .watch-lens { width: 236px; right: -64px; opacity: 0.3; }
+  .watch-lens { width: 236px; opacity: 0.3; }
 }
 
 .reels {
@@ -892,20 +897,11 @@ body::before {
 .strip::before, .story::before { top: -7px; }
 .strip::after,  .story::after  { bottom: -7px; }
 
-/* --- flourishes. All decorative, all aria-hidden, none affect layout. --- */
+/* --- flourishes. All decorative, all aria-hidden, none affect layout.
+   Each one takes currentColor from the line it sits on, so it is the same
+   red as its heading in both themes rather than a second red beside it. --- */
 
 .flourish { display: inline-block; vertical-align: middle; flex: none; }
-
-/* Scythe and cleaver sit at the end of a line of body copy, so they take
-   their colour from it and stay legible in both themes. */
-/* A tall glyph inside a paragraph stretches the line box it lands on, which
-   knocked the leading out. These sit beside the whole block instead. */
-.lede-row { display: flex; align-items: center; gap: 20px; }
-.lede-row .lede { margin-top: 0; }
-
-@media (max-width: 620px) {
-  .lede-row { flex-direction: column; align-items: flex-start; gap: 6px; }
-}
 
 /* A small torn print at the head of each maker's section, same treatment as
    the booth photo. The heading block keeps the left column; the print spans
@@ -922,7 +918,7 @@ body::before {
 
 #jars .sec-head > .eyebrow,  #sauces .sec-head > .eyebrow  { grid-column: 1; grid-row: 1; }
 #jars .sec-head > h2,        #sauces .sec-head > h2        { grid-column: 1; grid-row: 2; }
-#jars .sec-head > .lede-row, #sauces .sec-head > .lede-row { grid-column: 1; grid-row: 3; }
+#jars .sec-head > .lede,     #sauces .sec-head > .lede     { grid-column: 1; grid-row: 3; }
 
 #jars .sec-head > .snapshot, #sauces .sec-head > .snapshot {
   grid-column: 2; grid-row: 1 / span 3; align-self: center;
@@ -967,9 +963,11 @@ body::before {
   .snapshot-sm .snapshot-paper { padding: 7px 7px 12px; }
 }
 
+/* Sized against the maker name it follows, the way the spatter is sized
+   against "What it costs": a mark on the line, not a second illustration
+   competing with the torn print beside it. */
 .flourish-blade {
-  width: 84px; height: 56px;
-  color: var(--chile); opacity: 0.85;
+  width: 54px; height: 36px; margin-left: 12px;
 }
 
 .flourish-blade .edge { fill: currentColor; }
@@ -981,7 +979,7 @@ body::before {
    punched through it, with a chipped rim catching the light. */
 .flourish-holes { width: 118px; height: 52px; margin-left: 18px; }
 
-.flourish-spatter { width: 58px; height: 24px; margin-left: 12px; color: var(--chile); }
+.flourish-spatter { width: 58px; height: 24px; margin-left: 12px; }
 .flourish-spatter .drop { fill: currentColor; }
 .flourish-holes .hole { fill: #050403; }
 .flourish-holes .rim { fill: none; stroke: rgba(236,222,200,0.38); stroke-width: 1.3; }

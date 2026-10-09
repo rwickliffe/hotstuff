@@ -105,13 +105,8 @@ const debug = isDebug(Astro.url);
     <section id="jars">
       <div class="shell">
         <div class="sec-head">
-          <p class="eyebrow maker">Paula's</p>
-          <h2>Salsas, pickles, cowboy candy &amp; more</h2>
-          <div class="lede-row">
-            <p class="lede">
-              Paula's side of the table. Same garden, gentler intentions.
-              Mostly.
-            </p>
+          <p class="eyebrow maker">
+            Paula's
             <svg
               class="flourish flourish-blade"
               viewBox="0 0 84 56"
@@ -122,7 +117,11 @@ const debug = isDebug(Astro.url);
               <circle class="hole" cx="15" cy="17" r="3"></circle>
               <path class="grip" d="M52 25 H76"></path>
             </svg>
-          </div>
+          </p>
+          <h2>Salsas, pickles, cowboy candy &amp; more</h2>
+          <p class="lede">
+            Paula's side of the table. Same garden, gentler intentions. Mostly.
+          </p>
           <span class="snapshot snapshot-sm">
             <span class="snapshot-paper">
               <img
@@ -152,15 +151,8 @@ const debug = isDebug(Astro.url);
     <section id="sauces" style="background: var(--paper-sunk);">
       <div class="shell">
         <div class="sec-head">
-          <p class="eyebrow maker">Crazy John's</p>
-          <h2>The hot sauces</h2>
-          <div class="lede-row">
-            <p class="lede">
-              Crazy John builds these one small batch at a time, out in the
-              shed, and they climb from friendly to genuinely reckless. The
-              rating is his own, it goes well past the reaper, and he does not
-              grade on a curve.
-            </p>
+          <p class="eyebrow maker">
+            Crazy John's
             <svg
               class="flourish flourish-blade"
               viewBox="0 0 84 56"
@@ -174,7 +166,14 @@ const debug = isDebug(Astro.url);
               <path class="haft" d="M52 12 L60 52"></path>
               <path class="haft" d="M56 34 L68 29"></path>
             </svg>
-          </div>
+          </p>
+          <h2>The hot sauces</h2>
+          <p class="lede">
+            Crazy John builds these one small batch at a time, out in the shed,
+            and they climb from friendly to genuinely reckless. The rating is
+            his own, it goes well past the reaper, and he does not grade on a
+            curve.
+          </p>
           <span class="snapshot snapshot-sm">
             <span class="snapshot-paper">
               <img
@@ -366,11 +365,7 @@ const debug = isDebug(Astro.url);
           <div class="sec-head watch-head">
             <p class="eyebrow">The tapes</p>
             <h2>Watch it happen</h2>
-            <p class="lede">
-              Paula and John film these themselves. No narrator, no music,
-              nobody off camera telling them when to stop &mdash; just the
-              kitchen and whatever is going in the jar.
-            </p>
+            <p class="lede">Filmed by the people doing the cooking.</p>
           </div>
           <div class="reels">
             {videos.map((v) => (
@@ -379,7 +374,7 @@ const debug = isDebug(Astro.url);
           </div>
           <p class="see-all-row">
             <a class="see-all" href="/videos">
-              Every one of them
+              See everything
             </a>
           </p>
         </div>
