@@ -8,6 +8,8 @@ export type SheetCache<T extends Record<string, unknown[]>> = T & {
 
 export type SourceSpec<T> = {
   url: string;
+  /** A blank url is "nothing to fetch" (no rows), not a fault. */
+  optional?: boolean;
   validate: (text: string) => { rows?: T[]; error?: string };
 };
 
@@ -15,7 +17,7 @@ async function fetchAndValidate<T>(
   name: string,
   spec: SourceSpec<T>,
 ): Promise<{ rows?: T[]; error?: string }> {
-  if (!spec.url) return { error: "url empty" };
+  if (!spec.url) return spec.optional ? { rows: [] } : { error: "url empty" };
   let res: Response;
   try {
     res = await fetch(spec.url, {

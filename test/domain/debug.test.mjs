@@ -16,13 +16,16 @@ test("debugSources reports live KV row counts and lastError", () => {
   const d = debugSources({
     products: [{ name: "A" }, { name: "B" }],
     events: [],
+    announcements: [],
     fetchedAt: "2026-09-15T12:00:00Z",
-    lastError: { events: "too large" },
+    lastError: { events: "too large", announcements: "http 404" },
   });
   assert.equal(d.products.state, "live KV");
   assert.equal(d.products.rows, 2);
   assert.equal(d.events.state, "empty");
   assert.match(d.events.note, /lastError: too large/);
+  assert.equal(d.announcements.state, "empty");
+  assert.match(d.announcements.note, /lastError: http 404/);
   assert.match(d.products.note, /fetchedAt 2026-09-15T12:00:00Z/);
 });
 
@@ -31,6 +34,7 @@ test("debugSources names snapshot when KV was empty", () => {
     {
       products: [{ name: "A" }],
       events: [{ name: "M" }],
+      announcements: [{ headline: "H" }],
       fetchedAt: null,
       lastError: null,
     },
@@ -38,4 +42,5 @@ test("debugSources names snapshot when KV was empty", () => {
   );
   assert.equal(d.products.state, "snapshot");
   assert.equal(d.events.state, "snapshot");
+  assert.equal(d.announcements.state, "snapshot");
 });

@@ -1,4 +1,4 @@
-// This business's two sheets: headers, row rules, KV key, and stale window.
+// This business's three sheets: headers, row rules, KV key, and stale window.
 // The fetch/merge engine is src/lib/sheet-cache.ts; the size/header guard is
 // src/lib/csv-guard.ts.
 
@@ -75,6 +75,7 @@ export function refreshData(env: Env): Promise<CatalogPayload> {
     events: { url: env.EVENTS_CSV_URL, validate: eventRows },
     announcements: {
       url: env.ANNOUNCEMENTS_CSV_URL,
+      optional: true,
       validate: announcementRows,
     },
   });

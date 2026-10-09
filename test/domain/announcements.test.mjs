@@ -19,7 +19,7 @@ test("blank priority is an ordinary announcement", () => {
   assert.equal(announcementFor([row({})], "home", now).priority, "normal");
 });
 
-test("an unrecognised priority is quiet-by-default, not loud", () => {
+test("an unrecognised priority falls back to normal, not urgent", () => {
   const a = announcementFor([row({ priority: "URGENT!!" })], "home", now);
   assert.equal(a.priority, "normal");
 });

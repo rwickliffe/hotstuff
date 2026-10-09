@@ -56,9 +56,10 @@ EVENTS_CSV_URL         // events tab
 ANNOUNCEMENTS_CSV_URL  // announcements tab, empty until the tab exists
 ```
 
-`ANNOUNCEMENTS_CSV_URL` ships empty on purpose. An empty URL is fetched as
-"no rows", so the band never renders until the tab is published and the URL
-filled in — the feature can land before the sheet is ready for it.
+`ANNOUNCEMENTS_CSV_URL` ships empty on purpose. It is the one optional
+source: a blank URL means "no rows" with no error, so the band never renders
+until the tab is published and the URL filled in. Products and events stay
+required, and a blank URL for either is reported as `url empty`.
 
 `MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 
@@ -70,7 +71,7 @@ const LIST_ENABLED = false; // true only on their Resend Segment
 The sheet already exists. There is no CSV in this repo to import.
 Publish each tab with File, Share, Publish to web, picking that tab by name
 and CSV as the format, with "Automatically republish when changes are made"
-left ticked. Two tabs means two addresses. Each must end in **`output=csv`**, like this:
+left ticked. One address per tab. Each must end in **`output=csv`**, like this:
 
 ```
 https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=685501268&single=true&output=csv
@@ -282,7 +283,7 @@ with `astro build`, and runs `prettier --check` on JS/TS/Astro/JSON. It does
 not format Python or this `check` script. Nothing touches the network.
 
 ```bash
-node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/lib/json.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/domain/debug.test.mjs test/domain/data-age.test.mjs test/lib/email-address.test.mjs test/lib/html.test.mjs test/worker/crypto.test.mjs test/worker/tokens.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
+node --test test/lib/*.test.mjs test/domain/*.test.mjs test/worker/*.test.mjs
 npm run types                                               # wrangler Env types
 npm run check:types                                         # tsc + astro check
 npx prettier --check "**/*.{js,ts,mjs,astro,json}"          # JS/TS/Astro/JSON
