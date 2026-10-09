@@ -1004,6 +1004,13 @@ body::before {
   /* Tight and dark: a print lying on paper casts a hard little shadow,
      not the soft halo of something floating. */
   filter: drop-shadow(1px 2px 1px rgba(0,0,0,0.6));
+  /* Where the tape lands, read by the rules further down. The transform
+     above already makes this the containing block for them, so neither the
+     print nor the strips need a position of their own. Overhang is capped
+     by the page gutter, so tape on a print against the edge of the page
+     never makes it scroll sideways. */
+  --tape-edge: -18px;
+  --tape-out: max(-50px, calc(12px - var(--pad)));
 }
 
 .snapshot-paper {
@@ -1043,6 +1050,85 @@ body::before {
 .story .snapshot-story .snapshot-paper::after {
   background: var(--stain-story);
 }
+
+/* Clear tape holding each print to the page. On .snapshot rather than
+   .snapshot-paper: the paper is masked to its own torn outline, which would
+   clip the half of the tape that overhangs it. Translucent, with a bright
+   edge and a darker one so it reads as film, and ragged ends so it reads as
+   torn off a roll. Decorative only.
+
+   Where it goes follows the tear, which tools/make-assets.py sets per print.
+   Tape never sits on a corner that has been ripped away (it would hang in
+   the air) or on one where both edges are torn, and a torn edge gets none.
+   Each print keeps its own spot, count and angle so they do not read as one
+   sticker repeated. */
+.snapshot-sm {
+  --tape-edge: -14px;
+  --tape-out: max(-40px, calc(12px - var(--pad)));
+}
+
+/* Off by default, so a print added later with no rule of its own gets no
+   tape rather than two unplaced strips across its corner. */
+.snapshot::before, .snapshot::after {
+  content: ""; display: none; position: absolute; z-index: 1;
+  width: 140px; height: 48px; pointer-events: none;
+  background-image:
+    linear-gradient(100deg, transparent 38%, rgba(255,255,255,0.45) 44%,
+      rgba(255,255,255,0.12) 50%, transparent 56%),
+    linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.16) 18%,
+      rgba(255,255,255,0.16) 82%, rgba(60,50,35,0.16));
+  clip-path: polygon(0 0, 4% 14%, 0 29%, 5% 46%, 1% 63%, 4% 80%, 0 100%,
+    100% 100%, 96% 83%, 100% 67%, 95% 50%, 99% 33%, 96% 16%, 100% 0);
+}
+
+.snapshot-sm::before, .snapshot-sm::after { width: 112px; height: 38px; }
+
+/* Booth: right and bottom torn, bottom-left ripped off. The top edge is
+   clean, so one strip across the middle of it. */
+#find .snapshot::before {
+  display: block;
+  top: var(--tape-edge); left: calc(50% - 70px); transform: rotate(-2.5deg);
+}
+
+/* Jars: top and right torn, top-right ripped off. Only the two bottom
+   corners are clean enough to take tape. */
+#jars .snapshot::before, #jars .snapshot::after { display: block; }
+#jars .snapshot::before {
+  bottom: var(--tape-edge); left: var(--tape-out); transform: rotate(36deg);
+}
+#jars .snapshot::after {
+  bottom: -8px; right: var(--tape-out); transform: rotate(-44deg);
+}
+
+/* Sauces: right, bottom and left torn, bottom-right ripped off. The top is
+   clean, so both top corners. */
+#sauces .snapshot::before, #sauces .snapshot::after { display: block; }
+#sauces .snapshot::before {
+  top: -8px; left: var(--tape-out); transform: rotate(-31deg);
+}
+#sauces .snapshot::after {
+  top: var(--tape-edge); right: calc(var(--tape-out) - 4px); transform: rotate(40deg);
+}
+
+/* Story: bottom and left torn, top-left ripped off. The right edge is
+   clean, so the two right-hand corners. */
+/* Light film over a near-black ground shows far more than it does on paper,
+   so it is held back here to stay as faint as the others. */
+.snapshot-story::before, .snapshot-story::after {
+  display: block; opacity: 0.3;
+}
+.snapshot-story::before {
+  top: var(--tape-edge); right: var(--tape-out); transform: rotate(35deg);
+}
+.snapshot-story::after {
+  bottom: -4px; right: calc(var(--tape-out) + 4px); transform: rotate(-39deg);
+}
+
+/* In dark the whole page is the near-black ground the story print sits on
+   in both themes, so every strip needs the same holding back, not just
+   that one. */
+:root[data-theme="dark"] .snapshot::before,
+:root[data-theme="dark"] .snapshot::after { opacity: 0.3; }
 
 @media (max-width: 800px) { .snapshot { transform: rotate(1.4deg); } }
 
