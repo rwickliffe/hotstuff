@@ -22,8 +22,16 @@ export type Announcement = {
 /** Loudest first. The order is the tie-breaker, so it has to be explicit. */
 const RANK: Record<Priority, number> = { urgent: 2, normal: 1, quiet: 0 };
 
-/** `urgent` is the only one that follows you off the home page. */
-const EVERYWHERE: Priority = "urgent";
+/**
+ * How far a row is allowed to travel. A page asks for the reach it offers:
+ * the home page takes anything, every other page takes only what travels.
+ */
+export type Reach = "everywhere" | "home";
+
+/** `urgent` is the only priority that follows you off the home page. */
+function reachOf(priority: Priority): Reach {
+  return priority === "urgent" ? "everywhere" : "home";
+}
 
 function priorityOf(raw: string | undefined): Priority {
   const v = (raw || "").trim().toLowerCase();
@@ -52,13 +60,16 @@ function live(
 }
 
 /**
- * The row to show on `page`, or null. Loudest unexpired row wins; ties go to
- * the most recently posted, so pushing a second urgent row replaces the first
- * without anyone having to delete it.
+ * The row to show, or null. `reach` is what the calling page accepts: `home`
+ * on the front page, which takes every live row, and `everywhere` on the
+ * rest, which takes only the ones that travel.
+ *
+ * Loudest unexpired row wins; ties go to the most recently posted, so pushing
+ * a second urgent row replaces the first without anyone deleting anything.
  */
 export function announcementFor(
   rows: Record<string, string>[] | undefined,
-  page: "home" | "other",
+  reach: Reach,
   now = Date.now(),
 ): Announcement | null {
   const today = calendarDay(new Date(now), MARKET_TZ);
@@ -71,7 +82,7 @@ export function announcementFor(
       linkText: (r.link_text || "").trim() || "More",
       priority: priorityOf(r.priority),
     }))
-    .filter((a) => page === "home" || a.priority === EVERYWHERE);
+    .filter((a) => reach === "home" || reachOf(a.priority) === "everywhere");
 
   if (!showing.length) return null;
   showing.sort(

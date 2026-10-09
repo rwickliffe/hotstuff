@@ -20,7 +20,7 @@ const { catalog, source } = catalogForPage(await readCatalog(env));
 const paula = byMaker(catalog.products, "Paula");
 const john = byMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);
-const announcement = announcementFor(catalog.announcements, "other");
+const announcement = announcementFor(catalog.announcements, "everywhere");
 const debug = isDebug(Astro.url);
 ---
 

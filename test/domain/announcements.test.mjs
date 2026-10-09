@@ -61,13 +61,13 @@ test("at equal priority the newest wins", () => {
   assert.equal(a.headline, "Newer");
 });
 
-test("only urgent follows you off the home page", () => {
+test("only urgent reaches pages beyond home", () => {
   const rows = [row({ headline: "Normal" })];
   assert.equal(announcementFor(rows, "home", now).headline, "Normal");
-  assert.equal(announcementFor(rows, "other", now), null);
+  assert.equal(announcementFor(rows, "everywhere", now), null);
 
   const loud = [row({ headline: "Urgent", priority: "urgent" })];
-  assert.equal(announcementFor(loud, "other", now).headline, "Urgent");
+  assert.equal(announcementFor(loud, "everywhere", now).headline, "Urgent");
 });
 
 test("a past expiry date drops the row", () => {
