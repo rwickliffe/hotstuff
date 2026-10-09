@@ -1063,8 +1063,7 @@ body::before {
 /* Clear tape holding each print to the page. On .snapshot rather than
    .snapshot-paper: the paper is masked to its own torn outline, which would
    clip the half of the tape that overhangs it. Translucent, with a bright
-   edge and a darker one so it reads as film, and ragged ends so it reads as
-   torn off a roll. Decorative only.
+   edge and a darker one so it reads as film. Decorative only.
 
    Where it goes follows the tear, which tools/make-assets.py sets per print.
    Tape never sits on a corner that has been ripped away (it would hang in

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Regenerate the procedural CSS values in styles.css.
 
-Everything this writes is a *value*: two texture tiles, four torn-print mask
-outlines and four scatters of stains, all emitted as custom properties inside
-one marked block. Selectors stay in the stylesheet, so renaming a class can
+Everything this writes is a *value*: two texture tiles, five torn edges (the
+four prints and the announcement band), the dispenser-cut end of a strip of
+tape and a length for each strip, and four scatters of stains, all emitted as
+custom properties inside one marked block. Selectors stay in the stylesheet, so renaming a class can
 never silently disconnect the generated art from the page.
 
     tools/make-assets.py            rewrite the block in styles.css
