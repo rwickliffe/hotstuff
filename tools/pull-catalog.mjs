@@ -13,6 +13,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { SHEET_NAMES } from "../src/worker/catalog.ts";
+
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const snapOut = path.join(root, "data/catalog-snapshot.json");
 const dataUrl =
@@ -23,28 +25,17 @@ if (!res.ok) {
   console.error(`FAIL: ${dataUrl} → HTTP ${res.status}`);
   process.exit(1);
 }
-/** @type {{
- *   products?: Record<string, string>[],
- *   events?: Record<string, string>[],
- *   announcements?: Record<string, string>[],
- *   fetchedAt?: string | null,
- *   lastError?: { products?: string, events?: string } | null
- * }} */
 const data = await res.json();
-const products = Array.isArray(data.products) ? data.products : [];
-const events = Array.isArray(data.events) ? data.events : [];
-const announcements = Array.isArray(data.announcements)
-  ? data.announcements
-  : [];
-if (!products.length) {
+const datasets = Object.fromEntries(
+  SHEET_NAMES.map((n) => [n, Array.isArray(data[n]) ? data[n] : []]),
+);
+if (!datasets.products.length) {
   console.error("FAIL: /data returned no products");
   process.exit(1);
 }
 
 const snapshot = {
-  products,
-  events,
-  announcements,
+  ...datasets,
   fetchedAt: typeof data.fetchedAt === "string" ? data.fetchedAt : null,
   lastError:
     data.lastError && typeof data.lastError === "object"
@@ -53,5 +44,5 @@ const snapshot = {
 };
 fs.writeFileSync(snapOut, JSON.stringify(snapshot, null, 2) + "\n");
 console.log(
-  `wrote ${products.length} products, ${events.length} events to data/catalog-snapshot.json from ${dataUrl}`,
+  `wrote ${SHEET_NAMES.map((n) => `${datasets[n].length} ${n}`).join(", ")} to data/catalog-snapshot.json from ${dataUrl}`,
 );

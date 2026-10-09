@@ -17,6 +17,7 @@ import {
   productRows,
   refreshData,
   refreshMode,
+  videoRows,
 } from "../../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -144,6 +145,17 @@ test("refreshData merges on partial failure", async () => {
 test("announcements: headers only is a quiet success, a missing column is not", () => {
   assert.deepEqual(announcementRows("posted,headline\n"), { rows: [] });
   assert.ok(announcementRows("posted,text\n2026-10-01,Hi\n").error);
+});
+
+test("videos: a title without a usable address is dropped", () => {
+  const out = videoRows(
+    "video,title\nnonsense,Hot sauce\nhttps://youtu.be/dQw4w9WgXcQ,Real\n",
+  );
+  assert.deepEqual(
+    out.rows?.map((r) => r.title),
+    ["Real"],
+  );
+  assert.deepEqual(videoRows("video,title\n"), { rows: [] });
 });
 
 test("a blank URL is a quiet skip for the optional sheets only", async () => {

@@ -30,8 +30,7 @@ export function youtubeId(raw: string | undefined): string | null {
   const s = (raw || "").trim();
   if (!s) return null;
   if (BARE_ID.test(s)) return s;
-  const m = s.match(IN_URL);
-  return m ? m[1] : null;
+  return s.match(IN_URL)?.[1] ?? null;
 }
 
 /** The poster frame. `hqdefault` is the largest size that always exists. */

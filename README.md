@@ -40,7 +40,8 @@ the modules underneath take field names, predicates, and caps as arguments.
 
 ## Connecting the Google Sheet
 
-One spreadsheet drives the catalog, the schedule and the announcement band.
+One spreadsheet drives the catalog, the schedule, the announcement band and
+the how-to videos.
 Paula
 edits the sheet; the Worker fetches the published CSVs on a cron (and when
 `/data` is cold or stale) and stores them in KV. Pages render from KV. If KV

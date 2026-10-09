@@ -1,4 +1,4 @@
-// This business's three sheets: headers, row rules, KV key, and stale window.
+// This business's four sheets: headers, row rules, KV key, and stale window.
 // The fetch/merge engine is src/lib/sheet-cache.ts; the size/header guard is
 // src/lib/csv-guard.ts.
 
@@ -10,6 +10,7 @@ import {
 } from "../lib/sheet-cache.ts";
 import { acceptSheet } from "../lib/csv-guard.ts";
 import { csvToObjects, normalizeDay } from "../lib/csv.js";
+import { youtubeId } from "../domain/videos.ts";
 
 export const CATALOG_KEY = "catalog";
 export const CATALOG_STALE_MS = 60 * 60 * 1000;
@@ -20,7 +21,7 @@ const EVENT_HEADERS = ["date", "name"];
 // still validates, and every row is then an ordinary one that never expires.
 const ANNOUNCEMENT_HEADERS = ["posted", "headline"];
 // `posted`, `blurb` and `featured` are optional. `video` takes a YouTube id
-// or any address they paste; the domain layer is what reads it.
+// or any address they paste; a row with no id in it is dropped here.
 const VIDEO_HEADERS = ["video", "title"];
 /** Every sheet in the catalog. The ?debug panel walks this, so a new sheet
  *  shows up there without anyone remembering to add it. */
@@ -71,7 +72,8 @@ export function eventRows(text: string) {
 export function videoRows(text: string) {
   return acceptSheet(text, {
     requiredHeaders: VIDEO_HEADERS,
-    parse: (t) => csvToObjects(t).filter((r) => r.title?.trim()),
+    parse: (t) =>
+      csvToObjects(t).filter((r) => r.title?.trim() && youtubeId(r.video)),
     allowEmpty: true,
   });
 }

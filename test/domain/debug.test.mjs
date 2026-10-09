@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { debugSources, isDebug } from "../../src/domain/debug.ts";
+import { DEBUG_PARAM } from "../../src/site-config.ts";
 
 const at = (d, name) => d.sheets.find((s) => s.name === name);
 
-test("isDebug reads the ?debug flag", () => {
-  assert.equal(isDebug(new URL("https://x.test/?debug")), true);
-  assert.equal(isDebug(new URL("https://x.test/")), false);
+test("isDebug reads the configured param, not a hardcoded name", () => {
+  const flag = (query) => isDebug(new URL("https://hotstuff.example/" + query));
+  assert.equal(flag(""), false);
+  assert.equal(flag("?" + DEBUG_PARAM), true);
+  assert.equal(flag("?" + DEBUG_PARAM + "=1"), true);
+  assert.equal(flag("?ask=Chow%20Chow"), false);
 });
 
 test("debugSources reports live KV row counts and lastError", () => {
