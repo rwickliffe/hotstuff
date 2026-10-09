@@ -11,6 +11,7 @@ import {
   sheetHeadersOk,
 } from "../../src/lib/csv-guard.ts";
 import {
+  announcementRows,
   emptyCatalog,
   eventRows,
   productRows,
@@ -105,6 +106,7 @@ test("refreshData merges on partial failure", async () => {
   const env = {
     PRODUCTS_CSV_URL: "https://example.test/products.csv",
     EVENTS_CSV_URL: "https://example.test/events.csv",
+    ANNOUNCEMENTS_CSV_URL: "",
     CATALOG: {
       async get(key, type) {
         const v = store.get(key);
@@ -131,7 +133,28 @@ test("refreshData merges on partial failure", async () => {
     assert.ok(next.events.length >= 3);
     assert.ok(next.lastError?.products);
     assert.equal(next.lastError?.events, undefined);
+    assert.equal(next.lastError?.announcements, undefined);
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("announcements: headers only is a quiet success, a missing column is not", () => {
+  assert.deepEqual(announcementRows("posted,headline\n"), { rows: [] });
+  assert.ok(announcementRows("posted,text\n2026-10-01,Hi\n").error);
+});
+
+test("a blank URL is a quiet skip for announcements only", async () => {
+  const kv = { get: async () => null, put: async () => {} };
+  const next = await refreshData({
+    PRODUCTS_CSV_URL: "",
+    EVENTS_CSV_URL: "",
+    ANNOUNCEMENTS_CSV_URL: "",
+    CATALOG: kv,
+  });
+  assert.deepEqual(next.announcements, []);
+  assert.deepEqual(next.lastError, {
+    products: "url empty",
+    events: "url empty",
+  });
 });

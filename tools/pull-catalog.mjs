@@ -26,12 +26,16 @@ if (!res.ok) {
 /** @type {{
  *   products?: Record<string, string>[],
  *   events?: Record<string, string>[],
+ *   announcements?: Record<string, string>[],
  *   fetchedAt?: string | null,
  *   lastError?: { products?: string, events?: string } | null
  * }} */
 const data = await res.json();
 const products = Array.isArray(data.products) ? data.products : [];
 const events = Array.isArray(data.events) ? data.events : [];
+const announcements = Array.isArray(data.announcements)
+  ? data.announcements
+  : [];
 if (!products.length) {
   console.error("FAIL: /data returned no products");
   process.exit(1);
@@ -40,6 +44,7 @@ if (!products.length) {
 const snapshot = {
   products,
   events,
+  announcements,
   fetchedAt: typeof data.fetchedAt === "string" ? data.fetchedAt : null,
   lastError:
     data.lastError && typeof data.lastError === "object"

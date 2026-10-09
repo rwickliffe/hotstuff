@@ -1,27 +1,12 @@
 ---
 import { normalizeDay, parseDay } from "../lib/csv.js";
+import { shortMonth, shortWeekday } from "../lib/date-format.ts";
 import { calendarDay } from "../lib/timezone.ts";
 import { MARKET_TZ } from "../site-config.ts";
 
 interface Props {
   events: Record<string, string>[];
 }
-
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const today = calendarDay(new Date(), MARKET_TZ);
 
@@ -47,7 +32,7 @@ const upcoming = Astro.props.events
     upcoming.map((e) => (
       <div class="cal-row">
         <span class="cal-when">
-          {DAYS[e.when.getDay()]} {e.when.getDate()} {MONTHS[e.when.getMonth()]}
+          {shortWeekday(e.when)} {e.when.getDate()} {shortMonth(e.when)}
         </span>
         <span class="cal-what">
           {e.row.name || ""}

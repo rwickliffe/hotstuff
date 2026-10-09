@@ -8,10 +8,11 @@ interface Source {
 interface Props {
   products: Source;
   events: Source;
+  announcements: Source;
   worker: Source;
 }
 
-const { products, events, worker } = Astro.props;
+const { products, events, announcements, worker } = Astro.props;
 
 function tone(state: string) {
   return /^live/.test(state) || state === "same-origin" ? "#5CB84A" : "#E8A87C";
@@ -41,6 +42,16 @@ function rows(source: Source) {
     {rows(events)}
     {events.note ? (
       <div style="color:#B0A296;margin-top:2px">{events.note}</div>
+    ) : null}
+  </div>
+  <div style="margin-top:6px">
+    <b>announcements</b>{" "}
+    <span style={`color:${tone(announcements.state)}`}>
+      {announcements.state}
+    </span>
+    {rows(announcements)}
+    {announcements.note ? (
+      <div style="color:#B0A296;margin-top:2px">{announcements.note}</div>
     ) : null}
   </div>
   <div style="margin-top:6px">

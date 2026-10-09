@@ -196,6 +196,27 @@ def torn_edge_svg(seed=20260906, torn=("right", "bottom"), corner="bl",
     return _svg(d)
 
 
+BAND_W, BAND_H = 400, 20
+
+
+def band_tear_svg(seed=611909):
+    """The ragged bottom of the announcement band.
+
+    Same wander as a photo's bottom edge, in a short strip that is stretched
+    across the band's width. The baseline sits part way down so the rip bites
+    up into the band as well as hanging below it.
+    """
+    rnd = random.Random(seed)
+    pts = _wander(rnd, BAND_W, amp=9.0, notch=0.018, deep=(0.3, 0.55), base=7.5)
+    d = ["M0 0", "H%d" % BAND_W]
+    d += ["L%s %s" % (t, min(o, BAND_H)) for t, o in reversed(pts)]
+    d.append("H0")
+    return ("<svg xmlns='http://www.w3.org/2000/svg' width='%d' height='%d' "
+            "viewBox='0 0 %d %d' preserveAspectRatio='none'>"
+            "<path fill='#000' d='%s Z'/></svg>"
+            % (BAND_W, BAND_H, BAND_W, BAND_H, " ".join(d)))
+
+
 def _stains(seed, blotches=(5, 8), scuffs=(0, 2)):
     """A random scatter of blotches and scuffs, as a CSS background stack."""
     rnd = random.Random(seed)
@@ -240,7 +261,8 @@ def build():
     ]
     lines = [OPEN, ":root {",
              "  --grain: %s;" % _uri(GRAIN_SVG),
-             "  --wire: %s;" % _uri(WIRE_SVG)]
+             "  --wire: %s;" % _uri(WIRE_SVG),
+             "  --tear-band: %s;" % _uri(band_tear_svg())]
     lines += ["  --tear-%s: %s;" % (n, _uri(torn_edge_svg(**kw)))
               for n, kw in tears]
     lines.append("")

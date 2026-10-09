@@ -39,20 +39,27 @@ the modules underneath take field names, predicates, and caps as arguments.
 
 ## Connecting the Google Sheet
 
-One spreadsheet with two tabs still drives the catalog and schedule. Paula
+One spreadsheet drives the catalog, the schedule and the announcement band.
+Paula
 edits the sheet; the Worker fetches the published CSVs on a cron (and when
 `/data` is cold or stale) and stores them in KV. Pages render from KV. If KV
 is empty, they fall back to `data/catalog-snapshot.json`. The browser never
 talks to Google.
 
-The CSV publish URLs live in `wrangler.jsonc` under `vars`
-(`PRODUCTS_CSV_URL`, `EVENTS_CSV_URL`). Each must end in **`output=csv`**.
+The CSV publish URLs live in `wrangler.jsonc` under `vars`, one per tab.
+Each must end in **`output=csv`**.
 
 ```js
 // wrangler.jsonc → vars (not secrets)
-PRODUCTS_CSV_URL  // products tab
-EVENTS_CSV_URL    // events tab
+PRODUCTS_CSV_URL       // products tab
+EVENTS_CSV_URL         // events tab
+ANNOUNCEMENTS_CSV_URL  // announcements tab, empty until the tab exists
 ```
+
+`ANNOUNCEMENTS_CSV_URL` ships empty on purpose. It is the one optional
+source: a blank URL means "no rows" with no error, so the band never renders
+until the tab is published and the URL filled in. Products and events stay
+required, and a blank URL for either is reported as `url empty`.
 
 `MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 
@@ -64,7 +71,7 @@ const LIST_ENABLED = false; // true only on their Resend Segment
 The sheet already exists. There is no CSV in this repo to import.
 Publish each tab with File, Share, Publish to web, picking that tab by name
 and CSV as the format, with "Automatically republish when changes are made"
-left ticked. Two tabs means two addresses. Each must end in **`output=csv`**, like this:
+left ticked. One address per tab. Each must end in **`output=csv`**, like this:
 
 ```
 https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=685501268&single=true&output=csv
@@ -111,6 +118,32 @@ their own and the next thirty show, earliest first.
 | `name` | Market or event name. |
 | `time` | Free text, for example `8:00am to 1:00pm`. Optional. |
 | `address` | Becomes a link that opens Maps. Optional, the row is fine without one. |
+
+**Announcements.** A third tab, published the same way. One row shows at a
+time, at the very top of the page; most of the time the tab is empty and
+nothing renders at all.
+
+| Column | Notes |
+|---|---|
+| `posted` | `YYYY-MM-DD`. Shown as a small date chip, and breaks ties when two rows are equally loud. |
+| `headline` | The sentence itself. A row without one is ignored. |
+| `expires` | `YYYY-MM-DD`, optional. The row shows through the end of that day in Texas, then stops on its own. Blank never expires. |
+| `link` | Optional. `#find`, `#watch`, or a full address. |
+| `link_text` | Optional wording for that link. Defaults to `More`. |
+| `priority` | Optional: `quiet`, blank, or `urgent`. See below. |
+
+`priority` is the only lever on how visible a row is, and it moves two things
+at once:
+
+| Value | Looks like | Appears on |
+|---|---|---|
+| `quiet` | Paper strip, ink text, no red | The front page |
+| blank or anything unrecognised | The chile red band | The front page |
+| `urgent` | The red band, larger type | **Every page** |
+
+Anything the sheet does not recognise is treated as an ordinary
+announcement, so a typo is quiet rather than loud. Nothing has to be deleted
+to take a notice down: set `expires`, or post a louder row.
 
 The schedule deliberately does not use Google Calendar. Its embed cannot be
 styled to match the page, and keeping a calendar alongside the sheet would
@@ -250,7 +283,7 @@ with `astro build`, and runs `prettier --check` on JS/TS/Astro/JSON. It does
 not format Python or this `check` script. Nothing touches the network.
 
 ```bash
-node --test test/lib/csv.test.mjs test/lib/timezone.test.mjs test/lib/html-cache.test.mjs test/lib/json.test.mjs test/domain/heat-scale.test.mjs test/domain/products.test.mjs test/domain/page-catalog.test.mjs test/domain/debug.test.mjs test/domain/data-age.test.mjs test/lib/email-address.test.mjs test/lib/html.test.mjs test/worker/crypto.test.mjs test/worker/tokens.test.mjs test/worker/api.test.mjs test/worker/catalog.test.mjs
+node --test test/lib/*.test.mjs test/domain/*.test.mjs test/worker/*.test.mjs
 npm run types                                               # wrangler Env types
 npm run check:types                                         # tsc + astro check
 npx prettier --check "**/*.{js,ts,mjs,astro,json}"          # JS/TS/Astro/JSON

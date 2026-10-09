@@ -1,4 +1,4 @@
-// This business's two sheets: headers, row rules, KV key, and stale window.
+// This business's three sheets: headers, row rules, KV key, and stale window.
 // The fetch/merge engine is src/lib/sheet-cache.ts; the size/header guard is
 // src/lib/csv-guard.ts.
 
@@ -16,17 +16,27 @@ export const CATALOG_STALE_MS = 60 * 60 * 1000;
 
 const PRODUCT_HEADERS = ["maker", "name", "description", "heat", "price"];
 const EVENT_HEADERS = ["date", "name"];
-const SHEET_NAMES = ["products", "events"] as const;
+// `expires`, `link` and `priority` are optional columns: a sheet without them
+// still validates, and every row is then an ordinary one that never expires.
+const ANNOUNCEMENT_HEADERS = ["posted", "headline"];
+const SHEET_NAMES = ["products", "events", "announcements"] as const;
 
 type CatalogData = {
   products: Record<string, string>[];
   events: Record<string, string>[];
+  announcements: Record<string, string>[];
 };
 
 export type CatalogPayload = SheetCache<CatalogData>;
 
 export function emptyCatalog(): CatalogPayload {
-  return { products: [], events: [], fetchedAt: null, lastError: null };
+  return {
+    products: [],
+    events: [],
+    announcements: [],
+    fetchedAt: null,
+    lastError: null,
+  };
 }
 
 export function productRows(text: string) {
@@ -43,6 +53,15 @@ export function eventRows(text: string) {
   });
 }
 
+/** Most days there is nothing to announce, so no rows is a success here. */
+export function announcementRows(text: string) {
+  return acceptSheet(text, {
+    requiredHeaders: ANNOUNCEMENT_HEADERS,
+    parse: (t) => csvToObjects(t).filter((r) => r.headline?.trim()),
+    allowEmpty: true,
+  });
+}
+
 export const refreshMode = (c: CatalogPayload, now?: number) =>
   refreshModeAt(c, CATALOG_STALE_MS, now);
 
@@ -54,5 +73,10 @@ export function refreshData(env: Env): Promise<CatalogPayload> {
   return refreshSources<CatalogData>(env.CATALOG, CATALOG_KEY, {
     products: { url: env.PRODUCTS_CSV_URL, validate: productRows },
     events: { url: env.EVENTS_CSV_URL, validate: eventRows },
+    announcements: {
+      url: env.ANNOUNCEMENTS_CSV_URL,
+      optional: true,
+      validate: announcementRows,
+    },
   });
 }

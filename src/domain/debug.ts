@@ -14,32 +14,21 @@ export function debugSources(
   source: CatalogSource = "kv",
 ) {
   const fetched = catalog.fetchedAt ? "fetchedAt " + catalog.fetchedAt : "";
-  const productNote = [
-    catalog.lastError?.products
-      ? "lastError: " + catalog.lastError.products
-      : "",
-    fetched,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const eventNote = [
-    catalog.lastError?.events ? "lastError: " + catalog.lastError.events : "",
-    fetched,
-  ]
-    .filter(Boolean)
-    .join(" · ");
   const live = source === "snapshot" ? "snapshot" : "live KV";
+  const sheet = (name: "products" | "events" | "announcements") => {
+    const err = catalog.lastError?.[name];
+    return {
+      state: catalog[name].length ? live : "empty",
+      rows: catalog[name].length,
+      note: [err ? "lastError: " + err : "", fetched]
+        .filter(Boolean)
+        .join(" · "),
+    };
+  };
   return {
-    products: {
-      state: catalog.products.length ? live : "empty",
-      rows: catalog.products.length,
-      note: productNote,
-    },
-    events: {
-      state: catalog.events.length ? live : "empty",
-      rows: catalog.events.length,
-      note: eventNote,
-    },
+    products: sheet("products"),
+    events: sheet("events"),
+    announcements: sheet("announcements"),
     worker: { state: "same-origin", note: "" },
   };
 }
