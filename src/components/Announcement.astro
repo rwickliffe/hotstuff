@@ -1,25 +1,11 @@
 ---
 import type { Announcement } from "../domain/announcements.ts";
 import { parseDay } from "../lib/csv.js";
+import { shortMonth } from "../lib/date-format.ts";
 
 interface Props {
   announcement: Announcement | null;
 }
-
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
 
 const a = Astro.props.announcement;
 // A sheet row with no usable date still gets to speak; it just loses the chip.
@@ -30,7 +16,7 @@ const posted = a ? parseDay(a.posted) : null;
   <aside class={`shout shout-${a.priority}`}>
     {posted && (
       <span class="shout-when">
-        {MONTHS[posted.getMonth()]} {posted.getDate()}
+        {shortMonth(posted)} {posted.getDate()}
       </span>
     )}
     <p class="shout-say">{a.headline}</p>
