@@ -1,0 +1,41 @@
+---
+import type { Video } from "../domain/videos.ts";
+import { thumbnailUrl, watchUrl } from "../domain/videos.ts";
+import { shortMonth } from "../lib/date-format.ts";
+import { parseDay } from "../lib/csv.js";
+
+interface Props {
+  video: Video;
+}
+
+const v = Astro.props.video;
+const when = parseDay(v.posted);
+---
+
+<a
+  class="reel"
+  href={watchUrl(v.id)}
+  rel="noopener"
+  aria-label={`Watch ${v.title} on YouTube`}
+>
+  <span class="reel-thumb">
+    <img
+      src={thumbnailUrl(v.id)}
+      width="480"
+      height="360"
+      loading="lazy"
+      decoding="async"
+      alt=""
+    />
+    <span class="reel-play" aria-hidden="true"></span>
+  </span>
+  <span class="reel-body">
+    {when && (
+      <span class="reel-when">
+        {shortMonth(when)} {when.getFullYear()}
+      </span>
+    )}
+    <span class="reel-name">{v.title}</span>
+    {v.blurb && <span class="reel-blurb">{v.blurb}</span>}
+  </span>
+</a>

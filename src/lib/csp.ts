@@ -13,7 +13,9 @@ export const WORKER_CSP =
 /** On-demand catalogue pages — same family as public/_headers. */
 export const SITE_CSP =
   "default-src 'none'; base-uri 'none'; form-action 'self'; " +
-  "img-src 'self' data:; " +
+  // i.ytimg.com serves the video poster frames. Images only: the cards link
+  // out to YouTube rather than embedding it, so no frame-src is needed.
+  "img-src 'self' data: https://i.ytimg.com; " +
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "font-src https://fonts.gstatic.com; " +
   "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; " +

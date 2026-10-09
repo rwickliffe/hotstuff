@@ -23,6 +23,7 @@ daily:
 | What | Changes | Who updates it | Where |
 |---|---|---|---|
 | Product list, prices, sold out | Often | Them | A Google Sheet |
+| How-to videos | Now and then | Them | The same sheet, videos tab |
 | Market and event schedule | Weekly | Them | The same Google Sheet, second tab |
 | News and announcements | Weekly | Them | Facebook |
 | Photos, story, layout | Rarely | A developer | This repo |
@@ -54,12 +55,14 @@ Each must end in **`output=csv`**.
 PRODUCTS_CSV_URL       // products tab
 EVENTS_CSV_URL         // events tab
 ANNOUNCEMENTS_CSV_URL  // announcements tab, empty until the tab exists
+VIDEOS_CSV_URL         // videos tab, same
 ```
 
-`ANNOUNCEMENTS_CSV_URL` ships empty on purpose. It is the one optional
-source: a blank URL means "no rows" with no error, so the band never renders
-until the tab is published and the URL filled in. Products and events stay
-required, and a blank URL for either is reported as `url empty`.
+`ANNOUNCEMENTS_CSV_URL` and `VIDEOS_CSV_URL` ship empty on purpose. They are
+the optional sources: a blank URL means "no rows" with no error, so neither
+feature renders until its tab is published and the URL filled in. Products
+and events stay required, and a blank URL for either is reported as
+`url empty`.
 
 `MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 
@@ -144,6 +147,23 @@ at once:
 Anything the sheet does not recognise is treated as an ordinary
 announcement, so a typo is quiet rather than loud. Nothing has to be deleted
 to take a notice down: set `expires`, or post a louder row.
+
+**Videos.** A fourth tab. The site never serves video: YouTube hosts it, and
+these rows are a list of links. The front page shows three and links to
+`/videos`, which shows the lot, newest first — the same shape as the catalog
+and `/products`.
+
+| Column | Notes |
+|---|---|
+| `video` | The YouTube address. Paste whatever is in the browser bar: a `watch?v=` link, a `youtu.be` short link, a Shorts link, or the bare id. A row whose address has no id in it is dropped rather than shown as a dead tile. |
+| `title` | What it is called. A row without one is ignored. |
+| `blurb` | A sentence under the title. Optional. |
+| `posted` | `YYYY-MM-DD`, optional. Sorts newest first; undated rows go last. |
+| `featured` | `yes` to pin it to the front page. Optional — with nothing featured, the three newest show. |
+
+Cards are poster frames that link out, not embeds. Nothing of YouTube's
+loads until someone chooses to go there, which is why there is no cookie
+banner and why `img-src` admits `i.ytimg.com` and nothing else.
 
 The schedule deliberately does not use Google Calendar. Its embed cannot be
 styled to match the page, and keeping a calendar alongside the sheet would

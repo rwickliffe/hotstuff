@@ -107,6 +107,7 @@ test("refreshData merges on partial failure", async () => {
     PRODUCTS_CSV_URL: "https://example.test/products.csv",
     EVENTS_CSV_URL: "https://example.test/events.csv",
     ANNOUNCEMENTS_CSV_URL: "",
+    VIDEOS_CSV_URL: "",
     CATALOG: {
       async get(key, type) {
         const v = store.get(key);
@@ -134,6 +135,7 @@ test("refreshData merges on partial failure", async () => {
     assert.ok(next.lastError?.products);
     assert.equal(next.lastError?.events, undefined);
     assert.equal(next.lastError?.announcements, undefined);
+    assert.equal(next.lastError?.videos, undefined);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -144,15 +146,18 @@ test("announcements: headers only is a quiet success, a missing column is not", 
   assert.ok(announcementRows("posted,text\n2026-10-01,Hi\n").error);
 });
 
-test("a blank URL is a quiet skip for announcements only", async () => {
+test("a blank URL is a quiet skip for the optional sheets only", async () => {
   const kv = { get: async () => null, put: async () => {} };
   const next = await refreshData({
     PRODUCTS_CSV_URL: "",
     EVENTS_CSV_URL: "",
     ANNOUNCEMENTS_CSV_URL: "",
+    VIDEOS_CSV_URL: "",
     CATALOG: kv,
   });
   assert.deepEqual(next.announcements, []);
+  assert.deepEqual(next.videos, []);
+  // The two the site cannot do without still report a blank URL as a fault.
   assert.deepEqual(next.lastError, {
     products: "url empty",
     events: "url empty",

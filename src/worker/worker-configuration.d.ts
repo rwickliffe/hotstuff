@@ -11,5 +11,6 @@ interface __BaseEnv_Env {
 	PRODUCTS_CSV_URL: string;
 	EVENTS_CSV_URL: string;
 	ANNOUNCEMENTS_CSV_URL: string;
+	VIDEOS_CSV_URL: string;
 }
 interface Env extends __BaseEnv_Env {}

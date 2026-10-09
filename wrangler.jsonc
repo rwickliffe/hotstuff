@@ -57,9 +57,10 @@
   "vars": {
     "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv",
     "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv",
-    // Empty until the announcements tab exists and is published. This source
-    // is optional: a blank URL means "no rows", not an error.
-    "ANNOUNCEMENTS_CSV_URL": ""
+    // Empty until these tabs exist and are published. Both are optional
+    // sources: a blank URL means "no rows", not an error.
+    "ANNOUNCEMENTS_CSV_URL": "",
+    "VIDEOS_CSV_URL": ""
   },
   "ratelimits": [
     {

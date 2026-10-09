@@ -288,6 +288,99 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
   .shout-urgent .shout-say { font-size: 18px; }
 }
 
+/* ---------------- videos ---------------- */
+
+/* The lens is a wash, not a picture: one chile ink whose opacity follows the
+   photograph's own tones, so the camera prints and the studio background
+   drops to bare paper. It fills the right of the section head and is
+   decorative throughout — the heading carries the meaning. */
+.watch { position: relative; overflow: hidden; background: var(--paper-sunk); }
+
+/* The stylesheet reaches nothing outside itself, so the plate is an <img>
+   in the markup like every other image here, not a background.
+
+   It hangs off the section, not off the heading block. Centring it on the
+   heading made its top edge depend on how many lines the lede wrapped to, so
+   at some widths it rose above the section and `overflow: hidden` sliced the
+   camera in half. Anchored at the section's top edge it is flush with the
+   barbed wire at every width, and only ever runs on behind the cards. */
+.watch-lens {
+  position: absolute;
+  top: 0;
+  right: -46px;
+  width: 352px;
+  height: auto;
+  opacity: 0.46;
+  pointer-events: none;
+  z-index: 0;
+}
+.watch .shell { position: relative; z-index: 1; }
+.watch-head .lede { max-width: 54ch; }
+
+:root[data-theme="dark"] .watch-lens {
+  opacity: 0.42;
+  filter: brightness(1.55) saturate(1.1);
+}
+
+@media (max-width: 760px) {
+  .watch-lens { width: 236px; right: -64px; opacity: 0.3; }
+}
+
+.reels {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+}
+
+.reel {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  text-decoration: none;
+  color: inherit;
+}
+.reel:hover .reel-play { transform: scale(1.08); }
+.reel:focus-visible { outline: 3px solid var(--flame); outline-offset: 2px; }
+
+.reel-thumb { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; }
+.reel-thumb img {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover;
+  filter: sepia(0.22) saturate(0.88) contrast(1.06);
+}
+
+/* A facade, not an embed: the card is a link, so nothing of YouTube's loads
+   until someone chooses to go there. */
+.reel-play {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 52px; height: 52px;
+  margin: -26px 0 0 -26px;
+  border-radius: 50%;
+  background: var(--chile) no-repeat center;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2718%27%20height%3D%2720%27%3E%3Cpath%20fill%3D%27%23FFF6F2%27%20d%3D%27M1%201%20L17%2010%20L1%2019%20Z%27%2F%3E%3C%2Fsvg%3E");
+  box-shadow: 0 2px 12px rgba(0,0,0,0.45);
+  transition: transform 140ms ease;
+}
+@media (prefers-reduced-motion: reduce) { .reel-play { transition: none; } }
+
+.reel-body { display: grid; gap: 6px; padding: 14px 15px 16px; }
+.reel-when {
+  font-family: var(--cond);
+  font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.reel-name {
+  font-family: var(--name);
+  font-style: var(--name-style);
+  font-weight: var(--name-weight);
+  font-size: 20px; line-height: 1.2;
+  color: var(--name-color);
+}
+.reel-blurb { font-size: 14.5px; line-height: 1.5; color: var(--ink-mid); }
+
 /* ---------------- hero ---------------- */
 
 .hero { position: relative; background: var(--char); color: var(--bone); overflow: hidden; }

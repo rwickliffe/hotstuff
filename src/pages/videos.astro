@@ -1,0 +1,65 @@
+---
+export const prerender = false;
+
+import { env } from "cloudflare:workers";
+import Announcement from "../components/Announcement.astro";
+import Base from "../layouts/Base.astro";
+import DataAge from "../components/DataAge.astro";
+import DebugPanel from "../components/DebugPanel.astro";
+import VideoCard from "../components/VideoCard.astro";
+import { announcementFor } from "../domain/announcements.ts";
+import { catalogForPage } from "../domain/page-catalog.ts";
+import { debugSources, isDebug } from "../domain/debug.ts";
+import { dataAge } from "../domain/data-age.ts";
+import { videoList } from "../domain/videos.ts";
+import { readCatalog } from "../worker/catalog.ts";
+
+const { catalog, source } = catalogForPage(await readCatalog(env));
+const videos = videoList(catalog.videos);
+const age = dataAge(catalog.fetchedAt);
+const announcement = announcementFor(catalog.announcements, "everywhere");
+const debug = isDebug(Astro.url);
+---
+
+<Base
+  title="Watch it happen, Paula and Crazy John's Hot Stuff"
+  description="Every how-to video from Paula and Crazy John's Hot Stuff: cowboy candy, chow chow, hot sauce and pickles, filmed in their own kitchen in Elgin, Texas."
+>
+  {debug && <DebugPanel {...debugSources(catalog, source)} />}
+
+  <Announcement announcement={announcement} />
+
+  <main>
+    <header class="page-head">
+      <div class="shell">
+        <a class="page-back" href="/">
+          Paula and Crazy John's Hot Stuff
+        </a>
+        <h1>Watch it happen</h1>
+        <p class="lede">
+          Everything they have filmed so far, newest first. Nothing is staged
+          and nothing is edited down to a minute — if a batch takes an
+          afternoon, so does the video.
+        </p>
+      </div>
+    </header>
+
+    <section class="watch">
+      <div class="shell">
+        {videos.length === 0 ? (
+          <p class="cal-empty">
+            Nothing filmed yet. Check back, or ask at the booth what they are
+            making this week.
+          </p>
+        ) : (
+          <div class="reels">
+            {videos.map((v) => (
+              <VideoCard video={v} />
+            ))}
+          </div>
+        )}
+        <DataAge {...age} />
+      </div>
+    </section>
+  </main>
+</Base>
