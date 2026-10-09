@@ -55,15 +55,15 @@ Each must end in **`output=csv`**.
 // wrangler.jsonc → vars (not secrets)
 PRODUCTS_CSV_URL       // products tab
 EVENTS_CSV_URL         // events tab
-ANNOUNCEMENTS_CSV_URL  // announcements tab, empty until the tab exists
-VIDEOS_CSV_URL         // videos tab, same
+ANNOUNCEMENTS_CSV_URL  // announcements tab
+VIDEOS_CSV_URL         // videos tab
 ```
 
-`ANNOUNCEMENTS_CSV_URL` and `VIDEOS_CSV_URL` ship empty on purpose. They are
-the optional sources: a blank URL means "no rows" with no error, so neither
-feature renders until its tab is published and the URL filled in. Products
-and events stay required, and a blank URL for either is reported as
-`url empty`.
+`ANNOUNCEMENTS_CSV_URL` and `VIDEOS_CSV_URL` are the optional sources. Their
+tabs are published and empty most of the time, and no rows is a success, not
+an error — so the band and the video section simply do not render. Blanking
+either URL turns that feature off the same quiet way. Products and events
+stay required, and a blank URL for either is reported as `url empty`.
 
 `MAIL_ENABLED` / `LIST_ENABLED` stay in `public/site.js`:
 

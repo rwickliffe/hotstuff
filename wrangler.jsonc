@@ -57,10 +57,10 @@
   "vars": {
     "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv",
     "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv",
-    // Empty until these tabs exist and are published. Both are optional
-    // sources: a blank URL means "no rows", not an error.
-    "ANNOUNCEMENTS_CSV_URL": "",
-    "VIDEOS_CSV_URL": ""
+    // Both optional: the tabs are published but empty most of the time, and
+    // no rows is a success, not an error. Blank them to turn a feature off.
+    "ANNOUNCEMENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=619153325&single=true&output=csv",
+    "VIDEOS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=398538387&single=true&output=csv"
   },
   "ratelimits": [
     {
