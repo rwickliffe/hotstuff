@@ -22,7 +22,7 @@
 // unless the entry only exports `default`.
 // One Worker on one account: Paula's. There is no staging Worker and no
 // `env` block. Check a change before it is live by uploading a version
-// without deploying it, which runs on the real bindings:
+// without deploying it. It runs on the real bindings, at a public URL:
 //   npx wrangler versions upload --preview-alias next
 //   npx wrangler versions deploy        # promote it
 //   npx wrangler rollback               # undo

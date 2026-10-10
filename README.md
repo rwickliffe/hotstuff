@@ -542,7 +542,10 @@ there is nothing to keep in step across machines:
 ```bash
 npx wrangler deploy --dry-run    # bundle without uploading, to check a change
 npx wrangler deploy              # production, on the account_id in wrangler.jsonc
-npx wrangler versions upload --preview-alias next   # a URL to check, not live
+# Not private staging: the URL is public to anyone who can guess it, and it runs
+# on the real KV, secrets and mail bindings. Disable version URLs or put them
+# behind Cloudflare Access to close that; try anything destructive in `wrangler dev`.
+npx wrangler versions upload --preview-alias next   # a public URL, not live
 npx wrangler versions deploy     # promote that version
 npx wrangler rollback            # back to the previous one
 npx wrangler secret put NAME
