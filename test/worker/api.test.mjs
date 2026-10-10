@@ -148,6 +148,44 @@ test("contact records metrics after a successful send", async () => {
   }
 });
 
+test("contact still succeeds when metrics are missing or throw", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ id: "ok" }), { status: 200 });
+
+  try {
+    const base = {
+      MAIL_IP: limiter,
+      MAIL_EMAIL: limiter,
+      CONTACT_TO: "paula@example.com",
+      RESEND_FROM: "Hot Stuff <test@example.com>",
+      RESEND_API_KEY: "key",
+    };
+    const broken = {
+      writeDataPoint() {
+        throw new Error("analytics down");
+      },
+    };
+    for (const metrics of [undefined, broken]) {
+      const req = new Request("https://worker.test/contact", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          name: "Pat",
+          email: "pat@example.com",
+          message: "Just saying hi.",
+          ask: "Chow Chow",
+          company: "",
+        }),
+      });
+      const env = { ...base, METRICS: metrics };
+      assert.equal((await worker.fetch(req, env)).status, 200);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("subscribe records a metric after a successful confirm mail", async () => {
   const points = [];
   const originalFetch = globalThis.fetch;
