@@ -393,7 +393,7 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
   font-size: 20px; line-height: 1.2;
   color: var(--name-color);
 }
-.reel-blurb { font-size: 14.5px; line-height: 1.5; color: var(--ink-mid); }
+.reel-description { font-size: 14.5px; line-height: 1.5; color: var(--ink-mid); }
 
 /* ---------------- hero ---------------- */
 

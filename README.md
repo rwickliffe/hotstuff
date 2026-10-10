@@ -129,7 +129,7 @@ nothing renders at all.
 
 | Column | Notes |
 |---|---|
-| `posted` | `YYYY-MM-DD`. Shown as a small date chip, and breaks ties when two rows are equally loud. |
+| `date` | `YYYY-MM-DD`. Shown as a small date chip, and breaks ties when two rows are equally loud. |
 | `headline` | The sentence itself. A row without one is ignored. |
 | `expires` | `YYYY-MM-DD`, optional. The row shows through the end of that day in Texas, then stops on its own. Blank never expires. |
 | `link` | Optional. `#find`, `#watch`, or a full address. |
@@ -158,8 +158,8 @@ and `/products`.
 |---|---|
 | `video` | The YouTube address. Paste whatever is in the browser bar: a `watch?v=` link, a `youtu.be` short link, a Shorts link, or the bare id. A row whose address has no id in it is dropped rather than shown as a dead tile. |
 | `title` | What it is called. A row without one is ignored. |
-| `blurb` | A sentence under the title. Optional. |
-| `posted` | `YYYY-MM-DD`, optional. Sorts newest first; undated rows go last. |
+| `description` | A sentence under the title. Optional. |
+| `date` | `YYYY-MM-DD`, optional. Sorts newest first; undated rows go last. |
 | `featured` | `yes` to pin it to the front page. Optional — with nothing featured, the three newest show. |
 
 Cards are poster frames that link out, not embeds. Nothing of YouTube's

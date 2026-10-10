@@ -12,9 +12,9 @@ export type Video = {
   /** The 11-character YouTube id, already validated. */
   id: string;
   title: string;
-  blurb: string;
+  description: string;
   /** `YYYY-MM-DD`, or "" when the sheet has nothing usable. */
-  posted: string;
+  date: string;
   featured: boolean;
 };
 
@@ -51,12 +51,12 @@ export function videoList(rows: Record<string, string>[] | undefined): Video[] {
     .map((r) => ({
       id: youtubeId(r.video),
       title: (r.title || "").trim(),
-      blurb: (r.blurb || "").trim(),
-      posted: normalizeDay(r.posted) || "",
+      description: (r.description || "").trim(),
+      date: normalizeDay(r.date) || "",
       featured: isYes(r.featured),
     }))
     .filter((v): v is Video => Boolean(v.id && v.title))
-    .sort((a, b) => (b.posted || "").localeCompare(a.posted || ""));
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
 /** What the front page shows: whatever is marked featured, else the newest. */

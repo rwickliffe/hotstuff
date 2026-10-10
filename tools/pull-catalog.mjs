@@ -7,7 +7,8 @@
  * Writes data/catalog-snapshot.json (empty-KV floor). Cron updates KV only —
  * run this before deploy when the sheet has meaningfully changed.
  *
- * Default DATA_URL is the deployed workers.dev /data.
+ * Default DATA_URL is the live site. Point it at a local wrangler dev when
+ * you want the snapshot to match whatever you are testing against.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -17,8 +18,7 @@ import { SHEET_NAMES } from "../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const snapOut = path.join(root, "data/catalog-snapshot.json");
-const dataUrl =
-  process.env.DATA_URL || "https://hotstuff.rwickliffe.workers.dev/data";
+const dataUrl = process.env.DATA_URL || "https://paulaandcrazyjohn.com/data";
 
 const res = await fetch(dataUrl, { cache: "no-store" });
 if (!res.ok) {
