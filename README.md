@@ -172,14 +172,12 @@ mean entering every market twice. The sheet is the only place dates live.
 
 ## Before launch
 
-- [ ] Point the JSON-LD `url` and `image` at the custom domain once there is one.
-      They currently read `hotstuff.rwickliffe.workers.dev` (interim)
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
 - [ ] Flip `LIST_ENABLED` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
-- [ ] Move the repo to their GitHub organization and the Worker to their
-      Cloudflare, then re-point JSON-LD and the CI badge
+- [ ] Move the repo to their GitHub organization, then re-point the CI badge.
+      The Worker already targets their Cloudflare and JSON-LD their domain
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Have each of them tick `featured` for the jars they want on the front
       page. Until they do, it leads with whatever is at the top of their tab
@@ -423,10 +421,11 @@ npm run build && npx wrangler dev
 ```
 
 The Worker runs on Paula's Cloudflare account, pinned by `account_id` so a
-login with access to more than one cannot ship to the wrong place. At launch a
-custom domain is attached to it and the repo moves to an organization she owns;
-the `workers.dev` URL stays as a fallback. Until the domain is attached, Web
-Analytics is the dashboard snippet (automatic injection needs a proxied zone).
+login with access to more than one cannot ship to the wrong place. At launch
+`paulaandcrazyjohn.com` is attached to it as a Custom Domain and the repo moves
+to an organization she owns; the `workers.dev` URL stays as a fallback. Until
+the domain is attached, Web Analytics is the dashboard snippet (automatic
+injection needs a proxied zone).
 
 ### Custom events (asks and mail)
 
