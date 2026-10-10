@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /* Refresh the committed catalog floor from live /data.
  *
- *     tools/pull-catalog.mjs
+ *     DATA_URL=https://<worker>.<account>.workers.dev/data tools/pull-catalog.mjs
  *     DATA_URL=http://127.0.0.1:8787/data tools/pull-catalog.mjs
  *
  * Writes data/catalog-snapshot.json (empty-KV floor). Cron updates KV only —
  * run this before deploy when the sheet has meaningfully changed.
  *
- * Default DATA_URL is the deployed workers.dev /data.
+ * DATA_URL is required: there is no single deployed Worker to default to.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -17,8 +17,13 @@ import { SHEET_NAMES } from "../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const snapOut = path.join(root, "data/catalog-snapshot.json");
-const dataUrl =
-  process.env.DATA_URL || "https://hotstuff.rwickliffe.workers.dev/data";
+const dataUrl = process.env.DATA_URL;
+if (!dataUrl) {
+  console.error(
+    "FAIL: set DATA_URL to the /data URL of a deployed or local Worker",
+  );
+  process.exit(1);
+}
 
 const res = await fetch(dataUrl, { cache: "no-store" });
 if (!res.ok) {
