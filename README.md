@@ -422,8 +422,10 @@ Local preview of the full stack:
 npm run build && npx wrangler dev
 ```
 
-At launch the repo still moves to an organization Paula owns, and a custom
-domain on their Cloudflare account replaces `workers.dev`. Until then, Web
+The Worker runs on Paula's Cloudflare account, pinned by `account_id` so a
+login with access to more than one cannot ship to the wrong place. At launch a
+custom domain is attached to it and the repo moves to an organization she owns;
+the `workers.dev` URL stays as a fallback. Until the domain is attached, Web
 Analytics is the dashboard snippet (automatic injection needs a proxied zone).
 
 ### Custom events (asks and mail)
@@ -540,7 +542,10 @@ there is nothing to keep in step across machines:
 
 ```bash
 npx wrangler deploy --dry-run    # bundle without uploading, to check a change
-npx wrangler deploy              # into whichever account is logged in
+npx wrangler deploy              # production, on the account_id in wrangler.jsonc
+npx wrangler versions upload --preview-alias next   # a URL to check, not live
+npx wrangler versions deploy     # promote that version
+npx wrangler rollback            # back to the previous one
 npx wrangler secret put NAME
 ```
 

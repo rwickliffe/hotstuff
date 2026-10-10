@@ -20,8 +20,15 @@
 //   npx wrangler types --include-runtime false
 // Then drop the Cloudflare.GlobalProps block from src/worker/worker-configuration.d.ts
 // unless the entry only exports `default`.
+// One Worker on one account: Paula's. There is no staging Worker and no
+// `env` block. Check a change before it is live by uploading a version
+// without deploying it, which runs on the real bindings:
+//   npx wrangler versions upload --preview-alias next
+//   npx wrangler versions deploy        # promote it
+//   npx wrangler rollback               # undo
 {
   "name": "hotstuff",
+  "account_id": "90f3dbd0e159495e8bc15718edb11e20",
   // Custom entry: mail + /data + scheduled, then Astro's handle for HTML.
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-09-14",
@@ -36,15 +43,17 @@
     "directory": "./dist/client",
     "binding": "ASSETS"
   },
+  // No preview_id: `wrangler dev` simulates KV on disk rather than reading a
+  // namespace, so local runs need nothing here.
   "kv_namespaces": [
     {
       "binding": "CATALOG",
-      "id": "5b6480a293e34ad48d93e63be95c3972",
-      "preview_id": "90893cb2f6e24778a9519ece796bb77f"
+      "id": "6fa148702b0647d2b7c8b8db935e7796"
     }
   ],
   // Custom event counts (asks, successful mail, …). Dataset is account-scoped
   // (SQL table name), so prefix with the project — same idea as hotstuff-catalog.
+  // It is created by the first write, not by anything here.
   //   SELECT blob1 AS event, blob2 AS detail, SUM(_sample_interval) AS n
   //   FROM "hotstuff-metrics" WHERE timestamp > NOW() - INTERVAL '30' DAY
   //   GROUP BY event, detail ORDER BY n DESC
