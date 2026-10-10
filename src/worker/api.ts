@@ -105,8 +105,11 @@ async function dataGet(env: Env, ctx: ExecutionContext): Promise<Response> {
   return res;
 }
 
+// Optional chaining because counting something must never be able to fail the
+// thing being counted: a missing binding would otherwise throw here and turn a
+// delivered contact note into a 502.
 function track(env: Env, event: string, detail = "", n = 1): void {
-  env.METRICS.writeDataPoint({
+  env.METRICS?.writeDataPoint({
     blobs: [event, detail],
     doubles: [n],
     indexes: [event],
