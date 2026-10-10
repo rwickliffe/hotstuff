@@ -172,8 +172,6 @@ mean entering every market twice. The sheet is the only place dates live.
 
 ## Before launch
 
-- [ ] Point the JSON-LD `url` and `image` at the custom domain once there is one.
-      They currently read `hotstuff.rwickliffe.workers.dev` (interim)
 - [ ] Swap `images/logo.jpg` for the unwatermarked logo
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
 - [ ] Flip `LIST_ENABLED` to `true` only after `RESEND_SEGMENT_ID` is *their*
