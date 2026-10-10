@@ -36,6 +36,16 @@
   "observability": {
     "enabled": true
   },
+  // Both default to true, and a deploy applies the default when the key is
+  // absent — so the dashboard toggles for these cannot be turned off by hand
+  // and stay off. Stated here, the repo is the one place that decides.
+  //   workers_dev   the fallback hostname, for when the custom domain is the
+  //                 thing that is broken
+  //   preview_urls  `wrangler versions upload` serves at <alias>-hotstuff...,
+  //                 which is how a change is checked before it is live.
+  //                 Public: anyone with the link can load one.
+  "workers_dev": true,
+  "preview_urls": true,
   // Astro 7 puts copied public/ files in dist/client (server bundle is
   // dist/server). Wrangler Static Assets must point at the client tree so
   // _headers and CSS/images are served without invoking the Worker.
