@@ -17,6 +17,10 @@ export default defineConfig({
   },
   webServer: {
     command: `npm run build && npx wrangler dev --port ${port} --ip 127.0.0.1`,
+    // The Cloudflare adapter resolves the environment at build time and writes
+    // a flattened dist/server/wrangler.json, so `--env` on wrangler is a no-op
+    // here. Picking staging is what gives local dev a KV preview_id.
+    env: { CLOUDFLARE_ENV: "staging" },
     url: origin,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

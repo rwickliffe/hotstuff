@@ -20,8 +20,29 @@
 //   npx wrangler types --include-runtime false
 // Then drop the Cloudflare.GlobalProps block from src/worker/worker-configuration.d.ts
 // unless the entry only exports `default`.
+//
+// Two deploy targets. Production is this top level, on Paula's account.
+// Staging is env.staging at the bottom, on the developer's account, deploying
+// as `hotstuff-staging`.
+//
+// Pick between them with CLOUDFLARE_ENV at BUILD time:
+//   npm run build                        -> production
+//   CLOUDFLARE_ENV=staging npm run build -> staging
+//
+// Not at deploy time. The Cloudflare adapter resolves the environment during
+// `astro build` and writes a flattened dist/server/wrangler.json, and
+// .wrangler/deploy/config.json redirects Wrangler to that file. Nothing below
+// `env` survives into it, so `wrangler deploy --env staging` is accepted,
+// changes nothing, and ships whatever the last build baked in.
+//
+// Wrangler inherits some keys into an environment and not others. Everything
+// above the kv_namespaces block is inherited, which is why env.staging does
+// not repeat it. Bindings and `vars` are not inherited: an environment that
+// omits one gets nothing, not the top-level value. That is why the bottom
+// half of this file appears twice.
 {
   "name": "hotstuff",
+  "account_id": "90f3dbd0e159495e8bc15718edb11e20",
   // Custom entry: mail + /data + scheduled, then Astro's handle for HTML.
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-09-14",
@@ -36,15 +57,19 @@
     "directory": "./dist/client",
     "binding": "ASSETS"
   },
+  // No preview_id: production is never the target of a local run, and
+  // `wrangler dev` simulates KV on disk rather than reading one. Staging
+  // carries the preview namespace because that is the build local dev uses.
   "kv_namespaces": [
     {
       "binding": "CATALOG",
-      "id": "5b6480a293e34ad48d93e63be95c3972",
-      "preview_id": "90893cb2f6e24778a9519ece796bb77f"
+      "id": "6fa148702b0647d2b7c8b8db935e7796"
     }
   ],
   // Custom event counts (asks, successful mail, …). Dataset is account-scoped
   // (SQL table name), so prefix with the project — same idea as hotstuff-catalog.
+  // Each account gets its own table of the same name; the dataset is created
+  // by the first write, not by anything here.
   //   SELECT blob1 AS event, blob2 AS detail, SUM(_sample_interval) AS n
   //   FROM "hotstuff-metrics" WHERE timestamp > NOW() - INTERVAL '30' DAY
   //   GROUP BY event, detail ORDER BY n DESC
@@ -78,5 +103,46 @@
       "namespace_id": "1003",
       "simple": { "limit": 5, "period": 60 }
     }
-  ]
+  ],
+  "env": {
+    // The developer's account. Same code, same sheet for now — once Paula owns
+    // the spreadsheet, these four URLs move to a copy that exists to be broken
+    // on purpose, because the CSV is untrusted input typed by hand.
+    "staging": {
+      "account_id": "2592109b0bad652b789dbbba0de296c5",
+      "kv_namespaces": [
+        {
+          "binding": "CATALOG",
+          "id": "5b6480a293e34ad48d93e63be95c3972",
+          "preview_id": "90893cb2f6e24778a9519ece796bb77f"
+        }
+      ],
+      "analytics_engine_datasets": [
+        { "binding": "METRICS", "dataset": "hotstuff-metrics" }
+      ],
+      "vars": {
+        "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv",
+        "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv",
+        "ANNOUNCEMENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=619153325&single=true&output=csv",
+        "VIDEOS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=398538387&single=true&output=csv"
+      },
+      "ratelimits": [
+        {
+          "name": "MAIL_IP",
+          "namespace_id": "1001",
+          "simple": { "limit": 3, "period": 60 }
+        },
+        {
+          "name": "MAIL_EMAIL",
+          "namespace_id": "1002",
+          "simple": { "limit": 1, "period": 60 }
+        },
+        {
+          "name": "SEND_IP",
+          "namespace_id": "1003",
+          "simple": { "limit": 5, "period": 60 }
+        }
+      ]
+    }
+  }
 }

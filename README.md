@@ -189,8 +189,20 @@ mean entering every market twice. The sheet is the only place dates live.
 ## Working on it
 
 ```bash
-npm run build && npx wrangler dev   # site + mail, same origin
+CLOUDFLARE_ENV=staging npm run build && npx wrangler dev   # site + mail, same origin
 ```
+
+There are two deploy targets. The top level of `wrangler.jsonc` is production,
+on Paula's Cloudflare account; `env.staging` is the developer's, deploying as
+`hotstuff-staging`.
+
+**`CLOUDFLARE_ENV` picks between them at build time, not deploy time.** The
+Cloudflare adapter resolves the environment during `astro build` and writes a
+flattened `dist/server/wrangler.json`, which `.wrangler/deploy/config.json`
+then redirects every later Wrangler command to. By the time `wrangler deploy`
+runs, there are no environments left in the configuration it reads, so `--env`
+is accepted and does nothing — it does not fail, it silently deploys whatever
+the last build baked in. Build first, with the variable set.
 
 Wrangler reads `wrangler.jsonc` at the repo root and serves `dist/client`
 (the Astro build) plus `src/worker/index.ts`. There is no `worker/` directory
@@ -419,7 +431,7 @@ build output and the Worker.
 Local preview of the full stack:
 
 ```bash
-npm run build && npx wrangler dev
+CLOUDFLARE_ENV=staging npm run build && npx wrangler dev
 ```
 
 At launch the repo still moves to an organization Paula owns, and a custom
@@ -540,8 +552,8 @@ there is nothing to keep in step across machines:
 
 ```bash
 npx wrangler deploy --dry-run    # bundle without uploading, to check a change
-npx wrangler deploy              # into whichever account is logged in
-npx wrangler secret put NAME
+npx wrangler deploy              # whichever environment the last build baked in
+npx wrangler secret put NAME     # per Worker, so each target needs its own
 ```
 
 What that buys is typed `Env`. Rate-limit bindings come from
