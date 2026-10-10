@@ -176,8 +176,7 @@ mean entering every market twice. The sheet is the only place dates live.
 - [ ] Point the Square buttons at the real store, they are `href="#"` today
 - [ ] Flip `LIST_ENABLED` to `true` only after `RESEND_SEGMENT_ID` is *their*
       Resend Segment (not yours — see ops.md)
-- [ ] Move the repo to their GitHub organization and the Worker to their
-      Cloudflare, then re-point JSON-LD and the CI badge
+- [ ] Move the repo to their GitHub organization, then re-point the CI badge
 - [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
 - [ ] Have each of them tick `featured` for the jars they want on the front
       page. Until they do, it leads with whatever is at the top of their tab
@@ -415,12 +414,14 @@ git show <sha>^:build-horror.py                # read the last version
 
 ## Hosting
 
-The site and the mail API are one Cloudflare Worker (`hotstuff`). Astro builds
+The site and the mail API are one Cloudflare Worker, deployed to two targets:
+`hotstuff` (production, Paula's account) and `hotstuff-staging` (the
+developer's account). See Working on it for how the target is picked. Astro builds
 into `dist/`; Wrangler serves `dist/client` as Static Assets (CSS, images,
 `_headers`) and runs `src/worker/index.ts` for HTML, mail, `/data`, and cron.
-Interim public URL:
-
-`https://hotstuff.<account>.workers.dev`
+Until the custom domain is attached, each target is served at
+`https://<worker>.<account>.workers.dev`. The public address is
+`paulaandcrazyjohn.com`, which is what the JSON-LD already names.
 
 GitHub stays the repo and runs `./check` in Actions. GitHub Pages is not used.
 `tools/`, `src/`, `data/`, and the README are not served as source — only the
@@ -432,9 +433,9 @@ Local preview of the full stack:
 CLOUDFLARE_ENV=staging npm run build && npx wrangler dev
 ```
 
-At launch the repo still moves to an organization Paula owns, and a custom
-domain on their Cloudflare account replaces `workers.dev`. Until then, Web
-Analytics is the dashboard snippet (automatic injection needs a proxied zone).
+At launch the repo still moves to an organization Paula owns, and
+`paulaandcrazyjohn.com` is attached to the production Worker in place of
+`workers.dev`. Until then, Web Analytics is the dashboard snippet (automatic injection needs a proxied zone).
 
 ### Custom events (asks and mail)
 
