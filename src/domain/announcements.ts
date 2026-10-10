@@ -12,7 +12,7 @@ export type Priority = "quiet" | "normal" | "urgent";
 
 export type Announcement = {
   headline: string;
-  posted: string;
+  date: string;
   link: string;
   /** Wording for the link, when the sheet gives one. */
   linkText: string;
@@ -64,7 +64,7 @@ function live(
  * on the front page, which takes every live row, and `everywhere` on the
  * rest, which takes only the ones that travel.
  *
- * Loudest unexpired row wins; ties go to the most recently posted, so pushing
+ * Loudest unexpired row wins; ties go to the most recent date, so pushing
  * a second urgent row replaces the first without anyone deleting anything.
  */
 export function announcementFor(
@@ -77,7 +77,7 @@ export function announcementFor(
     .filter((r) => r.headline?.trim() && live(r, now, today))
     .map((r) => ({
       headline: r.headline.trim(),
-      posted: (r.posted || "").trim(),
+      date: (r.date || "").trim(),
       link: (r.link || "").trim(),
       linkText: (r.link_text || "").trim() || "More",
       priority: priorityOf(r.priority),
@@ -88,7 +88,7 @@ export function announcementFor(
   showing.sort(
     (a, b) =>
       RANK[b.priority] - RANK[a.priority] ||
-      (Date.parse(b.posted) || 0) - (Date.parse(a.posted) || 0),
+      (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0),
   );
   return showing[0];
 }

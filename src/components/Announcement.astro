@@ -9,14 +9,14 @@ interface Props {
 
 const a = Astro.props.announcement;
 // A sheet row with no usable date still gets to speak; it just loses the chip.
-const posted = a ? parseDay(a.posted) : null;
+const date = a ? parseDay(a.date) : null;
 ---
 
 {a && (
   <aside class={`shout shout-${a.priority}`}>
-    {posted && (
+    {date && (
       <span class="shout-when">
-        {shortMonth(posted)} {posted.getDate()}
+        {shortMonth(date)} {date.getDate()}
       </span>
     )}
     <p class="shout-say">{a.headline}</p>

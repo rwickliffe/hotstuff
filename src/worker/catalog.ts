@@ -19,8 +19,8 @@ const PRODUCT_HEADERS = ["maker", "name", "description", "heat", "price"];
 const EVENT_HEADERS = ["date", "name"];
 // `expires`, `link` and `priority` are optional columns: a sheet without them
 // still validates, and every row is then an ordinary one that never expires.
-const ANNOUNCEMENT_HEADERS = ["posted", "headline"];
-// `posted`, `blurb` and `featured` are optional. `video` takes a YouTube id
+const ANNOUNCEMENT_HEADERS = ["date", "headline"];
+// `date`, `description` and `featured` are optional. `video` takes a YouTube id
 // or any address they paste; a row with no id in it is dropped here.
 const VIDEO_HEADERS = ["video", "title"];
 /** Every sheet in the catalog. The ?debug panel walks this, so a new sheet

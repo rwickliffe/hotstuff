@@ -47,24 +47,24 @@ test("a row with no usable video or no title is dropped", () => {
 
 test("newest first, undated rows last", () => {
   const titles = videoList([
-    row({ title: "Older", posted: "2026-08-01" }),
+    row({ title: "Older", date: "2026-08-01" }),
     row({ title: "Undated" }),
-    row({ title: "Newest", posted: "2026-10-01" }),
+    row({ title: "Newest", date: "2026-10-01" }),
   ]).map((v) => v.title);
   assert.deepEqual(titles, ["Newest", "Older", "Undated"]);
 });
 
 test("the front page takes the featured ones when there are any", () => {
   const titles = featuredVideos([
-    row({ title: "Plain", posted: "2026-10-05" }),
-    row({ title: "Picked", posted: "2026-08-01", featured: "yes" }),
+    row({ title: "Plain", date: "2026-10-05" }),
+    row({ title: "Picked", date: "2026-08-01", featured: "yes" }),
   ]).map((v) => v.title);
   assert.deepEqual(titles, ["Picked"]);
 });
 
 test("with nothing featured it falls back to the newest, capped", () => {
   const rows = Array.from({ length: 8 }, (_, i) =>
-    row({ title: `Video ${i}`, posted: `2026-10-0${i + 1}` }),
+    row({ title: `Video ${i}`, date: `2026-10-0${i + 1}` }),
   );
   const picked = featuredVideos(rows);
   assert.equal(picked.length, 3);

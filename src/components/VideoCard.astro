@@ -9,7 +9,7 @@ interface Props {
 }
 
 const v = Astro.props.video;
-const when = parseDay(v.posted);
+const when = parseDay(v.date);
 ---
 
 <a
@@ -35,6 +35,6 @@ const when = parseDay(v.posted);
       </span>
     )}
     <span class="reel-name">{v.title}</span>
-    {v.blurb && <span class="reel-blurb">{v.blurb}</span>}
+    {v.description && <span class="reel-description">{v.description}</span>}
   </span>
 </a>

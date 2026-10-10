@@ -4,7 +4,7 @@ import test from "node:test";
 import { announcementFor } from "../../src/domain/announcements.ts";
 
 const now = Date.parse("2026-10-08T12:00:00Z");
-const row = (o) => ({ posted: "2026-10-01", headline: "Something", ...o });
+const row = (o) => ({ date: "2026-10-01", headline: "Something", ...o });
 
 test("nothing to say shows nothing", () => {
   assert.equal(announcementFor([], "home", now), null);
@@ -33,12 +33,12 @@ test("the loudest row wins, not the newest", () => {
   const a = announcementFor(
     [
       row({
-        posted: "2026-10-07",
+        date: "2026-10-07",
         headline: "Quiet but new",
         priority: "quiet",
       }),
       row({
-        posted: "2026-10-02",
+        date: "2026-10-02",
         headline: "Loud but old",
         priority: "urgent",
       }),
@@ -52,8 +52,8 @@ test("the loudest row wins, not the newest", () => {
 test("at equal priority the newest wins", () => {
   const a = announcementFor(
     [
-      row({ posted: "2026-10-02", headline: "Older" }),
-      row({ posted: "2026-10-06", headline: "Newer" }),
+      row({ date: "2026-10-02", headline: "Older" }),
+      row({ date: "2026-10-06", headline: "Newer" }),
     ],
     "home",
     now,
@@ -84,11 +84,11 @@ test("expiry covers the whole of its last day", () => {
 
 test("blank or unreadable expiry never expires", () => {
   assert.equal(
-    announcementFor([row({ expires: "" })], "home", now).posted,
+    announcementFor([row({ expires: "" })], "home", now).date,
     "2026-10-01",
   );
   assert.equal(
-    announcementFor([row({ expires: "whenever" })], "home", now).posted,
+    announcementFor([row({ expires: "whenever" })], "home", now).date,
     "2026-10-01",
   );
 });
