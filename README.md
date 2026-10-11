@@ -172,17 +172,29 @@ mean entering every market twice. The sheet is the only place dates live.
 
 ## Before launch
 
-- [ ] Swap `images/logo.jpg` for the unwatermarked logo
-- [ ] Point the Square buttons at the real store, they are `href="#"` today
-- [ ] Flip `LIST_ENABLED` to `true` only after `RESEND_SEGMENT_ID` is *their*
-      Resend Segment (not yours — see ops.md)
-- [ ] Move the repo to their GitHub organization, then re-point the CI badge.
-      The Worker already targets their Cloudflare and JSON-LD their domain
-- [ ] Confirm product names, prices and heat ratings with Paula and Crazy John
-- [ ] Have each of them tick `featured` for the jars they want on the front
-      page. Until they do, it leads with whatever is at the top of their tab
-- [ ] Delete the preview scaffolding: the `.draft` CSS block and the
-      `<div class="draft">` ribbon
+The site is live at `paulaandcrazyjohn.com` on their Cloudflare account,
+serving their sheet, with the contact form delivering. What is left:
+
+- [ ] Confirm product names, prices and heat ratings with Paula and Crazy
+      John. The draft ribbon says out loud that these are unconfirmed, so
+      this one gates the next
+- [ ] Delete the preview scaffolding once they sign off: the `.draft` CSS
+      block and the `<div class="draft">` ribbon in `Base.astro`
+- [ ] Point the Square buttons at the real store. Two of them, both
+      `href="#"`: `Base.astro` and `index.astro`
+- [ ] Decide whether the published phone number stays as it is. It is a
+      personal mobile, and the page, the footer, the mail-failure fallback
+      and the JSON-LD all carry it — structured data most of all, which is
+      built to be harvested. Theirs to choose, but indexing does not undo
+- [ ] Move the repo to their GitHub organization, then re-point the CI badge
+- [ ] `LIST_ENABLED` last of all, and only once `RESEND_SEGMENT_ID` is
+      *their* Resend Segment, not yours: `/confirm` writes every subscriber
+      into it. `SUBSCRIBE_SIGNING_KEY` has to be set too, or `/subscribe`
+      cannot build a confirm link. See ops.md
+
+Done: the unwatermarked logo, the Worker on their Cloudflare, the custom
+domain, JSON-LD pointing at it, a verified sending domain, and `featured`
+ticked on twelve jars.
 
 ## Working on it
 
