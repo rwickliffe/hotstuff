@@ -187,9 +187,10 @@ serving their sheet, with the contact form delivering. What is left:
       and the JSON-LD all carry it — structured data most of all, which is
       built to be harvested. Theirs to choose, but indexing does not undo
 - [ ] Move the repo to their GitHub organization, then re-point the CI badge
-- [ ] `LIST_ENABLED` last of all, and only with the KV counter and
-      `SUBSCRIBE_SIGNING_KEY` already in place — that key is what arms
-      `/subscribe`, see ops.md
+- [ ] `LIST_ENABLED` last of all, and only once `RESEND_SEGMENT_ID` is
+      *their* Resend Segment, not yours: `/confirm` writes every subscriber
+      into it. `SUBSCRIBE_SIGNING_KEY` has to be set too, or `/subscribe`
+      cannot build a confirm link. See ops.md
 
 Done: the unwatermarked logo, the Worker on their Cloudflare, the custom
 domain, JSON-LD pointing at it, a verified sending domain, and `featured`
