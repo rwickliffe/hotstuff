@@ -4,6 +4,7 @@
 
 import {
   readCache,
+  readVersion,
   refreshSources,
   refreshMode as refreshModeAt,
   type SheetCache,
@@ -13,6 +14,8 @@ import { csvToObjects, normalizeDay } from "../lib/csv.js";
 import { youtubeId } from "../domain/videos.ts";
 
 export const CATALOG_KEY = "catalog";
+/** Which generation of the catalog is current, written after the payload. */
+export const CATALOG_VERSION_KEY = "catalog:version";
 export const CATALOG_STALE_MS = 60 * 60 * 1000;
 
 const PRODUCT_HEADERS = ["maker", "name", "description", "heat", "price"];
@@ -95,14 +98,28 @@ export function readCatalog(env: Env): Promise<CatalogPayload> {
 }
 
 export function refreshData(env: Env): Promise<CatalogPayload> {
-  return refreshSources<CatalogData>(env.CATALOG, CATALOG_KEY, {
-    products: { url: env.PRODUCTS_CSV_URL, validate: productRows },
-    events: { url: env.EVENTS_CSV_URL, validate: eventRows },
-    announcements: {
-      url: env.ANNOUNCEMENTS_CSV_URL,
-      optional: true,
-      validate: announcementRows,
+  return refreshSources<CatalogData>(
+    env.CATALOG,
+    CATALOG_KEY,
+    {
+      products: { url: env.PRODUCTS_CSV_URL, validate: productRows },
+      events: { url: env.EVENTS_CSV_URL, validate: eventRows },
+      announcements: {
+        url: env.ANNOUNCEMENTS_CSV_URL,
+        optional: true,
+        validate: announcementRows,
+      },
+      videos: { url: env.VIDEOS_CSV_URL, optional: true, validate: videoRows },
     },
-    videos: { url: env.VIDEOS_CSV_URL, optional: true, validate: videoRows },
-  });
+    CATALOG_VERSION_KEY,
+  );
+}
+
+/**
+ * The generation HTML should be cached under. Null before the first refresh
+ * has run, which callers treat as a version of its own rather than a reason
+ * to skip caching — the next refresh moves it and retires those entries.
+ */
+export function catalogVersion(env: Env): Promise<string | null> {
+  return readVersion(env.CATALOG, CATALOG_VERSION_KEY);
 }

@@ -2,9 +2,14 @@
 // This module only exports `default` (Static Assets rejects named exports).
 
 import { handle } from "@astrojs/cloudflare/handler";
-import { dailyCacheControl, htmlCacheKey } from "../lib/html-cache.ts";
+import {
+  cacheablePath,
+  dailyCacheControl,
+  htmlCacheKey,
+} from "../lib/html-cache.ts";
 import { SITE_CSP } from "../lib/csp.ts";
 import { CACHEABLE_PATHS, DEBUG_PARAM, MARKET_TZ } from "../site-config.ts";
+import { catalogVersion } from "./catalog.ts";
 import api from "./api.ts";
 
 const API = new Set([
@@ -25,10 +30,27 @@ export default {
     const path = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
     if (API.has(path)) return api.fetch(req, env, ctx);
 
-    const cacheKey = htmlCacheKey(req, CACHEABLE_PATHS, DEBUG_PARAM);
-    if (cacheKey) {
-      const hit = await caches.default.match(cacheKey);
-      if (hit) return hit;
+    // The key carries the catalog generation, so a refresh retires every
+    // older entry everywhere at once. Only cacheable paths pay the lookup.
+    const cachePath = cacheablePath(req, CACHEABLE_PATHS, DEBUG_PARAM);
+    let cacheKey: Request | null = null;
+    if (cachePath) {
+      try {
+        const version = await catalogVersion(env);
+        cacheKey = htmlCacheKey(
+          new URL(req.url).origin,
+          cachePath,
+          version ?? "none",
+        );
+      } catch {
+        // KV unreachable: render rather than risk pinning HTML under a key
+        // no refresh will move.
+        cacheKey = null;
+      }
+      if (cacheKey) {
+        const hit = await caches.default.match(cacheKey);
+        if (hit) return hit;
+      }
     }
 
     const astroResponse = withSiteHtmlHeaders(await handle(req, env, ctx));
