@@ -30,21 +30,24 @@ export default {
     const path = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
     if (API.has(path)) return api.fetch(req, env, ctx);
 
-    // The key carries the catalog generation, so a refresh retires every
-    // older entry everywhere at once. Only cacheable paths pay the lookup.
+    // The key carries both things that can make cached HTML wrong: the
+    // catalog generation, moved by a refresh, and the deployed version id,
+    // moved by a deploy. Either one retires every older entry in every data
+    // center at once. Only cacheable paths pay the KV lookup.
     const cachePath = cacheablePath(req, CACHEABLE_PATHS, DEBUG_PARAM);
     let cacheKey: Request | null = null;
     if (cachePath) {
       try {
-        const version = await catalogVersion(env);
+        const data = await catalogVersion(env);
+        const code = env.CF_VERSION_METADATA.id;
         cacheKey = htmlCacheKey(
           new URL(req.url).origin,
           cachePath,
-          version ?? "none",
+          `${code}:${data ?? "none"}`,
         );
       } catch {
-        // KV unreachable: render rather than risk pinning HTML under a key
-        // no refresh will move.
+        // KV or the version binding unreachable: render rather than risk
+        // pinning HTML under a key no refresh will move.
         cacheKey = null;
       }
       if (cacheKey) {
