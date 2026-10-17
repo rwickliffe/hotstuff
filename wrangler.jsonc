@@ -120,7 +120,9 @@
   // and a preview is only ever reachable on workers.dev, never the domain.
   // Preview URLs are public.
   "previews": {
-    // A namespace of its own. Omit this and a preview writes the live catalog.
+    // A namespace of its own. Leaving this out leaves CATALOG unbound; the
+    // live catalog is written only if production's id is put here. The same
+    // goes for the rate-limit ids below: never copy a production id across.
     "kv_namespaces": [
       {
         "binding": "CATALOG",

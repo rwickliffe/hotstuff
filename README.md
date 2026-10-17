@@ -587,7 +587,9 @@ Four things to know before relying on one:
 
 - **Nothing is inherited.** A preview gets only what the `previews` block
   names, which is why that block repeats the bindings rather than extending
-  them. Leave `kv_namespaces` out and a preview writes the live catalog.
+  them. Leave `kv_namespaces` out and `CATALOG` is simply unbound; a preview
+  writes the live catalog only if production's id is copied in. The same goes
+  for the rate-limit `namespace_id`s, which are shared across Workers.
 - **No cron.** Triggers target production, so a preview's KV stays empty until
   something requests `/data`. Prime it once, the same way the first production
   deploy was primed.
