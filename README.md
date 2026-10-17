@@ -563,6 +563,46 @@ npx wrangler rollback            # back to the previous one
 npx wrangler secret put NAME
 ```
 
+### Previews, for changes someone else has to look at
+
+A version URL runs on production's bindings. A **Preview** is a per-branch
+deployment with its own, configured by the `previews` block in
+`wrangler.jsonc` — its own KV namespace, its own metrics dataset, its own
+secrets. That is what makes it safe to point at a Square sandbox, or a copy of
+the spreadsheet with deliberately broken rows in it, and then send the URL to
+Paula and John.
+
+```bash
+npx wrangler preview                       # deploys the current git branch
+npx wrangler preview secret put NAME       # a secret for this branch only
+npx wrangler preview base-config secret    # a secret every preview inherits
+npx wrangler preview delete --name NAME    # when the branch is merged
+```
+
+`wrangler dev` is still the faster loop and still the place for anything
+destructive. Reach for a preview when the point is that somebody other than
+you needs to click it.
+
+Four things to know before relying on one:
+
+- **Nothing is inherited.** A preview gets only what the `previews` block
+  names, which is why that block repeats the bindings rather than extending
+  them. Leave `kv_namespaces` out and `CATALOG` is simply unbound; a preview
+  writes the live catalog only if production's id is copied in. The same goes
+  for the rate-limit `namespace_id`s, which are shared across Workers.
+- **No cron.** Triggers target production, so a preview's KV stays empty until
+  something requests `/data`. Prime it once, the same way the first production
+  deploy was primed.
+- **No routes.** A preview is reachable on `workers.dev` only, never the
+  custom domain.
+- **The URL is public**, like a version URL. Nothing confidential is exposed,
+  but an unfinished feature is reachable by anyone holding the link.
+
+Secrets live on Cloudflare rather than in this repo, so `wrangler preview
+secret list` is the only record of what a preview has. Base-config secrets —
+the ones that make every preview use a developer's Resend account instead of
+Paula's — are account state that nothing here can show you.
+
 What that buys is typed `Env`. Rate-limit bindings come from
 `npx wrangler types --include-runtime false`; secrets are merged in
 `env.d.ts` because they live in the dashboard, not in `wrangler.jsonc`. A
