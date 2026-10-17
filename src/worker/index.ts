@@ -2,9 +2,14 @@
 // This module only exports `default` (Static Assets rejects named exports).
 
 import { handle } from "@astrojs/cloudflare/handler";
-import { dailyCacheControl, htmlCacheKey } from "../lib/html-cache.ts";
+import {
+  cacheablePath,
+  dailyCacheControl,
+  htmlCacheKey,
+} from "../lib/html-cache.ts";
 import { SITE_CSP } from "../lib/csp.ts";
 import { CACHEABLE_PATHS, DEBUG_PARAM, MARKET_TZ } from "../site-config.ts";
+import { readCatalog, type CatalogContext } from "./catalog.ts";
 import api from "./api.ts";
 
 const API = new Set([
@@ -25,10 +30,36 @@ export default {
     const path = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
     if (API.has(path)) return api.fetch(req, env, ctx);
 
-    const cacheKey = htmlCacheKey(req, CACHEABLE_PATHS, DEBUG_PARAM);
-    if (cacheKey) {
-      const hit = await caches.default.match(cacheKey);
-      if (hit) return hit;
+    // The key carries both things that can make cached HTML wrong: the
+    // catalog generation, moved by a refresh, and the deployed version id,
+    // moved by a deploy. Either one retires every older entry in every data
+    // center at once. The generation is the fetchedAt of the very catalog the
+    // page then renders from (handed over on the context), never a second KV
+    // key: KV does not order reads across keys, so a pointer can run ahead of
+    // the payload it names. Only cacheable paths pay the KV lookup.
+    const cachePath = cacheablePath(req, CACHEABLE_PATHS, DEBUG_PARAM);
+    let cacheKey: Request | null = null;
+    if (cachePath) {
+      try {
+        const catalog = await readCatalog(env);
+        const code = env.CF_VERSION_METADATA.id;
+        cacheKey = htmlCacheKey(
+          new URL(req.url).origin,
+          cachePath,
+          `${code}:${catalog.fetchedAt ?? "none"}`,
+        );
+        // The adapter's createLocals hands this very object to the page as
+        // locals.cfContext, so a property on it is the whole handover.
+        (ctx as CatalogContext).catalog = catalog;
+      } catch {
+        // KV or the version binding unreachable: render rather than risk
+        // pinning HTML under a key no refresh will move.
+        cacheKey = null;
+      }
+      if (cacheKey) {
+        const hit = await caches.default.match(cacheKey);
+        if (hit) return hit;
+      }
     }
 
     const astroResponse = withSiteHtmlHeaders(await handle(req, env, ctx));

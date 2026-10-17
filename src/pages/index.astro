@@ -16,9 +16,11 @@ import { debugSources, isDebug } from "../domain/debug.ts";
 import { dataAge } from "../domain/data-age.ts";
 import { featuredByMaker } from "../domain/products.ts";
 import { featuredVideos } from "../domain/videos.ts";
-import { readCatalog } from "../worker/catalog.ts";
+import { pageCatalog } from "../worker/catalog.ts";
 
-const { catalog, source } = catalogForPage(await readCatalog(env));
+const { catalog, source } = catalogForPage(
+  await pageCatalog(Astro.locals, env),
+);
 const paula = featuredByMaker(catalog.products, "Paula");
 const john = featuredByMaker(catalog.products, "John");
 const age = dataAge(catalog.fetchedAt);

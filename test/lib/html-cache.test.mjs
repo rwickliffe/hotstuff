@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { dailyCacheControl, htmlCacheKey } from "../../src/lib/html-cache.ts";
+import {
+  cacheablePath,
+  dailyCacheControl,
+  htmlCacheKey,
+} from "../../src/lib/html-cache.ts";
 import {
   CACHEABLE_PATHS,
   DEBUG_PARAM,
@@ -31,27 +35,49 @@ test("the last second of the day still caches for one second", () => {
   );
 });
 
-test("htmlCacheKey keeps cacheable paths, strips query, skips the debug param", () => {
+test("cacheablePath keeps cacheable paths and skips the debug param", () => {
   const origin = "https://hotstuff.example";
-  const key = (path) =>
-    htmlCacheKey(new Request(origin + path), CACHEABLE_PATHS, DEBUG_PARAM);
-  assert.equal(key("/")?.url, origin + "/");
-  assert.equal(key("/?ask=Chow%20Chow")?.url, origin + "/");
-  assert.equal(key("/products")?.url, origin + "/products");
-  assert.equal(
-    htmlCacheKey(new Request(origin + "/products"), ["/products/"], DEBUG_PARAM)
-      ?.url,
-    origin + "/products",
-  );
-  assert.equal(key("/products?debug"), null);
-  assert.equal(key("/?debug=1"), null);
-  assert.equal(key("/data"), null);
-  assert.equal(
-    htmlCacheKey(
-      new Request(origin + "/", { method: "POST" }),
+  const at = (path, init) =>
+    cacheablePath(
+      new Request(origin + path, init),
       CACHEABLE_PATHS,
       DEBUG_PARAM,
+    );
+  assert.equal(at("/"), "/");
+  assert.equal(at("/?ask=Chow%20Chow"), "/");
+  assert.equal(at("/products"), "/products");
+  assert.equal(at("/products/"), "/products");
+  assert.equal(at("/products?debug"), null);
+  assert.equal(at("/?debug=1"), null);
+  assert.equal(at("/data"), null);
+  assert.equal(at("/", { method: "POST" }), null);
+});
+
+test("a trailing slash in the configured path still matches", () => {
+  assert.equal(
+    cacheablePath(
+      new Request("https://hotstuff.example/products"),
+      ["/products/"],
+      DEBUG_PARAM,
     ),
-    null,
+    "/products",
+  );
+});
+
+test("the key carries the version, so a refresh retires the old entry", () => {
+  const origin = "https://hotstuff.example";
+  const before = htmlCacheKey(origin, "/", "2026-09-19T10:13:00.000Z");
+  const after = htmlCacheKey(origin, "/", "2026-09-19T11:13:00.000Z");
+  assert.notEqual(before.url, after.url);
+  assert.equal(before.url, origin + "/?v=2026-09-19T10%3A13%3A00.000Z");
+  // Same generation, same key: that is what makes a hit possible at all.
+  assert.equal(
+    htmlCacheKey(origin, "/", "same").url,
+    htmlCacheKey(origin, "/", "same").url,
+  );
+  // Pages are still separate entries within one generation.
+  assert.notEqual(
+    htmlCacheKey(origin, "/", "same").url,
+    htmlCacheKey(origin, "/products", "same").url,
   );
 });

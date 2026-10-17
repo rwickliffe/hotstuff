@@ -106,3 +106,20 @@ export function refreshData(env: Env): Promise<CatalogPayload> {
     videos: { url: env.VIDEOS_CSV_URL, optional: true, validate: videoRows },
   });
 }
+
+/** The worker hands its read to Astro on the execution context. */
+export type CatalogContext = ExecutionContext & { catalog?: CatalogPayload };
+
+/**
+ * The catalog a page renders from. The worker keys the HTML cache on this same
+ * value's fetchedAt, so a page must not read KV again behind its back: a second
+ * read can land on an older copy and file old HTML under the new key. The
+ * fallback read is for a request the worker could not pre-read.
+ */
+export function pageCatalog(
+  locals: { cfContext?: unknown },
+  env: Env,
+): Promise<CatalogPayload> {
+  const read = (locals.cfContext as CatalogContext | undefined)?.catalog;
+  return read ? Promise.resolve(read) : readCatalog(env);
+}
