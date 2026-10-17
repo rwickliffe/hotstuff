@@ -143,20 +143,23 @@
       "ANNOUNCEMENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=619153325&single=true&output=csv",
       "VIDEOS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=398538387&single=true&output=csv"
     },
+    // Counters are shared by id across Workers, so these must not reuse the
+    // production ids: a preview URL is public, and sharing 1001-1003 would let
+    // anyone's POSTs to a preview rate-limit the live forms.
     "ratelimits": [
       {
         "name": "MAIL_IP",
-        "namespace_id": "1001",
+        "namespace_id": "2001",
         "simple": { "limit": 3, "period": 60 }
       },
       {
         "name": "MAIL_EMAIL",
-        "namespace_id": "1002",
+        "namespace_id": "2002",
         "simple": { "limit": 1, "period": 60 }
       },
       {
         "name": "SEND_IP",
-        "namespace_id": "1003",
+        "namespace_id": "2003",
         "simple": { "limit": 5, "period": 60 }
       }
     ]
