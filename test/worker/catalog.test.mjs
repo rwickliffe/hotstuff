@@ -12,10 +12,9 @@ import {
 } from "../../src/lib/csv-guard.ts";
 import {
   announcementRows,
-  CATALOG_VERSION_KEY,
-  catalogVersion,
   emptyCatalog,
   eventRows,
+  pageCatalog,
   productRows,
   refreshData,
   refreshMode,
@@ -178,77 +177,19 @@ test("a blank URL is a quiet skip for the optional sheets only", async () => {
   });
 });
 
-test("the version is written after the payload, and names the generation", async () => {
-  const store = new Map();
-  const writes = [];
+test("a page renders from the catalog the worker keyed the cache on", async () => {
+  const read = { ...emptyCatalog(), fetchedAt: "2026-10-16T12:00:00.000Z" };
   const env = {
-    PRODUCTS_CSV_URL: "https://example.test/products.csv",
-    EVENTS_CSV_URL: "https://example.test/events.csv",
     CATALOG: {
-      async get(key, type) {
-        const v = store.get(key);
-        if (v == null) return null;
-        return type === "json" ? JSON.parse(v) : v;
-      },
-      async put(key, value) {
-        writes.push(key);
-        store.set(key, value);
+      async get() {
+        return { ...emptyCatalog(), fetchedAt: "older" };
       },
     },
   };
 
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (url) =>
-    new Response(String(url).includes("products") ? productsCsv : eventsCsv, {
-      status: 200,
-    });
-
-  try {
-    assert.equal(
-      await catalogVersion(env),
-      null,
-      "no version before a refresh",
-    );
-    const next = await refreshData(env);
-    // Order is the safety property: a version that outran its payload would
-    // point readers at a generation that was never stored.
-    assert.deepEqual(writes, ["catalog", CATALOG_VERSION_KEY]);
-    assert.equal(await catalogVersion(env), next.fetchedAt);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("a later refresh moves the version, retiring older cache keys", async () => {
-  const store = new Map();
-  const env = {
-    PRODUCTS_CSV_URL: "https://example.test/products.csv",
-    EVENTS_CSV_URL: "https://example.test/events.csv",
-    CATALOG: {
-      async get(key, type) {
-        const v = store.get(key);
-        if (v == null) return null;
-        return type === "json" ? JSON.parse(v) : v;
-      },
-      async put(key, value) {
-        store.set(key, value);
-      },
-    },
-  };
-
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (url) =>
-    new Response(String(url).includes("products") ? productsCsv : eventsCsv, {
-      status: 200,
-    });
-
-  try {
-    const first = await refreshData(env);
-    await new Promise((r) => setTimeout(r, 2));
-    const second = await refreshData(env);
-    assert.notEqual(first.fetchedAt, second.fetchedAt);
-    assert.equal(await catalogVersion(env), second.fetchedAt);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+  // Handed over: the page uses it and never touches KV, so the key and the
+  // rendered HTML cannot name different generations.
+  assert.equal(await pageCatalog({ cfContext: { catalog: read } }, env), read);
+  // Not handed over: fall back to a read of its own.
+  assert.equal((await pageCatalog({}, env)).fetchedAt, "older");
 });

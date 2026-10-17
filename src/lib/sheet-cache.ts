@@ -66,19 +66,10 @@ export async function readCache<T extends Record<string, unknown[]>>(
   };
 }
 
-/**
- * Fetch every source, merge with what is already stored, and write it back.
- * `versionKey`, when given, is written *after* the payload with the same
- * fetchedAt: a reader can learn which generation is current without pulling
- * the whole payload. The order matters — if the second write fails, readers
- * keep asking for the previous generation and see stale data, instead of
- * asking for a generation whose payload was never stored.
- */
 export async function refreshSources<T extends Record<string, unknown[]>>(
   kv: KVNamespace,
   key: string,
   sources: { [K in keyof T]: SourceSpec<T[K][number]> },
-  versionKey?: string,
 ): Promise<SheetCache<T>> {
   const names = Object.keys(sources) as (keyof T)[];
   const prev = await readCache<T>(kv, key, names);
@@ -95,23 +86,13 @@ export async function refreshSources<T extends Record<string, unknown[]>>(
   const err = Object.fromEntries(
     results.filter(([, res]) => res.error).map(([n, res]) => [n, res.error]),
   ) as Partial<Record<keyof T, string>>;
-  const fetchedAt = new Date().toISOString();
   const next: SheetCache<T> = {
     ...datasets,
-    fetchedAt,
+    fetchedAt: new Date().toISOString(),
     lastError: Object.keys(err).length ? err : null,
   };
   await kv.put(key, JSON.stringify(next));
-  if (versionKey) await kv.put(versionKey, fetchedAt);
   return next;
-}
-
-/** The stored generation, or null before the first write. */
-export function readVersion(
-  kv: KVNamespace,
-  versionKey: string,
-): Promise<string | null> {
-  return kv.get(versionKey);
 }
 
 export function isStale(

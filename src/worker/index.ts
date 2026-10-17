@@ -9,7 +9,7 @@ import {
 } from "../lib/html-cache.ts";
 import { SITE_CSP } from "../lib/csp.ts";
 import { CACHEABLE_PATHS, DEBUG_PARAM, MARKET_TZ } from "../site-config.ts";
-import { catalogVersion } from "./catalog.ts";
+import { readCatalog } from "./catalog.ts";
 import api from "./api.ts";
 
 const API = new Set([
@@ -33,18 +33,31 @@ export default {
     // The key carries both things that can make cached HTML wrong: the
     // catalog generation, moved by a refresh, and the deployed version id,
     // moved by a deploy. Either one retires every older entry in every data
-    // center at once. Only cacheable paths pay the KV lookup.
+    // center at once. The generation is the fetchedAt of the very catalog the
+    // page then renders from (handed over on the context), never a second KV
+    // key: KV does not order reads across keys, so a pointer can run ahead of
+    // the payload it names. Only cacheable paths pay the KV lookup.
     const cachePath = cacheablePath(req, CACHEABLE_PATHS, DEBUG_PARAM);
     let cacheKey: Request | null = null;
+    let astroCtx: ExecutionContext = ctx;
     if (cachePath) {
       try {
-        const data = await catalogVersion(env);
+        const catalog = await readCatalog(env);
         const code = env.CF_VERSION_METADATA.id;
         cacheKey = htmlCacheKey(
           new URL(req.url).origin,
           cachePath,
-          `${code}:${data ?? "none"}`,
+          `${code}:${catalog.fetchedAt ?? "none"}`,
         );
+        // A proxy rather than a copy: ExecutionContext's methods need the real
+        // object as `this`, and its member list is not ours to keep in step.
+        astroCtx = new Proxy(ctx, {
+          get: (target, prop) => {
+            if (prop === "catalog") return catalog;
+            const v = Reflect.get(target, prop, target);
+            return typeof v === "function" ? v.bind(target) : v;
+          },
+        });
       } catch {
         // KV or the version binding unreachable: render rather than risk
         // pinning HTML under a key no refresh will move.
@@ -56,7 +69,7 @@ export default {
       }
     }
 
-    const astroResponse = withSiteHtmlHeaders(await handle(req, env, ctx));
+    const astroResponse = withSiteHtmlHeaders(await handle(req, env, astroCtx));
     if (cacheKey && astroResponse.ok) {
       ctx.waitUntil(caches.default.put(cacheKey, astroResponse.clone()));
     }

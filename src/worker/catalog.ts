@@ -4,7 +4,6 @@
 
 import {
   readCache,
-  readVersion,
   refreshSources,
   refreshMode as refreshModeAt,
   type SheetCache,
@@ -14,8 +13,6 @@ import { csvToObjects, normalizeDay } from "../lib/csv.js";
 import { youtubeId } from "../domain/videos.ts";
 
 export const CATALOG_KEY = "catalog";
-/** Which generation of the catalog is current, written after the payload. */
-export const CATALOG_VERSION_KEY = "catalog:version";
 export const CATALOG_STALE_MS = 60 * 60 * 1000;
 
 const PRODUCT_HEADERS = ["maker", "name", "description", "heat", "price"];
@@ -98,28 +95,31 @@ export function readCatalog(env: Env): Promise<CatalogPayload> {
 }
 
 export function refreshData(env: Env): Promise<CatalogPayload> {
-  return refreshSources<CatalogData>(
-    env.CATALOG,
-    CATALOG_KEY,
-    {
-      products: { url: env.PRODUCTS_CSV_URL, validate: productRows },
-      events: { url: env.EVENTS_CSV_URL, validate: eventRows },
-      announcements: {
-        url: env.ANNOUNCEMENTS_CSV_URL,
-        optional: true,
-        validate: announcementRows,
-      },
-      videos: { url: env.VIDEOS_CSV_URL, optional: true, validate: videoRows },
+  return refreshSources<CatalogData>(env.CATALOG, CATALOG_KEY, {
+    products: { url: env.PRODUCTS_CSV_URL, validate: productRows },
+    events: { url: env.EVENTS_CSV_URL, validate: eventRows },
+    announcements: {
+      url: env.ANNOUNCEMENTS_CSV_URL,
+      optional: true,
+      validate: announcementRows,
     },
-    CATALOG_VERSION_KEY,
-  );
+    videos: { url: env.VIDEOS_CSV_URL, optional: true, validate: videoRows },
+  });
 }
 
+/** The worker hands its read to Astro on the execution context. */
+export type CatalogContext = ExecutionContext & { catalog?: CatalogPayload };
+
 /**
- * The generation HTML should be cached under. Null before the first refresh
- * has run, which callers treat as a version of its own rather than a reason
- * to skip caching — the next refresh moves it and retires those entries.
+ * The catalog a page renders from. The worker keys the HTML cache on this same
+ * value's fetchedAt, so a page must not read KV again behind its back: a second
+ * read can land on an older copy and file old HTML under the new key. The
+ * fallback read is for a request the worker could not pre-read.
  */
-export function catalogVersion(env: Env): Promise<string | null> {
-  return readVersion(env.CATALOG, CATALOG_VERSION_KEY);
+export function pageCatalog(
+  locals: { cfContext?: unknown },
+  env: Env,
+): Promise<CatalogPayload> {
+  const read = (locals.cfContext as CatalogContext | undefined)?.catalog;
+  return read ? Promise.resolve(read) : readCatalog(env);
 }
