@@ -70,6 +70,13 @@
   "analytics_engine_datasets": [
     { "binding": "METRICS", "dataset": "hotstuff-metrics" }
   ],
+  // The deployed version id, which changes on every deploy. It is half of the
+  // HTML cache key: the catalog generation retires entries when the sheet
+  // changes, and this retires them when the code does. Without it a copy edit
+  // ships correctly and then waits out the previous entry's hour.
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
   "triggers": {
     "crons": ["13 * * * *"]
   },

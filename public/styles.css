@@ -712,7 +712,7 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 }
 
 .cal-stub {
-  background: var(--card); border: 2px dashed var(--rule-firm);
+  background: var(--card); border: 1px solid var(--rule-firm);
   padding: 30px 28px;
   display: flex; flex-direction: column; gap: 15px;
 }
@@ -763,7 +763,6 @@ section { padding: clamp(56px, 9vw, 104px) 0; }
 .cal-map:hover { text-decoration-color: var(--chile); }
 .cal-map:focus-visible { outline: 2px solid var(--chile); outline-offset: 2px; }
 
-.cal-note { margin: 6px 0 0; font-size: 14px; color: var(--ink-mid); }
 
 
 .cal-empty { margin: 0; color: var(--ink-mid); font-style: italic; }

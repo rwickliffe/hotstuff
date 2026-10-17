@@ -12,9 +12,11 @@ import { catalogForPage } from "../domain/page-catalog.ts";
 import { debugSources, isDebug } from "../domain/debug.ts";
 import { dataAge } from "../domain/data-age.ts";
 import { videoList } from "../domain/videos.ts";
-import { readCatalog } from "../worker/catalog.ts";
+import { pageCatalog } from "../worker/catalog.ts";
 
-const { catalog, source } = catalogForPage(await readCatalog(env));
+const { catalog, source } = catalogForPage(
+  await pageCatalog(Astro.locals, env),
+);
 const videos = videoList(catalog.videos);
 const age = dataAge(catalog.fetchedAt);
 const announcement = announcementFor(catalog.announcements, "everywhere");

@@ -14,6 +14,7 @@ import {
   announcementRows,
   emptyCatalog,
   eventRows,
+  pageCatalog,
   productRows,
   refreshData,
   refreshMode,
@@ -174,4 +175,21 @@ test("a blank URL is a quiet skip for the optional sheets only", async () => {
     products: "url empty",
     events: "url empty",
   });
+});
+
+test("a page renders from the catalog the worker keyed the cache on", async () => {
+  const read = { ...emptyCatalog(), fetchedAt: "2026-10-16T12:00:00.000Z" };
+  const env = {
+    CATALOG: {
+      async get() {
+        return { ...emptyCatalog(), fetchedAt: "older" };
+      },
+    },
+  };
+
+  // Handed over: the page uses it and never touches KV, so the key and the
+  // rendered HTML cannot name different generations.
+  assert.equal(await pageCatalog({ cfContext: { catalog: read } }, env), read);
+  // Not handed over: fall back to a read of its own.
+  assert.equal((await pageCatalog({}, env)).fetchedAt, "older");
 });
