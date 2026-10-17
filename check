@@ -128,6 +128,32 @@ site_build () {
   "$astro" build
 }
 
+# A preview shares nothing with production only if its KV id and rate-limit
+# namespace ids differ from the top-level ones, and the adapter flattens the
+# config in memory, so look at what it wrote rather than at wrangler.jsonc.
+# Copying a production id into `previews` is silent: it would write the live
+# catalog, or let a public preview URL rate-limit the live forms. Runs after
+# the build for that reason.
+previews_isolated () {
+  local f=dist/server/wrangler.json
+  [ -f "$f" ] || return 0
+  node -e '
+    const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    const p = c.previews;
+    if (!p) throw new Error("previews block missing from the built config");
+    const ids = (o, k, f) => (o[k] || []).map(f);
+    const pairs = [
+      ["kv", ids(c, "kv_namespaces", (b) => b.id), ids(p, "kv_namespaces", (b) => b.id)],
+      ["ratelimit", ids(c, "ratelimits", (b) => b.namespace_id), ids(p, "ratelimits", (b) => b.namespace_id)],
+    ];
+    for (const [what, prod, prev] of pairs) {
+      if (!prev.length) throw new Error("previews has no " + what + " ids");
+      const shared = prev.filter((id) => prod.includes(id));
+      if (shared.length) throw new Error("preview reuses production " + what + " ids: " + shared);
+    }
+  ' "$f"
+}
+
 # JS/TS/Astro/JSON only. Python and this script are out of scope.
 prettier_check () {
   [ -x node_modules/.bin/prettier ] || return 0
@@ -162,6 +188,7 @@ unit_tests () {
 step "unit tests"       unit_tests
 step "astro check"          site_astro_types
 step "astro build"          site_build
+step "previews share nothing with production" previews_isolated
 step "prettier"             prettier_check
 
 if [ "$failed" -ne 0 ]; then
