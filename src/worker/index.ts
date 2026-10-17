@@ -9,7 +9,7 @@ import {
 } from "../lib/html-cache.ts";
 import { SITE_CSP } from "../lib/csp.ts";
 import { CACHEABLE_PATHS, DEBUG_PARAM, MARKET_TZ } from "../site-config.ts";
-import { readCatalog } from "./catalog.ts";
+import { readCatalog, type CatalogContext } from "./catalog.ts";
 import api from "./api.ts";
 
 const API = new Set([
@@ -39,7 +39,6 @@ export default {
     // the payload it names. Only cacheable paths pay the KV lookup.
     const cachePath = cacheablePath(req, CACHEABLE_PATHS, DEBUG_PARAM);
     let cacheKey: Request | null = null;
-    let astroCtx: ExecutionContext = ctx;
     if (cachePath) {
       try {
         const catalog = await readCatalog(env);
@@ -49,15 +48,9 @@ export default {
           cachePath,
           `${code}:${catalog.fetchedAt ?? "none"}`,
         );
-        // A proxy rather than a copy: ExecutionContext's methods need the real
-        // object as `this`, and its member list is not ours to keep in step.
-        astroCtx = new Proxy(ctx, {
-          get: (target, prop) => {
-            if (prop === "catalog") return catalog;
-            const v = Reflect.get(target, prop, target);
-            return typeof v === "function" ? v.bind(target) : v;
-          },
-        });
+        // The adapter's createLocals hands this very object to the page as
+        // locals.cfContext, so a property on it is the whole handover.
+        (ctx as CatalogContext).catalog = catalog;
       } catch {
         // KV or the version binding unreachable: render rather than risk
         // pinning HTML under a key no refresh will move.
@@ -69,7 +62,7 @@ export default {
       }
     }
 
-    const astroResponse = withSiteHtmlHeaders(await handle(req, env, astroCtx));
+    const astroResponse = withSiteHtmlHeaders(await handle(req, env, ctx));
     if (cacheKey && astroResponse.ok) {
       ctx.waitUntil(caches.default.put(cacheKey, astroResponse.clone()));
     }

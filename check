@@ -43,6 +43,18 @@ worker_types () {
   "$tsc" --noEmit --project tsconfig.worker.json
 }
 
+# The worker reads the catalog once and leaves it on the ExecutionContext,
+# which the Cloudflare adapter passes to pages as locals.cfContext. Rename
+# that in the adapter and every page silently falls back to a second KV
+# read — which can land on an older copy and file stale HTML under the new
+# cache key. Nothing else would fail, so this is the canary.
+adapter_context () {
+  local f=node_modules/@astrojs/cloudflare/dist/utils/cf-helpers.js
+  [ -f "$f" ] || return 0
+  grep -q "cfContext" "$f" ||
+    { echo "the adapter no longer sets locals.cfContext"; return 1; }
+}
+
 pages () {
   grep -q 'href="/styles.css"' src/layouts/Base.astro ||
     { echo "Base.astro does not link /styles.css"; return 1; }
@@ -128,6 +140,7 @@ step "generated art is current" tools/make-assets.py --check
 step "catalog snapshot has products" snapshot
 step "SITE_CSP matches _headers" csp
 step "pages are wired up"       pages
+step "adapter still hands over the context" adapter_context
 step "favicon matches the sprite" flame
 # Name the files rather than the directories they sit in: passing a
 # directory to --test is not handled the same way across Node versions,
