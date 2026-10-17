@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { FLOOR_SHEETS, SHEET_NAMES } from "../src/worker/catalog.ts";
+import { FLOOR_SHEET_NAMES, SHEET_NAMES } from "../src/worker/catalog.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const snapOut = path.join(root, "data/catalog-snapshot.json");
@@ -26,11 +26,11 @@ if (!res.ok) {
   process.exit(1);
 }
 const data = await res.json();
-// The optional sheets stay empty on purpose: see FLOOR_SHEETS.
+// The optional sheets stay empty on purpose: see FLOOR_SHEET_NAMES.
 const datasets = Object.fromEntries(
   SHEET_NAMES.map((n) => [
     n,
-    FLOOR_SHEETS.includes(n) && Array.isArray(data[n]) ? data[n] : [],
+    FLOOR_SHEET_NAMES.includes(n) && Array.isArray(data[n]) ? data[n] : [],
   ]),
 );
 if (!datasets.products.length) {
@@ -48,6 +48,6 @@ const snapshot = {
 };
 fs.writeFileSync(snapOut, JSON.stringify(snapshot, null, 2) + "\n");
 console.log(
-  `wrote ${FLOOR_SHEETS.map((n) => `${datasets[n].length} ${n}`).join(", ")} to data/catalog-snapshot.json from ${dataUrl}` +
-    ` (${SHEET_NAMES.filter((n) => !FLOOR_SHEETS.includes(n)).join(", ")} left empty)`,
+  `wrote ${FLOOR_SHEET_NAMES.map((n) => `${datasets[n].length} ${n}`).join(", ")} to data/catalog-snapshot.json from ${dataUrl}` +
+    ` (${SHEET_NAMES.filter((n) => !FLOOR_SHEET_NAMES.includes(n)).join(", ")} left empty)`,
 );

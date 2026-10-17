@@ -46,7 +46,7 @@ export type SheetName = (typeof SHEET_NAMES)[number];
  * announcement in particular has no business outliving its sheet — the one
  * on the site when this was written carries no expiry at all.
  */
-export const FLOOR_SHEETS: readonly SheetName[] = ["products", "events"];
+export const FLOOR_SHEET_NAMES: readonly SheetName[] = ["products", "events"];
 
 type CatalogData = {
   products: Record<string, string>[];
