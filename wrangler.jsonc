@@ -104,5 +104,61 @@
       "namespace_id": "1003",
       "simple": { "limit": 5, "period": 60 }
     }
-  ]
+  ],
+  // Worker Previews: per-branch deployments of this same Worker, created with
+  // `npx wrangler preview`, for changes the owners need to click before they
+  // are live. Nothing here is inherited from above — a preview gets only what
+  // this block names — so the bindings are repeated rather than extended.
+  //
+  //   npx wrangler preview                      deploy the current branch
+  //   npx wrangler preview secret put NAME      a secret for this branch only
+  //   npx wrangler preview base-config secret   a secret every preview gets
+  //   npx wrangler preview delete --name NAME   remove it
+  //
+  // Two things previews do not get: cron triggers and routes both target
+  // production, so a preview's KV stays empty until something asks for /data,
+  // and a preview is only ever reachable on workers.dev, never the domain.
+  // Preview URLs are public.
+  "previews": {
+    // A namespace of its own. Omit this and a preview writes the live catalog.
+    "kv_namespaces": [
+      {
+        "binding": "CATALOG",
+        "id": "2f67a8dedf2e4cb2ba6a239d38610ad8"
+      }
+    ],
+    // Test traffic stays out of the numbers Paula and John would read.
+    "analytics_engine_datasets": [
+      { "binding": "METRICS", "dataset": "hotstuff-metrics-preview" }
+    ],
+    "version_metadata": {
+      "binding": "CF_VERSION_METADATA"
+    },
+    // The live sheet for now, because it is public and read-only. Point these
+    // at a copy when there is one: the reason to have a second spreadsheet is
+    // to type bad data into it on purpose and watch what the page does.
+    "vars": {
+      "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv",
+      "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv",
+      "ANNOUNCEMENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=619153325&single=true&output=csv",
+      "VIDEOS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=398538387&single=true&output=csv"
+    },
+    "ratelimits": [
+      {
+        "name": "MAIL_IP",
+        "namespace_id": "1001",
+        "simple": { "limit": 3, "period": 60 }
+      },
+      {
+        "name": "MAIL_EMAIL",
+        "namespace_id": "1002",
+        "simple": { "limit": 1, "period": 60 }
+      },
+      {
+        "name": "SEND_IP",
+        "namespace_id": "1003",
+        "simple": { "limit": 5, "period": 60 }
+      }
+    ]
+  }
 }
