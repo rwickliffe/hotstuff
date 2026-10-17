@@ -301,32 +301,8 @@
       "address": "1302 Chestnut St, Bastrop, TX 78602"
     }
   ],
-  "announcements": [
-    {
-      "date": "2026-10-08",
-      "headline": "Found footage! Check out our new videos.",
-      "expires": "",
-      "link": "#watch",
-      "link_text": "watch now",
-      "priority": ""
-    }
-  ],
-  "videos": [
-    {
-      "video": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "title": "What happens to two pounds of jalapeños",
-      "description": "One afternoon, a pot of syrup, and the trick that keeps them crisp instead of sad.",
-      "date": "2026-10-08",
-      "featured": ""
-    },
-    {
-      "video": "https://www.youtube.com/watch?v=I9Doo9ajCyQ",
-      "title": "What to do with the chow chow",
-      "description": "Pinto beans, a hot dog, and a cast iron skillet of cornbread. Three ways in five minutes.",
-      "date": "2026-10-09",
-      "featured": ""
-    }
-  ],
+  "announcements": [],
+  "videos": [],
   "fetchedAt": "2026-10-17T03:13:12.214Z",
   "lastError": null
 }

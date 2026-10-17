@@ -34,6 +34,16 @@ export const SHEET_NAMES = [
 
 export type SheetName = (typeof SHEET_NAMES)[number];
 
+/**
+ * What the committed snapshot carries. Only the sheets the site cannot do
+ * without: announcements and videos are optional, and no rows is a success
+ * for both, so an empty-KV render should omit them rather than show whatever
+ * happened to be live the day someone last ran tools/pull-catalog.mjs. An
+ * announcement in particular has no business outliving its sheet — the one
+ * on the site when this was written carries no expiry at all.
+ */
+export const FLOOR_SHEETS: readonly SheetName[] = ["products", "events"];
+
 type CatalogData = {
   products: Record<string, string>[];
   events: Record<string, string>[];
