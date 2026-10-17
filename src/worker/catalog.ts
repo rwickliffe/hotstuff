@@ -35,8 +35,12 @@ export const SHEET_NAMES = [
 export type SheetName = (typeof SHEET_NAMES)[number];
 
 /**
- * What the committed snapshot carries. Only the sheets the site cannot do
- * without: announcements and videos are optional, and no rows is a success
+ * What the committed floor (`data/catalog-snapshot.json`) carries, which is
+ * only the sheets the site cannot do without. The floor is what a page
+ * renders from when KV comes back empty; `page-catalog.ts` takes it as
+ * `floor` and reports it as the `snapshot` source.
+ *
+ * Announcements and videos are optional, and no rows is a success
  * for both, so an empty-KV render should omit them rather than show whatever
  * happened to be live the day someone last ran tools/pull-catalog.mjs. An
  * announcement in particular has no business outliving its sheet — the one
