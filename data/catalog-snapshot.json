@@ -3,7 +3,17 @@
     {
       "maker": "Paula",
       "name": "Mild Smoked Jalapeño Salsa",
-      "description": "Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion and lime juice.",
+      "description": "Tomato, smoked jalapeños, smoked bell pepper, cilantro, garlic, onion. cider vinegar, and lime juice.",
+      "heat": "1",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Mild Jalapeño Salsa",
+      "description": "Tomato, jalapeños, bell pepper, cilantro, garlic, onion, cider vinegar, and lime juice.",
       "heat": "1",
       "price": "10",
       "price_quart": "",
@@ -13,7 +23,7 @@
     {
       "maker": "Paula",
       "name": "Jalapeño Salsa",
-      "description": "Tomato, jalapeños, serrano pepper, cilantro, garlic, onion and lime juice.",
+      "description": "Tomato, jalapeños, serrano pepper, cilantro, garlic, onion, cider vinegar, and lime juice.",
       "heat": "2",
       "price": "10",
       "price_quart": "",
@@ -22,8 +32,18 @@
     },
     {
       "maker": "Paula",
-      "name": "Tropical Fire Salsa",
-      "description": "Mango, papaya, strawberry, habanero, jalapeño, serrano, bell pepper, cilantro and lime.",
+      "name": "Smoked Jalapeño Salsa",
+      "description": "Tomato, smoked jalapeños, smoked serranos, smoked bell pepper, cilantro, garlic, onion, cider vinegar, and lime juice.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Smoked Nitro Habanero Salsa",
+      "description": "Tomato, smoked habanero, smoked serrano, smoked jalapeno, smoked bell pepper, garlic, onion, cilantro, lime juice, and cider vinegar.",
       "heat": "4",
       "price": "10",
       "price_quart": "",
@@ -32,8 +52,28 @@
     },
     {
       "maker": "Paula",
-      "name": "Smoked Ghostly Salsa",
-      "description": "Tomato, smoked habanero, smoked serrano, garlic, onion, lime juice and cider vinegar.",
+      "name": "Nitro Habanero Salsa",
+      "description": "Tomato, habanero, serrano, jalapeno, bell pepper, garlic, onion, lime juice, cilantro, and cider vinegar.",
+      "heat": "4",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Ghostly Inferno Salsa",
+      "description": "Tomato, ghost pepper, habanero, serrano, jalapeno, bell pepper, garlic, onion, lime juice, cilantro, and cider vinegar.",
+      "heat": "5",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "",
+      "featured": "yes"
+    },
+    {
+      "maker": "Paula",
+      "name": "Smoked Ghostly Inferno Salsa",
+      "description": "Tomato, smoked ghost pepper, smoked habanero, smoked serrano, smoked jalapeno, smoked bell pepper, garlic, onion, cilantro, lime juice and cider vinegar.",
       "heat": "5",
       "price": "10",
       "price_quart": "",
@@ -62,8 +102,28 @@
     },
     {
       "maker": "Paula",
-      "name": "What's Yer Garlicky Dill",
-      "description": "Cucumber, garlic, onion and bell pepper. The one that disappears first.",
+      "name": "What's Your Garlicky Dill",
+      "description": "Cucumber, dill, garlic, sugar, salt, pickling spices, and white vinegar. The one that disappears first.",
+      "heat": "1",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "What's Your Jalapeno Garlicky Dill",
+      "description": "Cucumber, jalapeno, dill, garlic, sugar, salt, pickling spices, and white vinegar. The one that disappears first.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Bread n Butter Pickles",
+      "description": "Cucumber, garlic, onion, sugar, bell pepper, and spices.",
       "heat": "1",
       "price": "10",
       "price_quart": "15",
@@ -73,7 +133,7 @@
     {
       "maker": "Paula",
       "name": "Spicy Bread n Butter",
-      "description": "Cucumber, onion, sugar, bell pepper and spices, with a little heat behind it.",
+      "description": "Cucumber, jalapeno, garlic, onion, sugar, bell pepper, and spices, with a little heat behind it.",
       "heat": "2",
       "price": "10",
       "price_quart": "15",
@@ -82,9 +142,49 @@
     },
     {
       "maker": "Paula",
-      "name": "Chow Chow",
-      "description": "Made the old way. Back when the cabbage is ready.",
+      "name": "Garlicky Dill Okra",
+      "description": "Okra, garlic, dill, white vinegar, sugar and spices.",
       "heat": "1",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Jalapeno Garlicky Dill Okra",
+      "description": "Okra, jalapeno, garlic, dill, white vinegar, sugar and spices.",
+      "heat": "2",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Okra of Death",
+      "description": "Okra, Carolina reaper, ghost pepper, 7 pot primo, habanero garlic, dill, white vinegar, sugar and spices.",
+      "heat": "6",
+      "price": "10",
+      "price_quart": "15",
+      "sold_out": "yes",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Chow Chow",
+      "description": "Green tomato, jalapeno, bell pepper, red onion, cinnamon, sugar, cloves, all spice, white vinegar, and spices.",
+      "heat": "1",
+      "price": "10",
+      "price_quart": "",
+      "sold_out": "yes",
+      "featured": ""
+    },
+    {
+      "maker": "Paula",
+      "name": "Hot Chow Chow",
+      "description": "Green tomato, carolina reaper, scorpion, ghost, habanero, jalapeno, bell pepper, red onion, cinnamon, sugar, cloves, all spice, white vinegar, and spices.",
+      "heat": "5",
       "price": "10",
       "price_quart": "",
       "sold_out": "yes",
@@ -183,44 +283,50 @@
   ],
   "events": [
     {
-      "date": "2026-09-05",
+      "date": "2026-10-17",
       "name": "Bastrop 1832 Farmers Market",
       "time": "10:00am to 2:00pm",
       "address": "1302 Chestnut St, Bastrop, TX 78602"
     },
     {
-      "date": "2026-09-06",
-      "name": "Elgin Farmers Market",
-      "time": "8:00am to 1:00pm",
-      "address": "Main St, Elgin, TX 78621"
-    },
-    {
-      "date": "2026-09-12",
+      "date": "2026-10-24",
       "name": "Bastrop 1832 Farmers Market",
       "time": "10:00am to 2:00pm",
       "address": "1302 Chestnut St, Bastrop, TX 78602"
     },
     {
-      "date": "2026-09-13",
-      "name": "Fall Festival",
-      "time": "10:00am to 4:00pm",
-      "address": "Courthouse Square, Elgin, TX 78621"
-    },
-    {
-      "date": "2026-09-19",
+      "date": "2026-10-31",
       "name": "Bastrop 1832 Farmers Market",
       "time": "10:00am to 2:00pm",
       "address": "1302 Chestnut St, Bastrop, TX 78602"
-    },
-    {
-      "date": "2026-09-21",
-      "name": "Makers Market",
-      "time": "11:00am to 5:00pm",
-      "address": ""
     }
   ],
-  "announcements": [],
-  "videos": [],
-  "fetchedAt": "2026-09-16T18:13:57.561Z",
+  "announcements": [
+    {
+      "date": "2026-10-08",
+      "headline": "Found footage! Check out our new videos.",
+      "expires": "",
+      "link": "#watch",
+      "link_text": "watch now",
+      "priority": ""
+    }
+  ],
+  "videos": [
+    {
+      "video": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "title": "What happens to two pounds of jalapeños",
+      "description": "One afternoon, a pot of syrup, and the trick that keeps them crisp instead of sad.",
+      "date": "2026-10-08",
+      "featured": ""
+    },
+    {
+      "video": "https://www.youtube.com/watch?v=I9Doo9ajCyQ",
+      "title": "What to do with the chow chow",
+      "description": "Pinto beans, a hot dog, and a cast iron skillet of cornbread. Three ways in five minutes.",
+      "date": "2026-10-09",
+      "featured": ""
+    }
+  ],
+  "fetchedAt": "2026-10-17T03:13:12.214Z",
   "lastError": null
 }
