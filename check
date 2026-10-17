@@ -48,11 +48,19 @@ worker_types () {
 # that in the adapter and every page silently falls back to a second KV
 # read — which can land on an older copy and file stale HTML under the new
 # cache key. Nothing else would fail, so this is the canary.
+#
+# Match the colon, not the bare word: the same file names the property in a
+# deprecation string, so grepping for `cfContext` stays green through exactly
+# the rename this is here to catch. The colon is assignment syntax, and it
+# survives the adapter minifying its own variable names.
 adapter_context () {
-  local f=node_modules/@astrojs/cloudflare/dist/utils/cf-helpers.js
-  [ -f "$f" ] || return 0
-  grep -q "cfContext" "$f" ||
-    { echo "the adapter no longer sets locals.cfContext"; return 1; }
+  local d=node_modules/@astrojs/cloudflare
+  [ -d "$d" ] || return 0
+  local f=$d/dist/utils/cf-helpers.js
+  [ -f "$f" ] ||
+    { echo "the adapter moved cf-helpers.js; check how it builds locals"; return 1; }
+  grep -q "cfContext:" "$f" ||
+    { echo "the adapter no longer assigns locals.cfContext"; return 1; }
 }
 
 pages () {
