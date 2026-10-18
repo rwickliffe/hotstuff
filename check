@@ -128,6 +128,40 @@ site_build () {
   "$astro" build
 }
 
+# Every resource a preview could share with production is named by id, and
+# each id is account-wide: a KV namespace, a rate-limit counter, an Analytics
+# Engine dataset. Copying a production one into `previews` is silent — it
+# would write the live catalog, let a public preview URL rate-limit the live
+# forms, or file test asks under the numbers Paula and John read. The four CSV
+# vars are deliberately not in here; they point at a public read-only sheet.
+#
+# The adapter flattens the config in memory, so check what it wrote rather
+# than wrangler.jsonc, which means this runs after the build. No astro, no
+# build, nothing to read - but if astro is here and the file is not, the
+# adapter moved it and this check has stopped checking anything.
+previews_isolated () {
+  [ -x "$astro" ] || return 0
+  local f=dist/server/wrangler.json
+  [ -f "$f" ] ||
+    { echo "the adapter no longer writes $f; find where previews land"; return 1; }
+  node -e '
+    const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    const p = c.previews;
+    if (!p) throw new Error("previews block missing from the built config");
+    const ids = (o, k, f) => (o[k] || []).map(f);
+    const pairs = [
+      ["kv", ids(c, "kv_namespaces", (b) => b.id), ids(p, "kv_namespaces", (b) => b.id)],
+      ["ratelimit", ids(c, "ratelimits", (b) => b.namespace_id), ids(p, "ratelimits", (b) => b.namespace_id)],
+      ["dataset", ids(c, "analytics_engine_datasets", (b) => b.dataset), ids(p, "analytics_engine_datasets", (b) => b.dataset)],
+    ];
+    for (const [what, prod, prev] of pairs) {
+      if (!prev.length) throw new Error("previews has no " + what + " ids");
+      const shared = prev.filter((id) => prod.includes(id));
+      if (shared.length) throw new Error("preview reuses production " + what + " ids: " + shared);
+    }
+  ' "$f"
+}
+
 # JS/TS/Astro/JSON only. Python and this script are out of scope.
 prettier_check () {
   [ -x node_modules/.bin/prettier ] || return 0
@@ -162,6 +196,7 @@ unit_tests () {
 step "unit tests"       unit_tests
 step "astro check"          site_astro_types
 step "astro build"          site_build
+step "previews share nothing with production" previews_isolated
 step "prettier"             prettier_check
 
 if [ "$failed" -ne 0 ]; then
