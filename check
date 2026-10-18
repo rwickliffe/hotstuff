@@ -128,15 +128,22 @@ site_build () {
   "$astro" build
 }
 
-# A preview shares nothing with production only if its KV id and rate-limit
-# namespace ids differ from the top-level ones, and the adapter flattens the
-# config in memory, so look at what it wrote rather than at wrangler.jsonc.
-# Copying a production id into `previews` is silent: it would write the live
-# catalog, or let a public preview URL rate-limit the live forms. Runs after
-# the build for that reason.
+# Every resource a preview could share with production is named by id, and
+# each id is account-wide: a KV namespace, a rate-limit counter, an Analytics
+# Engine dataset. Copying a production one into `previews` is silent — it
+# would write the live catalog, let a public preview URL rate-limit the live
+# forms, or file test asks under the numbers Paula and John read. The four CSV
+# vars are deliberately not in here; they point at a public read-only sheet.
+#
+# The adapter flattens the config in memory, so check what it wrote rather
+# than wrangler.jsonc, which means this runs after the build. No astro, no
+# build, nothing to read - but if astro is here and the file is not, the
+# adapter moved it and this check has stopped checking anything.
 previews_isolated () {
+  [ -x "$astro" ] || return 0
   local f=dist/server/wrangler.json
-  [ -f "$f" ] || return 0
+  [ -f "$f" ] ||
+    { echo "the adapter no longer writes $f; find where previews land"; return 1; }
   node -e '
     const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
     const p = c.previews;
@@ -145,6 +152,7 @@ previews_isolated () {
     const pairs = [
       ["kv", ids(c, "kv_namespaces", (b) => b.id), ids(p, "kv_namespaces", (b) => b.id)],
       ["ratelimit", ids(c, "ratelimits", (b) => b.namespace_id), ids(p, "ratelimits", (b) => b.namespace_id)],
+      ["dataset", ids(c, "analytics_engine_datasets", (b) => b.dataset), ids(p, "analytics_engine_datasets", (b) => b.dataset)],
     ];
     for (const [what, prod, prev] of pairs) {
       if (!prev.length) throw new Error("previews has no " + what + " ids");
