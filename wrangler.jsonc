@@ -136,14 +136,16 @@
     "version_metadata": {
       "binding": "CF_VERSION_METADATA"
     },
-    // The live sheet for now, because it is public and read-only. Point these
-    // at a copy when there is one: the reason to have a second spreadsheet is
-    // to type bad data into it on purpose and watch what the page does.
+    // A copy of the live sheet, not the sheet itself: the reason to have a
+    // second spreadsheet is to type bad data into it on purpose and watch what
+    // the page does. ./check doesn't guard these, since a public read-only
+    // sheet can't damage anything, so nothing catches the live URLs being
+    // pasted back here.
     "vars": {
-      "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=685501268&single=true&output=csv",
-      "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=1952117961&single=true&output=csv",
-      "ANNOUNCEMENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=619153325&single=true&output=csv",
-      "VIDEOS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vThGdNSBT7_ydyWCHyQUuvYu8gBaow8xgqiLPkyAAmT1AcVnCe0ttgpdvqIlA0rp7UGs-uQL-Sx4k3z/pub?gid=398538387&single=true&output=csv"
+      "PRODUCTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTz1W79LekpxPYDDCH2H3Rx8ZmG8h1YwqySIZwprWqT5AjMGosZXRd545-uBUVeLzUgf91hzmPeI0hI/pub?gid=685501268&single=true&output=csv",
+      "EVENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTz1W79LekpxPYDDCH2H3Rx8ZmG8h1YwqySIZwprWqT5AjMGosZXRd545-uBUVeLzUgf91hzmPeI0hI/pub?gid=1952117961&single=true&output=csv",
+      "ANNOUNCEMENTS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTz1W79LekpxPYDDCH2H3Rx8ZmG8h1YwqySIZwprWqT5AjMGosZXRd545-uBUVeLzUgf91hzmPeI0hI/pub?gid=619153325&single=true&output=csv",
+      "VIDEOS_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTz1W79LekpxPYDDCH2H3Rx8ZmG8h1YwqySIZwprWqT5AjMGosZXRd545-uBUVeLzUgf91hzmPeI0hI/pub?gid=398538387&single=true&output=csv"
     },
     // Counters are shared by id across Workers, so these must not reuse the
     // production ids: a preview URL is public, and sharing 1001-1003 would let
