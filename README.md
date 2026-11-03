@@ -583,16 +583,27 @@ npx wrangler preview delete --name NAME    # when the branch is merged
 destructive. Reach for a preview when the point is that somebody other than
 you needs to click it.
 
-Four things to know before relying on one:
+Five things to know before relying on one:
 
 - **Nothing is inherited.** A preview gets only what the `previews` block
   names, which is why that block repeats the bindings rather than extending
   them. Leave `kv_namespaces` out and `CATALOG` is simply unbound; a preview
   writes the live catalog only if production's id is copied in. The same goes
   for the rate-limit `namespace_id`s, which are shared across Workers.
+- **Its own spreadsheet.** `previews.vars` reads a copy of the live sheet, so
+  bad rows typed into the copy never reach the site. Rows can drift freely, but
+  columns can't: add or rename a column in the live sheet and do the same in
+  the copy, or previews break on a difference production doesn't have.
 - **No cron.** Triggers target production, so a preview's KV stays empty until
   something requests `/data`. Prime it once, the same way the first production
-  deploy was primed.
+  deploy was primed. An unprimed preview still looks healthy because it renders
+  the committed floor, so check `fetchedAt` in `/data` or `?debug`, not the
+  page. Edits to the copy don't show up on their own: a payload under an hour
+  old is fresh, so `/data` doesn't refresh it. To see an edit now, delete the
+  `catalog` key from `hotstuff-catalog-preview`, and the next `/data` refreshes
+  synchronously and returns the result. Past the hour, request `/data` twice:
+  the first returns the old payload and refreshes behind it, and the second
+  gets the new one.
 - **No routes.** A preview is reachable on `workers.dev` only, never the
   custom domain.
 - **The URL is public**, like a version URL. Nothing confidential is exposed,
