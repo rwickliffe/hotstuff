@@ -310,7 +310,8 @@ confirms the generated art block is current, the catalog snapshot has
 products, SITE_CSP matches `public/_headers`, the stylesheet reaches nothing
 outside itself, Base.astro is wired to the shared files, the favicon matches
 the flame sprite, runs the test suites, type-checks `.astro` files, compiles
-with `astro build`, and runs `prettier --check` on JS/TS/Astro/JSON. It does
+with `astro build`, confirms the Node floor covers every locked package, and
+runs `prettier --check` on JS/TS/Astro/JSON. It does
 not format Python or this `check` script. Nothing touches the network.
 
 ```bash

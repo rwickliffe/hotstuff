@@ -162,6 +162,29 @@ previews_isolated () {
   ' "$f"
 }
 
+# npm only warns when a package needs a newer Node than engines.node promises,
+# and CI and this machine both run newer than the floor, so nothing else notices
+# an update raising it. Astro 7.4.5 exits outright below its own floor, which
+# left ./check dead on versions package.json still claimed to support. This
+# reads declared ranges, so a package that enforces more than it declares can
+# still get past. Optional packages are left out: npm skips those that don't fit.
+#
+# semver is transitive. If it leaves the tree this fails rather than passing
+# without checking anything.
+node_floor () {
+  [ -x "$astro" ] || return 0
+  node -e '
+    const semver = require("semver");
+    const { packages } = JSON.parse(require("fs").readFileSync("package-lock.json", "utf8"));
+    const range = packages[""].engines.node;
+    const floor = semver.minVersion(range);
+    const tooOld = Object.entries(packages)
+      .filter(([name, p]) => name && !p.optional && p.engines?.node && !semver.satisfies(floor, p.engines.node))
+      .map(([name, p]) => name.replace(/^node_modules\//, "") + "@" + p.version + " needs " + p.engines.node);
+    if (tooOld.length) throw new Error("engines.node is " + range + ", but:\n" + tooOld.join("\n"));
+  '
+}
+
 # JS/TS/Astro/JSON only. Python and this script are out of scope.
 prettier_check () {
   [ -x node_modules/.bin/prettier ] || return 0
@@ -197,6 +220,7 @@ step "unit tests"       unit_tests
 step "astro check"          site_astro_types
 step "astro build"          site_build
 step "previews share nothing with production" previews_isolated
+step "Node floor covers what is locked" node_floor
 step "prettier"             prettier_check
 
 if [ "$failed" -ne 0 ]; then
