@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    # Monthly and grouped, because @cloudflare/workers-types publishes almost
+    # daily and this site changes rarely. Security updates ignore the schedule.
+    schedule:
+      interval: monthly
+    # Lets a bad release get noticed and pulled before it is proposed here.
+    cooldown:
+      default-days: 14
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # @astrojs/check supports only typescript ^5 and ^6; raise this bound
+      # when its peer range widens.
+      - dependency-name: typescript
+        versions: [">=7.0.0"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
