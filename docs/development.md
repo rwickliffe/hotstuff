@@ -28,6 +28,9 @@ magick source/booth.jpg          -resize 1400x -quality 78 public/images/booth.j
 magick source/logo-watermarked.jpg -resize 560x -quality 82 public/images/logo.jpg
 ```
 
+`lineup.jpg` was retouched by hand after the command above, so don't regenerate
+it from the original without repeating that; the private ops notes explain why.
+
 Three more are cropped from the originals and shipped at 520px. Keep that size
 and those crops; the private ops notes explain why.
 
