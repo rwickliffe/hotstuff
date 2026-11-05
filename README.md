@@ -67,5 +67,3 @@ npx playwright test                 # first run: npx playwright install chromium
 ## Status
 
 The site is live and the contact form is delivering. The draft ribbon at the top of each page is deliberate: product names and ingredients were read off jar labels, and it stays until the owners confirm them. Remaining work is in the [issues](https://github.com/rwickliffe/hotstuff/issues).
-
-<sub>Built by [Russell Wickliffe](https://github.com/rwickliffe) for Paula and Crazy John.</sub>
